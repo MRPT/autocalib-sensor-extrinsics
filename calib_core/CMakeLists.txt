@@ -8,16 +8,16 @@ INCLUDE_DIRECTORIES(${PCL_INCLUDE_DIRS})
 
 # List the source files of CALIB_CORE
 SET(SRC
-    ${CALIB_CORE_INCLUDE_DIR}/calib_core.h
-    ${CALIB_CORE_INCLUDE_DIR}/lines.h
-    ${CALIB_CORE_INCLUDE_DIR}/planes.h
-    ${CALIB_CORE_INCLUDE_DIR}/correspondences.h
-    ${CALIB_CORE_INCLUDE_DIR}/solver.h
+	${CALIB_CORE_INCLUDE_DIR}/calib_core.h
+	${CALIB_CORE_INCLUDE_DIR}/lines.h
+	${CALIB_CORE_INCLUDE_DIR}/planes.h
+	${CALIB_CORE_INCLUDE_DIR}/correspondences.h
+	${CALIB_CORE_INCLUDE_DIR}/solver.h
 
-    ${CALIB_CORE_CPP_DIR}/lines.cpp
-    ${CALIB_CORE_CPP_DIR}/planes.cpp
-    ${CALIB_CORE_CPP_DIR}/correspondences.cpp
-    ${CALIB_CORE_CPP_DIR}/solver.cpp
+	${CALIB_CORE_CPP_DIR}/lines.cpp
+	${CALIB_CORE_CPP_DIR}/planes.cpp
+	${CALIB_CORE_CPP_DIR}/correspondences.cpp
+	${CALIB_CORE_CPP_DIR}/solver.cpp
 )
 
 # CALIB_CORE library encapsulates the data types and methods for SphericalRGBD input, output and basic operations

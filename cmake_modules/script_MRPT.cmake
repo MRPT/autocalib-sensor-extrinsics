@@ -9,13 +9,15 @@ MARK_AS_ADVANCED(DISABLE_MRPT)
 IF(NOT DISABLE_MRPT)
 	# MRPT library:
 	# --------------------------------------------
-	find_package(MRPT COMPONENTS base hwdrivers obs slam maps graphslam pbmap QUIET)
-        IF(MRPT_FOUND)
+	#find_package(MRPT COMPONENTS base hwdrivers obs slam maps graphslam pbmap QUIET)
+	MESSAGE(STATUS "Checking for MRPT")
+	find_package(MRPT COMPONENTS hwdrivers vision obs slam maps graphslam pbmap QUIET)
+	IF(MRPT_FOUND)
 
-                SET(RV_HAS_MRPT 1)
-                SET(RV_HAS_MRPT_BASE 1)
-                add_definitions(-DRV_HAS_MRPT=1)
-                #add_definitions(-D_HAS_MRPT_BASE=${RV_HAS_MRPT_BASE})
+		SET(RV_HAS_MRPT 1)
+		SET(RV_HAS_MRPT_BASE 1)
+		add_definitions(-DRV_HAS_MRPT=1)
+		#add_definitions(-D_HAS_MRPT_BASE=${RV_HAS_MRPT_BASE})
 
 		INCLUDE_DIRECTORIES(${MRPT_INCLUDE_DIRS})
 		link_directories(${MRPT_LIBRARY_DIRS})
@@ -29,6 +31,6 @@ IF(NOT DISABLE_MRPT)
 			MESSAGE(STATUS " Libraries   : ${MRPT_LIBRARIES}")
 		ENDIF($ENV{VERBOSE})		
 
-        ENDIF(MRPT_FOUND)
+	ENDIF(MRPT_FOUND)
 
 ENDIF(NOT DISABLE_MRPT)

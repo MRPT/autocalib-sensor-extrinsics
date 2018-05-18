@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8.11)
 project(autocalib-sensor-extrinsics)
 
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
+	set(CMAKE_BUILD_TYPE Release)
 endif()
 
 # Set the maximum level of warnings:
@@ -21,36 +21,36 @@ ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 # Shared options between GCC and CLANG:
 # ======================================
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR CMAKE_COMPILER_IS_GNUCXX)
-        IF(CMAKE_BUILD_TYPE MATCHES "Debug")
-                SET(EXTRA_CPP_FLAGS "${EXTRA_CPP_FLAGS} -g")
-                ADD_DEFINITIONS( -D_DEBUG)
-                ADD_DEFINITIONS( -DDEBUG)
-        ENDIF(CMAKE_BUILD_TYPE MATCHES "Debug")
+	IF(CMAKE_BUILD_TYPE MATCHES "Debug")
+        	SET(EXTRA_CPP_FLAGS "${EXTRA_CPP_FLAGS} -g")
+		ADD_DEFINITIONS( -D_DEBUG)
+        	ADD_DEFINITIONS( -DDEBUG)
+	ENDIF(CMAKE_BUILD_TYPE MATCHES "Debug")
 
         # Whole program optimization
-        IF(WHOLE_PROGRAM_OPTIMIZATION)
-                SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --combine")
-                SET(EXES_CXX_FLAGS "${EXES_CXX_FLAGS} -fwhole-program --combine")
-        ENDIF(WHOLE_PROGRAM_OPTIMIZATION)
+	IF(WHOLE_PROGRAM_OPTIMIZATION)
+        	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --combine")
+        	SET(EXES_CXX_FLAGS "${EXES_CXX_FLAGS} -fwhole-program --combine")
+	ENDIF(WHOLE_PROGRAM_OPTIMIZATION)
 
         # "-mtune=native" generates code optimized for the detected current processor.
-        if (WIN32 OR "${CMAKE_ARCH}" MATCHES ".*86" OR "${CMAKE_ARCH}" MATCHES "amd64")
-                set(opt_native_def ON)
-        endif (WIN32 OR "${CMAKE_ARCH}" MATCHES ".*86" OR "${CMAKE_ARCH}" MATCHES "amd64")
+	if (WIN32 OR "${CMAKE_ARCH}" MATCHES ".*86" OR "${CMAKE_ARCH}" MATCHES "amd64")
+        	set(opt_native_def ON)
+	endif (WIN32 OR "${CMAKE_ARCH}" MATCHES ".*86" OR "${CMAKE_ARCH}" MATCHES "amd64")
 
-        SET( OPTIMIZE_NATIVE ${opt_native_def} CACHE BOOL "GCC/clang optimizations for current processor (-mtune=native). Requires GCC 4.2+")
+	SET( OPTIMIZE_NATIVE ${opt_native_def} CACHE BOOL "GCC/clang optimizations for current processor (-mtune=native). Requires GCC 4.2+")
 
-        IF(CMAKE_BUILD_TYPE STREQUAL "Debug")  # Not in debug!
-                SET(OPTIMIZE_NATIVE OFF)
-        ENDIF(CMAKE_BUILD_TYPE STREQUAL "Debug")
+	IF(CMAKE_BUILD_TYPE STREQUAL "Debug")  # Not in debug!
+        	SET(OPTIMIZE_NATIVE OFF)
+	ENDIF(CMAKE_BUILD_TYPE STREQUAL "Debug")
 
         # "-ffast-math"
-        SET( OPTIMIZE_FFAST-MATH OFF CACHE BOOL "GCC/clang optimization for floating math (-ffast-math).")
-        IF(OPTIMIZE_FFAST-MATH)
-                SET(EXTRA_CPP_FLAGS "${EXTRA_CPP_FLAGS} -ffast-math")
-        ENDIF(OPTIMIZE_FFAST-MATH)
+	SET( OPTIMIZE_FFAST-MATH OFF CACHE BOOL "GCC/clang optimization for floating math (-ffast-math).")
+	IF(OPTIMIZE_FFAST-MATH)
+        	SET(EXTRA_CPP_FLAGS "${EXTRA_CPP_FLAGS} -ffast-math")
+	ENDIF(OPTIMIZE_FFAST-MATH)
 
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_CPP_FLAGS}")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_CPP_FLAGS}")
 endif ()
 
 
@@ -80,8 +80,8 @@ ADD_DEFINITIONS(-DPROJECT_SOURCE_PATH="${PROJECT_SOURCE_DIR}")
 ADD_SUBDIRECTORY(calib_core)
 ADD_SUBDIRECTORY(autocalib-gui)
 
-SET( BUILD_EXAMPLES ON CACHE BOOL "Build examples programs to show functions usage")
-ADD_SUBDIRECTORY(examples)
+#SET( BUILD_EXAMPLES ON CACHE BOOL "Build examples programs to show functions usage")
+#ADD_SUBDIRECTORY(examples)
 
-SET( BUILD_TESTS ON CACHE BOOL "Build tests")
-ADD_SUBDIRECTORY(test)
+#SET( BUILD_TESTS ON CACHE BOOL "Build tests")
+#ADD_SUBDIRECTORY(test)

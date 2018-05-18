@@ -1,13 +1,17 @@
-#include "mainwindow.h"
+#include "CMainWindow.h"
 #include <QApplication>
 #include <QWidget>
 
 int main(int argc, char *argv[])
 {
-    QApplication application(argc, argv);
-    MainWindow mainWindow;
+	QApplication application(argc, argv);
 
-    mainWindow.show();
+	QApplication::setOrganizationName("MRPT");
+	QApplication::setOrganizationDomain("mrpt.org");
+	QApplication::setApplicationName("autocalib-sensor-extrinsics");
 
-    return application.exec();
+	CMainWindow main_window;
+	main_window.showMaximized();
+
+	return application.exec();
 }
