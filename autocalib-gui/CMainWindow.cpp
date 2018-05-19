@@ -3,7 +3,18 @@
 
 #include <QFileDialog>
 #include <QDebug>
-#include <mrpt/obs/CRawlog.h>
+
+#include <mrpt/io/CFileGZInputStream.h>
+#include <mrpt/obs/CObservation3DRangeScan.h>
+#include <mrpt/serialization/CArchive.h>
+#include <mrpt/system/filesystem.h>
+#include <mrpt/math/ops_containers.h>
+
+using namespace mrpt::obs;
+using namespace mrpt::io;
+using namespace mrpt::serialization;
+using namespace mrpt::system;
+using namespace mrpt::math;
 
 CMainWindow::CMainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -77,8 +88,18 @@ void CMainWindow::loadRawlog(QString file_name)
 
 	m_ui->statusBar->showMessage("Loading Rawlog...");
 
-	mrpt::obs::CRawlog dataset;
-	dataset.loadFromRawLogFile(file_name.toStdString());
+	CFileGZInputStream rawlog(file_name.toStdString());
+
+	CSerializable::Ptr obj;
+
+	bool read = true;
+	while(read)
+	{
+		archiveFrom(rawlog) >> obj;
+
+		if(!obj)
+			read = false;
+	}
 
 	m_ui->start_calib_button->setDisabled(false);
 	m_ui->continue_calib_button->setDisabled(false);
