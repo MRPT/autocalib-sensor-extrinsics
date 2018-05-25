@@ -1,5 +1,7 @@
 #pragma once
 
+#include "observation_tree/CObservationTreeModel.h"
+
 #include <QMainWindow>
 #include <QSettings>
 
@@ -24,9 +26,10 @@ public:
 private slots:
 	void sensorsIndexChanged(int index);
 	void algosIndexChanged(int index);
-	void openRawlog();
+	void loadRawlog();
 	void startCalib();
 	void continueCalib();
+	void itemClicked(const QModelIndex &);
 
 private:
 	Ui::CMainWindow *m_ui;
@@ -35,4 +38,5 @@ private:
 	QSettings m_settings;
 	QString m_recent_file;
 
+	CObservationTreeModel* m_model;
 };

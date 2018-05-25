@@ -13,7 +13,20 @@
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
-  <widget class="QWidget" name="centralWidget"/>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <widget class="CViewerContainer" name="viewer_container" native="true">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
@@ -32,18 +45,24 @@
     <bool>false</bool>
    </attribute>
   </widget>
-  <widget class="QStatusBar" name="statusBar"/>
+  <widget class="QStatusBar" name="status_bar"/>
   <widget class="QDockWidget" name="setup_dockwidget">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
    <property name="minimumSize">
     <size>
-     <width>400</width>
-     <height>260</height>
+     <width>382</width>
+     <height>257</height>
     </size>
    </property>
    <property name="maximumSize">
     <size>
-     <width>400</width>
-     <height>260</height>
+     <width>382</width>
+     <height>257</height>
     </size>
    </property>
    <property name="features">
@@ -55,7 +74,13 @@
    <attribute name="dockWidgetArea">
     <number>1</number>
    </attribute>
-   <widget class="QWidget" name="dockWidgetContents">
+   <widget class="QWidget" name="setup_dockwidget_contents">
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
       <layout class="QFormLayout" name="formLayout">
@@ -359,12 +384,12 @@
     </layout>
    </widget>
   </widget>
-  <widget class="QDockWidget" name="obs_dockwidget">
-   <property name="minimumSize">
-    <size>
-     <width>88</width>
-     <height>107</height>
-    </size>
+  <widget class="QDockWidget" name="observations_dockwidget">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
    </property>
    <property name="features">
     <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
@@ -375,16 +400,24 @@
    <attribute name="dockWidgetArea">
     <number>1</number>
    </attribute>
-   <widget class="QWidget" name="dockWidgetContents_2">
-    <layout class="QHBoxLayout" name="horizontalLayout">
+   <widget class="QWidget" name="observations_dockwidget_contents">
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
-      <widget class="QTreeView" name="treeView"/>
+      <widget class="QTreeView" name="observations_treeview"/>
      </item>
     </layout>
    </widget>
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>CViewerContainer</class>
+   <extends>QWidget</extends>
+   <header>viewer_container/CViewerContainer.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

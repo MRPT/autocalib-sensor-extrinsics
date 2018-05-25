@@ -1,29 +1,31 @@
 #pragma once
 
+#include "CObservationTreeItem.h"
+
 #include <QAbstractItemModel>
 #include <QModelIndex>
 #include <QVariant>
-#include "CObservationTreeItem.h"
 
-//Data model for representing the rawlog observations and interfacing with TreeView
+//Data model for representing the rawlog observations and interfacing them with TreeView
 
 class CObservationTreeModel : public QAbstractItemModel
 {
 	Q_OBJECT
 
 	public:
-		CObservationTreeModel(
-				const mrpt::obs::CRawlog &rawlog, QObject *parent = nullptr);
+		explicit CObservationTreeModel(
+			const std::string &rawlog_filename, QObject *parent = 0);
 		~CObservationTreeModel();
 
 		QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
+		mrpt::obs::CObservation::Ptr observationData(const QModelIndex &index) const;
 		QModelIndex index(int row, int column, const QModelIndex &parent) const;
 		QModelIndex parent(const QModelIndex &index) const;
+		Qt::ItemFlags flags(const QModelIndex &index) const;
 		int rowCount(const QModelIndex &parent = QModelIndex()) const;
 		int columnCount(const QModelIndex &parent = QModelIndex()) const;
-	
+
 	private:
-		void setupModelData(const QStringList &lines, CTreeItem *parent);
 
 		CObservationTreeItem *m_rootitem;
-}
+};

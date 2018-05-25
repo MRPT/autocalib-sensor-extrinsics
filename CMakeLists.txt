@@ -1,10 +1,10 @@
-cmake_minimum_required(VERSION 2.8.11)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.5.1)
 
-project(autocalib-sensor-extrinsics)
+PROJECT(autocalib-sensor-extrinsics)
 
-if(NOT CMAKE_BUILD_TYPE)
-	set(CMAKE_BUILD_TYPE Release)
-endif()
+IF(NOT CMAKE_BUILD_TYPE)
+	SET(CMAKE_BUILD_TYPE Debug)
+ENDIF()
 
 # Set the maximum level of warnings:
 SET( EXTRA_WARNINGS OFF CACHE BOOL "Enable extra warnings apart from -Wall")
@@ -12,15 +12,15 @@ MARK_AS_ADVANCED(EXTRA_WARNINGS)
 
 # GNU GCC options ================================
 IF(CMAKE_COMPILER_IS_GNUCXX)
-	# Enable C++11 features in GCC 4.7+
+	# Enable C++17 features in GCC 4.7+
 	IF (NOT CMAKE_GCC_VERSION LESS 47)
-		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y") # -std=c++11 | -std=c++1y | -std=c++17
+	        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y") #-std=c++11 | -std=c++1y | -std=c++14 | -std=c++17
 	ENDIF (NOT CMAKE_GCC_VERSION LESS 47)
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
 # Shared options between GCC and CLANG:
 # ======================================
-if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR CMAKE_COMPILER_IS_GNUCXX)
+IF (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR CMAKE_COMPILER_IS_GNUCXX)
 	IF(CMAKE_BUILD_TYPE MATCHES "Debug")
         	SET(EXTRA_CPP_FLAGS "${EXTRA_CPP_FLAGS} -g")
 		ADD_DEFINITIONS( -D_DEBUG)
@@ -34,9 +34,9 @@ if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR CMAKE_COMPILER_IS_GNUCXX)
 	ENDIF(WHOLE_PROGRAM_OPTIMIZATION)
 
         # "-mtune=native" generates code optimized for the detected current processor.
-	if (WIN32 OR "${CMAKE_ARCH}" MATCHES ".*86" OR "${CMAKE_ARCH}" MATCHES "amd64")
-        	set(opt_native_def ON)
-	endif (WIN32 OR "${CMAKE_ARCH}" MATCHES ".*86" OR "${CMAKE_ARCH}" MATCHES "amd64")
+	IF (WIN32 OR "${CMAKE_ARCH}" MATCHES ".*86" OR "${CMAKE_ARCH}" MATCHES "amd64")
+		SET(opt_native_def ON)
+	ENDIF (WIN32 OR "${CMAKE_ARCH}" MATCHES ".*86" OR "${CMAKE_ARCH}" MATCHES "amd64")
 
 	SET( OPTIMIZE_NATIVE ${opt_native_def} CACHE BOOL "GCC/clang optimizations for current processor (-mtune=native). Requires GCC 4.2+")
 
@@ -50,13 +50,13 @@ if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR CMAKE_COMPILER_IS_GNUCXX)
         	SET(EXTRA_CPP_FLAGS "${EXTRA_CPP_FLAGS} -ffast-math")
 	ENDIF(OPTIMIZE_FFAST-MATH)
 
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_CPP_FLAGS}")
-endif ()
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_CPP_FLAGS}")
+ENDIF ()
 
 
 # Project dependencies
 # ======================================
-include(cmake_modules/script_MRPT.cmake REQUIRED)
+INCLUDE(cmake_modules/script_MRPT.cmake REQUIRED)
 
 # OpenCV is required to process images from regular cameras
 FIND_PACKAGE(OpenCV REQUIRED)
@@ -78,7 +78,7 @@ find_package(Qt5Widgets)
 # Set the path to this project' sources
 ADD_DEFINITIONS(-DPROJECT_SOURCE_PATH="${PROJECT_SOURCE_DIR}")
 ADD_SUBDIRECTORY(calib_core)
-ADD_SUBDIRECTORY(autocalib-gui)
+ADD_SUBDIRECTORY(gui)
 
 #SET( BUILD_EXAMPLES ON CACHE BOOL "Build examples programs to show functions usage")
 #ADD_SUBDIRECTORY(examples)
