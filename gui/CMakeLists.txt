@@ -5,16 +5,19 @@ SET(SOURCES
 	CMainWindow.cpp
 	observation_tree/CObservationTreeModel.cpp
 	observation_tree/CObservationTreeItem.cpp
-	viewer_container/CViewerContainer.cpp)
+	viewer/CViewerContainer.cpp
+	config/CCalibConfig.cpp)
 
 SET(FILES_TO_MOC
 	CMainWindow.h
 	observation_tree/CObservationTreeModel.h
-	viewer_container/CViewerContainer.h)
+	viewer/CViewerContainer.h
+	config/CCalibConfig.h)
 
 SET(FILES_TO_UIC
 	CMainWindow.ui
-	viewer_container/CViewerContainer.ui)
+	viewer/CViewerContainer.ui
+	config/CCalibConfig.ui)
 
 #SET(FILES_TO_RCC
 #	resources/)
@@ -25,4 +28,4 @@ QT5_WRAP_UI(UIC_CPPS ${FILES_TO_UIC})
 
 ADD_EXECUTABLE(autocalib_sensor_extrinsics ${SOURCES} ${MOC_CPPS} ${UIC_CPPS} ${RCC_CPPS})
 
-TARGET_LINK_LIBRARIES(autocalib_sensor_extrinsics Qt5::Widgets ${MRPT_LIBRARIES})
+TARGET_LINK_LIBRARIES(autocalib_sensor_extrinsics Qt5::Widgets ${MRPT_LIBRARIES} ${PCL_LIBRARIES})

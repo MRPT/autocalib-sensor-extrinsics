@@ -63,6 +63,8 @@ FIND_PACKAGE(OpenCV REQUIRED)
 INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
 LINK_DIRECTORIES(${OpenCV_LIBS_DIR})
 
+FIND_PACKAGE(VTK REQUIRED)
+
 # PCL is required to segment 3D planes from depth images
 FIND_PACKAGE(PCL REQUIRED)
 INCLUDE_DIRECTORIES(${PCL_INCLUDE_DIRS})
@@ -73,7 +75,7 @@ ADD_DEFINITIONS(${PCL_DEFINITIONS})
 FIND_PACKAGE(Boost 1.46.0 REQUIRED system filesystem unit_test_framework serialization)
 
 # Qt5 GUI library
-find_package(Qt5Widgets)
+FIND_PACKAGE(Qt5Widgets)
 
 # Set the path to this project' sources
 ADD_DEFINITIONS(-DPROJECT_SOURCE_PATH="${PROJECT_SOURCE_DIR}")
