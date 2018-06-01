@@ -10,7 +10,7 @@ IF(NOT DISABLE_MRPT)
 	# MRPT library:
 	# --------------------------------------------
 	#find_package(MRPT COMPONENTS base hwdrivers obs slam maps graphslam pbmap QUIET)
-	find_package(MRPT COMPONENTS obs serialization rtti QUIET)
+	find_package(MRPT COMPONENTS obs serialization rtti maps QUIET)
 	IF(MRPT_FOUND)
 
 		SET(RV_HAS_MRPT 1)

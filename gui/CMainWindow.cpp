@@ -2,6 +2,9 @@
 #include "ui_CMainWindow.h"
 #include "observation_tree/CObservationTreeModel.h"
 
+#include <mrpt/maps/CPointsMap.h>
+#include <mrpt/maps/CSimplePointsMap.h>
+
 #include <QFileDialog>
 #include <QDebug>
 
@@ -93,7 +96,18 @@ void CMainWindow::continueCalib()
 void CMainWindow::itemClicked(const QModelIndex &index)
 {
 	std::stringstream stream;
+	mrpt::obs::CObservation3DRangeScan::Ptr obs_item = std::dynamic_pointer_cast<mrpt::obs::CObservation3DRangeScan>(m_model->observationData(index));
 
-	m_model->observationData(index)->getDescriptionAsText(stream);
+	obs_item->getDescriptionAsText(stream);
 	m_ui->viewer_container->changeOutputText(QString::fromStdString(stream.str()));
+
+	mrpt::maps::CPointsMap::Ptr map;
+	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+
+	map = mrpt::make_aligned_shared<mrpt::maps::CSimplePointsMap>();
+	map->insertObservation(obs_item.get());
+
+	map->getPCLPointCloud(*cloud);
+
+	m_ui->viewer_container->changeViewerPointCloud(m_model->m_obs_labels.indexOf(QString::fromStdString(obs_item->sensorLabel + " : " + obs_item->GetRuntimeClass()->className)) + 1, cloud);
 }

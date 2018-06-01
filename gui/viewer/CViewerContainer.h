@@ -21,13 +21,14 @@ public:
 	~CViewerContainer();
 
 	void changeOutputText(const QString &);
+	void changeViewerPointCloud(const int &viewer_id, const pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud);
 
 private:
 	boost::shared_ptr<pcl::visualization::PCLVisualizer> m_input1_viewer;
 	boost::shared_ptr<pcl::visualization::PCLVisualizer> m_input2_viewer;
 	boost::shared_ptr<pcl::visualization::PCLVisualizer> m_output_viewer;
 
+	pcl::PointCloud<pcl::PointXYZ>::Ptr m_cloud;
 
-	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr m_cloud;
 	Ui::CViewerContainer *m_ui;
 };

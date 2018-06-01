@@ -20,7 +20,7 @@ CObservationTreeModel::CObservationTreeModel(const std::string &rawlog_filename,
 
 	bool read = true;
 	uint obs_count = 0, obs_sets_count = 0;
-	QStringList obs_labels, obs_labels_in_set;
+	QStringList obs_labels_in_set;
 	std::vector<CObservation::Ptr> obs_set;
 	QString obs_label;
 
@@ -37,7 +37,7 @@ CObservationTreeModel::CObservationTreeModel(const std::string &rawlog_filename,
 
 			if(obs_count == 1)
 			{
-				obs_labels.push_back(obs_label);
+				m_obs_labels.push_back(obs_label);
 				obs_labels_in_set.push_back(obs_label);
 				obs_set.push_back(obs);
 				continue;
@@ -45,9 +45,9 @@ CObservationTreeModel::CObservationTreeModel(const std::string &rawlog_filename,
 
 			else
 			{
-				auto iter = std::find(obs_labels.begin(), obs_labels.end(), obs_label);
-				if(iter == obs_labels.end())
-					obs_labels.push_back(obs_label);
+				auto iter = std::find(m_obs_labels.begin(), m_obs_labels.end(), obs_label);
+				if(iter == m_obs_labels.end())
+					m_obs_labels.push_back(obs_label);
 
 				iter = std::find(obs_labels_in_set.begin(), obs_labels_in_set.end(), obs_label);
 				if(iter == obs_labels_in_set.end())
@@ -71,9 +71,7 @@ CObservationTreeModel::CObservationTreeModel(const std::string &rawlog_filename,
 					obs_labels_in_set.push_back(obs_label);
 					obs_set.push_back(obs);
 				}
-
 			}
-
 		}
 
 		catch(std::exception &e)
@@ -163,7 +161,7 @@ CObservation::Ptr CObservationTreeModel::observationData(const QModelIndex &inde
 
 	CObservationTreeItem *item = static_cast<CObservationTreeItem*>(index.internalPointer());
 
-	return item->observationData();
+	return item->getObservation();
 }
 
 Qt::ItemFlags CObservationTreeModel::flags(const QModelIndex &index) const

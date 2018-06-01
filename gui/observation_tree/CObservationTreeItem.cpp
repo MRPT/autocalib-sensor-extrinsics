@@ -49,7 +49,7 @@ QVariant CObservationTreeItem::displayData() const
 	return this->m_displaydata;
 }
 
-CObservation::Ptr CObservationTreeItem::observationData() const
+CObservation::Ptr CObservationTreeItem::getObservation() const
 {
 	return this->m_observation;
 }

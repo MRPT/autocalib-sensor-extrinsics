@@ -25,7 +25,8 @@ class CObservationTreeModel : public QAbstractItemModel
 		int rowCount(const QModelIndex &parent = QModelIndex()) const;
 		int columnCount(const QModelIndex &parent = QModelIndex()) const;
 
-	private:
+		QStringList m_obs_labels;
 
+	private:
 		CObservationTreeItem *m_rootitem;
 };

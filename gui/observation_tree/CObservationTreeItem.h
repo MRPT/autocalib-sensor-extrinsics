@@ -16,7 +16,7 @@ class CObservationTreeItem
 
 		void appendChild(CObservationTreeItem *child);
 		QVariant displayData() const;
-		mrpt::obs::CObservation::Ptr observationData() const;
+		mrpt::obs::CObservation::Ptr getObservation() const;
 		CObservationTreeItem *child(int row);
 		int childCount() const;
 		int row() const;

@@ -38,5 +38,5 @@ private:
 	QSettings m_settings;
 	QString m_recent_file;
 
-	CObservationTreeModel* m_model;
+	CObservationTreeModel *m_model;
 };
