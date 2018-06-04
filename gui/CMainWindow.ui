@@ -100,32 +100,7 @@
          </item>
          <item>
           <property name="text">
-           <string>3D LiDAR - 3D LiDAR</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>3D LiDAR - RGB</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>3D LiDAR - RGB-D</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
            <string>RGB-D - RGB-D</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>RGB-D - RGB</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>RGB - RGB</string>
           </property>
          </item>
         </widget>
@@ -150,16 +125,6 @@
          <item>
           <property name="text">
            <string>Plane matching</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Line matching</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Trajectory matching</string>
           </property>
          </item>
         </widget>
@@ -344,22 +309,22 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="start_calib_button">
+        <widget class="QPushButton" name="run_calib_button">
          <property name="enabled">
           <bool>false</bool>
          </property>
          <property name="text">
-          <string>Start Calibration</string>
+          <string>Run Calibration</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="continue_calib_button">
+        <widget class="QPushButton" name="proceed_calib_button">
          <property name="enabled">
           <bool>false</bool>
          </property>
          <property name="text">
-          <string>Continue</string>
+          <string>Proceed</string>
          </property>
         </widget>
        </item>

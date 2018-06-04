@@ -1,17 +1,23 @@
 #include "CViewerContainer.h"
 #include "ui_CViewerContainer.h"
 
+#include <boost/bind.hpp>
+#include <boost/signals2.hpp>
+
 CViewerContainer::CViewerContainer(QWidget *parent) :
 	QWidget(parent),
 	m_ui(new Ui::CViewerContainer)
 {
 	m_ui->setupUi(this);
 
-	m_cloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
+	m_viewer_cloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
+	m_viewer_text.reset(new std::string);
 
 	m_input1_viewer.reset(new pcl::visualization::PCLVisualizer("input1_viewer", false));
 	m_input1_viewer->setBackgroundColor(0.3,0.3,0.3);
-	m_input1_viewer->addPointCloud(m_cloud, "cloud");
+	m_input1_viewer->addPointCloud(m_viewer_cloud, "cloud");
+	m_input1_viewer->setShowFPS(false);
+	m_input1_viewer->addText(*m_viewer_text, 10, 10, 1, 1, 1, "text");
 	m_input1_viewer->resetCamera();
 
 	m_ui->input1_viz->SetRenderWindow(m_input1_viewer->getRenderWindow());
@@ -20,7 +26,9 @@ CViewerContainer::CViewerContainer(QWidget *parent) :
 
 	m_input2_viewer.reset(new pcl::visualization::PCLVisualizer("input2_viewer", false));
 	m_input2_viewer->setBackgroundColor(0.3,0.3,0.3);
-	m_input2_viewer->addPointCloud(m_cloud, "cloud");
+	m_input2_viewer->addPointCloud(m_viewer_cloud, "cloud");
+	m_input2_viewer->addText(*m_viewer_text, 10, 10, 1, 1, 1, "text");
+	m_input2_viewer->setShowFPS(false);
 	m_input2_viewer->resetCamera();
 
 	m_ui->input2_viz->SetRenderWindow(m_input2_viewer->getRenderWindow());
@@ -29,7 +37,9 @@ CViewerContainer::CViewerContainer(QWidget *parent) :
 
 	m_output_viewer.reset(new pcl::visualization::PCLVisualizer("output_viewer", false));
 	m_output_viewer->setBackgroundColor(0.3,0.3,0.3);
-	m_output_viewer->addPointCloud(m_cloud, "cloud");
+	m_output_viewer->addPointCloud(m_viewer_cloud, "cloud");
+	m_output_viewer->setShowFPS(false);
+	m_output_viewer->addText(*m_viewer_text, 10, 10, 1, 1, 1, "text");
 	m_output_viewer->resetCamera();
 
 	m_ui->result_viz->SetRenderWindow(m_output_viewer->getRenderWindow());
@@ -47,7 +57,7 @@ void CViewerContainer::changeOutputText(const QString &text)
 	m_ui->text_output->setText(text);
 }
 
-void CViewerContainer::changeViewerPointCloud(const int &viewer_id, const pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud)
+void CViewerContainer::updateViewer(const int &viewer_id, const pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, const std::string &text)
 {
 	switch(viewer_id)
 	{
@@ -56,6 +66,7 @@ void CViewerContainer::changeViewerPointCloud(const int &viewer_id, const pcl::P
 			m_input1_viewer->updatePointCloud(cloud, "cloud");
 			m_input1_viewer->addCoordinateSystem(0.3);
 			m_input1_viewer->resetCamera();
+			m_input1_viewer->updateText(text, 10, 10, 1, 1, 1, "text");
 			m_ui->input1_viz->update();
 		}
 		break;
@@ -65,6 +76,7 @@ void CViewerContainer::changeViewerPointCloud(const int &viewer_id, const pcl::P
 			m_input2_viewer->updatePointCloud(cloud, "cloud");
 			m_input2_viewer->addCoordinateSystem(0.3);
 			m_input2_viewer->resetCamera();
+			m_input2_viewer->updateText(text, 10, 10, 1, 1, 1, "text");
 			m_ui->input2_viz->update();
 		}
 		break;
@@ -74,6 +86,7 @@ void CViewerContainer::changeViewerPointCloud(const int &viewer_id, const pcl::P
 			m_output_viewer->updatePointCloud(cloud, "cloud");
 			m_output_viewer->addCoordinateSystem(0.3);
 			m_output_viewer->resetCamera();
+			m_output_viewer->updateText(text, 10, 10, 1, 1, 1, "text");
 			m_ui->result_viz->update();
 		}
 		break;

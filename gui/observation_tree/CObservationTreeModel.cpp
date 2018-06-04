@@ -171,3 +171,8 @@ Qt::ItemFlags CObservationTreeModel::flags(const QModelIndex &index) const
 
 	return QAbstractItemModel::flags(index);
 }
+
+CObservationTreeItem *CObservationTreeModel::getRootItem() const
+{
+	return this->m_rootitem;
+}

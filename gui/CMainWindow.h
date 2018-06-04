@@ -1,6 +1,8 @@
 #pragma once
 
 #include "observation_tree/CObservationTreeModel.h"
+#include "config/CCalibConfig.h"
+#include "../core/calib_solvers/CPlaneMatching.h"
 
 #include <QMainWindow>
 #include <QSettings>
@@ -27,8 +29,8 @@ private slots:
 	void sensorsIndexChanged(int index);
 	void algosIndexChanged(int index);
 	void loadRawlog();
-	void startCalib();
-	void continueCalib();
+	void runCalib();
+	void proceedCalib();
 	void itemClicked(const QModelIndex &);
 
 private:
@@ -39,4 +41,7 @@ private:
 	QString m_recent_file;
 
 	CObservationTreeModel *m_model;
+	CCalibConfig *m_calib_config;
+
+	CPlaneMatching *m_planeMatching;
 };

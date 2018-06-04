@@ -1,5 +1,4 @@
-#ifndef CCALIBCONFIG_H
-#define CCALIBCONFIG_H
+#pragma once
 
 #include <QWidget>
 
@@ -18,5 +17,3 @@ public:
 private:
 	Ui::CCalibConfig *ui;
 };
-
-#endif // CCALIBCONFIG_H

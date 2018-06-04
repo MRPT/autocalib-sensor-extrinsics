@@ -7,7 +7,7 @@ IF(NOT CMAKE_BUILD_TYPE)
 ENDIF()
 
 # Set the maximum level of warnings:
-SET( EXTRA_WARNINGS OFF CACHE BOOL "Enable extra warnings apart from -Wall")
+SET(EXTRA_WARNINGS OFF CACHE BOOL "Enable extra warnings apart from -Wall")
 MARK_AS_ADVANCED(EXTRA_WARNINGS)
 
 # GNU GCC options ================================
@@ -79,7 +79,7 @@ FIND_PACKAGE(Qt5Widgets)
 
 # Set the path to this project' sources
 ADD_DEFINITIONS(-DPROJECT_SOURCE_PATH="${PROJECT_SOURCE_DIR}")
-ADD_SUBDIRECTORY(calib_core)
+ADD_SUBDIRECTORY(core)
 ADD_SUBDIRECTORY(gui)
 
 #SET( BUILD_EXAMPLES ON CACHE BOOL "Build examples programs to show functions usage")

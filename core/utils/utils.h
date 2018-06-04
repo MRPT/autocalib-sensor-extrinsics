@@ -14,7 +14,7 @@
 /** \defgroup calib_core
 
 This module encapsulates an easy-to-use GUI application for the extrinsic calibration of different types of sensors.
-It includes several data classes to represent spherical RGBD images, which can be loaded/saved to disk or visualized in 2D and 3D.
+It includes several data classes for the calibration algorithms.
 The app estimates the relative poses of a set of sensors, including 2D and 3D LiDARs, RGB-D cameras, RGB cameras, and any combination between them.
 Automatic and target-less calibration algorithms based on line matching, plane matching, and trajectory matching are implemented.
 The user will be able to directly visualize the calibration results and compare different algorithms.
