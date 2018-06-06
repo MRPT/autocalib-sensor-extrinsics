@@ -1,5 +1,7 @@
 #pragma once
 
+//#include <config/CPlaneConfig.h>
+
 #include <QWidget>
 
 #include <pcl/point_cloud.h>
@@ -22,6 +24,8 @@ public:
 
 	void changeOutputText(const QString &);
 	void updateViewer(const int &viewer_id, const pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, const std::string &text);
+	void updateCalibConfig(const int &calib_algo_id);
+	//CPlaneMatchingParams getCalibConfigParams();
 
 private:
 	boost::shared_ptr<pcl::visualization::PCLVisualizer> m_input1_viewer;

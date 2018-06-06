@@ -1,8 +1,5 @@
-#include "CViewerContainer.h"
-#include "ui_CViewerContainer.h"
-
-#include <boost/bind.hpp>
-#include <boost/signals2.hpp>
+#include <viewer/CViewerContainer.h>
+#include <ui_CViewerContainer.h>
 
 CViewerContainer::CViewerContainer(QWidget *parent) :
 	QWidget(parent),
@@ -11,7 +8,7 @@ CViewerContainer::CViewerContainer(QWidget *parent) :
 	m_ui->setupUi(this);
 
 	m_viewer_cloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
-	m_viewer_text.reset(new std::string);
+	m_viewer_text.reset(new std::string("No input"));
 
 	m_input1_viewer.reset(new pcl::visualization::PCLVisualizer("input1_viewer", false));
 	m_input1_viewer->setBackgroundColor(0.3,0.3,0.3);
@@ -92,3 +89,24 @@ void CViewerContainer::updateViewer(const int &viewer_id, const pcl::PointCloud<
 		break;
 	}
 }
+
+//void CViewerContainer::updateCalibConfig(const int &calib_algo_id)
+//{
+//	if(calib_algo_id == 0)
+//	{
+//		m_ui->config_label->setText(QString("Configuration"));
+//		m_ui->config_widget->updateWidget(new CCalibConfig());
+//	}
+
+//	else if(calib_algo_id == 1)
+//	{
+//		m_ui->config_label->setText(QString("Plane-Matching Configuration"));
+//		//CPlaneConfig *config = new CPlaneConfig();
+//	//	m_ui->config_widget->updateWidget(config);
+//	}
+//}
+
+//CPlaneMatchingParams CViewerContainer::getCalibConfigParams()
+//{
+//	return m_ui->config_widget->getParams();
+//}

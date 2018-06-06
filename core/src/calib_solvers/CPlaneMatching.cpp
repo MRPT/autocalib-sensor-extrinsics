@@ -1,31 +1,30 @@
-#include "CPlaneMatching.h"
+#include <calib_solvers/CPlaneMatching.h>
 
-#include<mrpt/obs/CObservation3DRangeScan.h>
-#include<mrpt/math/types_math.h>
+#include <mrpt/obs/CObservation3DRangeScan.h>
+#include <mrpt/math/types_math.h>
 #include <mrpt/maps/PCL_adapters.h>
 
-#include<pcl/segmentation/organized_multi_plane_segmentation.h>
-#include<pcl/ModelCoefficients.h>
-#include<pcl/features/normal_3d.h>
-#include<pcl/features/integral_image_normal.h>
-#include<pcl/common/time.h>
+#include <pcl/segmentation/organized_multi_plane_segmentation.h>
+#include <pcl/ModelCoefficients.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/features/integral_image_normal.h>
+#include <pcl/common/time.h>
 
 using namespace mrpt::obs;
 using namespace mrpt::maps;
 
-CPlaneMatching::CPlaneMatching(double angle_threshold, double dist_threshold, double min_inliers_frac)
+CPlaneMatching::CPlaneMatching(CObservationTreeModel *model/*, Ui::CMainWindow *main_ui*/, CPlaneMatchingParams params)
 {
-	m_angle_threshold = angle_threshold;
-	m_dist_threshold = dist_threshold;
-	m_min_inliers_frac = min_inliers_frac;
+	m_model = model;
+	//m_main_ui = main_ui;
+	m_params = params;
 }
 
 CPlaneMatching::~CPlaneMatching()
 {
-
 }
 
-void CPlaneMatching::run(CObservationTreeModel *model, Ui::CMainWindow *main_ui)
+void CPlaneMatching::run()
 {
 	CObservationTreeItem *root_item, *tree_item;
 	CObservation3DRangeScan::Ptr obs_item;
@@ -34,19 +33,20 @@ void CPlaneMatching::run(CObservationTreeModel *model, Ui::CMainWindow *main_ui)
 	T3DPointsProjectionParams projection_params;
 	projection_params.MAKE_DENSE = true;
 
-	m_model = model;
-	root_item = model->getRootItem();
+	root_item = m_model->getRootItem();
 
-	for(int i = 0; i < model->rowCount(); i++)
+	for(int i = 0; i < m_model->rowCount(); i++)
 	{
 		tree_item = root_item->child(i);
 		for(int j = 0; j < tree_item->childCount(); j++)
 		{
 			stream << "**Extracting planes from #" << i << " set, #" << j << " observation**\n\n";
-			main_ui->viewer_container->changeOutputText(QString::fromStdString(stream.str()));
+			//m_main_ui->viewer_container->changeOutputText(QString::fromStdString(stream.str()));
 
 			obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(tree_item->child(j)->getObservation());
+			obs_item->load();
 			obs_item->project3DPointsFromDepthImageInto(*cloud, projection_params);
+			obs_item->unload();
 
 			detectPlanes(cloud, stream);
 		}
@@ -55,7 +55,7 @@ void CPlaneMatching::run(CObservationTreeModel *model, Ui::CMainWindow *main_ui)
 
 void CPlaneMatching::detectPlanes(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, std::stringstream &stream)
 {
-	unsigned min_inliers = m_min_inliers_frac * cloud->size();
+	unsigned min_inliers = m_params.min_inliers_frac * cloud->size();
 
 	pcl::IntegralImageNormalEstimation<pcl::PointXYZ, pcl::Normal> normal_estimation;
 	normal_estimation.setNormalEstimationMethod(normal_estimation.COVARIANCE_MATRIX);
@@ -65,8 +65,8 @@ void CPlaneMatching::detectPlanes(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, st
 
 	pcl::OrganizedMultiPlaneSegmentation<pcl::PointXYZ, pcl::Normal, pcl::Label> multi_plane_segmentation;
 	multi_plane_segmentation.setMinInliers(min_inliers);
-	multi_plane_segmentation.setAngularThreshold(m_angle_threshold);
-	multi_plane_segmentation.setDistanceThreshold(m_dist_threshold);
+	multi_plane_segmentation.setAngularThreshold(m_params.angle_threshold);
+	multi_plane_segmentation.setDistanceThreshold(m_params.dist_threshold);
 
 	pcl::PointCloud<pcl::Normal>::Ptr normal_cloud(new pcl::PointCloud<pcl::Normal>);
 	normal_estimation.setInputCloud(cloud);

@@ -1,4 +1,4 @@
-#include "CObservationTreeItem.h"
+#include <observation_tree/CObservationTreeItem.h>
 
 #include <QString>
 

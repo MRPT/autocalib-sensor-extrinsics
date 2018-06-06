@@ -1,4 +1,4 @@
-#include "gui/CMainWindow.h"
+#include <CMainWindow.h>
 #include <QApplication>
 #include <QWidget>
 

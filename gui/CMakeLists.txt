@@ -1,23 +1,23 @@
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 SET(SOURCES
-	../main.cpp
+	main.cpp
 	CMainWindow.cpp
 	observation_tree/CObservationTreeModel.cpp
 	observation_tree/CObservationTreeItem.cpp
 	viewer/CViewerContainer.cpp
-	config/CCalibConfig.cpp)
+	config/CPlaneConfig.cpp)
 
 SET(FILES_TO_MOC
 	CMainWindow.h
 	observation_tree/CObservationTreeModel.h
 	viewer/CViewerContainer.h
-	config/CCalibConfig.h)
+	config/CPlaneConfig.h)
 
 SET(FILES_TO_UIC
 	CMainWindow.ui
 	viewer/CViewerContainer.ui
-	config/CCalibConfig.ui)
+	config/CPlaneConfig.ui)
 
 #SET(FILES_TO_RCC
 #	resources/)
@@ -28,4 +28,4 @@ QT5_WRAP_UI(UIC_CPPS ${FILES_TO_UIC})
 
 ADD_EXECUTABLE(autocalib_sensor_extrinsics ${SOURCES} ${MOC_CPPS} ${UIC_CPPS} ${RCC_CPPS})
 
-TARGET_LINK_LIBRARIES(autocalib_sensor_extrinsics Qt5::Widgets ${MRPT_LIBRARIES} ${PCL_LIBRARIES})
+TARGET_LINK_LIBRARIES(autocalib_sensor_extrinsics core Qt5::Widgets ${MRPT_LIBRARIES} ${PCL_LIBRARIES})

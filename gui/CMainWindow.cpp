@@ -1,13 +1,13 @@
-#include "CMainWindow.h"
-#include "ui_CMainWindow.h"
-#include "observation_tree/CObservationTreeModel.h"
-#include "../core/calib_solvers/CPlaneMatching.cpp"
+#include <CMainWindow.h>
+#include <ui_CMainWindow.h>
+#include <observation_tree/CObservationTreeModel.h>
+#include <config/CPlaneConfig.h>
 
 #include <mrpt/maps/CSimplePointsMap.h>
 #include <pcl/search/impl/search.hpp>
 
 #include <QFileDialog>
-#include <QDebug>
+#include <QSignalMapper>
 
 CMainWindow::CMainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -18,18 +18,36 @@ CMainWindow::CMainWindow(QWidget *parent) :
 
 	connect(m_ui->sensors_cbox, SIGNAL(currentIndexChanged(int)), this, SLOT(sensorsIndexChanged(int)));
 	connect(m_ui->algo_cbox, SIGNAL(currentIndexChanged(int)), this, SLOT(algosIndexChanged(int)));
-	connect(m_ui->load_rlog_button, SIGNAL(clicked(bool)), this, SLOT(loadRawlog()));
-	connect(m_ui->run_calib_button, SIGNAL(clicked(bool)), this, SLOT(runCalib()));
-	connect(m_ui->proceed_calib_button, SIGNAL(clicked(bool)), this, SLOT(proceedCalib()));
+	connect(m_ui->open_rlog_button, SIGNAL(clicked(bool)), this, SLOT(openRawlog()));
 	connect(m_ui->observations_treeview, SIGNAL(clicked(QModelIndex)), this, SLOT(itemClicked(QModelIndex)));
 
+	QSignalMapper *signal_mapper = new QSignalMapper(this);
+	signal_mapper->setMapping(m_ui->irx_sbox, 0);
+	signal_mapper->setMapping(m_ui->iry_sbox, 1);
+	signal_mapper->setMapping(m_ui->irz_sbox, 2);
+	signal_mapper->setMapping(m_ui->itx_sbox, 3);
+	signal_mapper->setMapping(m_ui->ity_sbox, 4);
+	signal_mapper->setMapping(m_ui->itz_sbox, 5);
+
+	connect(m_ui->irx_sbox, SIGNAL(valueChanged(double)), signal_mapper, SLOT(map()));
+	connect(m_ui->iry_sbox, SIGNAL(valueChanged(double)), signal_mapper, SLOT(map()));
+	connect(m_ui->irz_sbox, SIGNAL(valueChanged(double)), signal_mapper, SLOT(map()));
+	connect(m_ui->itx_sbox, SIGNAL(valueChanged(double)), signal_mapper, SLOT(map()));
+	connect(m_ui->ity_sbox, SIGNAL(valueChanged(double)), signal_mapper, SLOT(map()));
+	connect(m_ui->itz_sbox, SIGNAL(valueChanged(double)), signal_mapper, SLOT(map()));
+
+	connect(signal_mapper, SIGNAL(mapped(int)), this, SLOT(initCalibChanged(int)));
+
 	#ifndef NDEBUG
-		m_ui->load_rlog_button->setDisabled(false);
+		m_ui->open_rlog_button->setDisabled(false);
+		m_ui->algo_cbox->setDisabled(false);
 	#endif
 
 	setWindowTitle("Automatic Calibration of Sensor Extrinsics");
 	//m_ui->viewer_container->changeOutputText(QString("Welcome to autocalib-sensor-extrinsics!"));
 	m_recent_file = m_settings.value("recent").toString();
+
+	m_init_calib.fill(0);
 }
 
 CMainWindow::~CMainWindow()
@@ -40,11 +58,7 @@ CMainWindow::~CMainWindow()
 
 void CMainWindow::sensorsIndexChanged(int index)
 {
-   m_ui->algo_cbox->setDisabled(false);
-}
-
-void CMainWindow::algosIndexChanged(int index)
-{
+	m_ui->algo_cbox->setDisabled(false);
 	m_ui->irx_sbox->setDisabled(false);
 	m_ui->iry_sbox->setDisabled(false);
 	m_ui->irz_sbox->setDisabled(false);
@@ -52,10 +66,30 @@ void CMainWindow::algosIndexChanged(int index)
 	m_ui->ity_sbox->setDisabled(false);
 	m_ui->itz_sbox->setDisabled(false);
 	m_ui->med_sbox->setDisabled(false);
-	m_ui->load_rlog_button->setDisabled(false);
+	m_ui->open_rlog_button->setDisabled(false);
 }
 
-void CMainWindow::loadRawlog()
+void CMainWindow::algosIndexChanged(int index)
+{
+	switch(index)
+	{
+		case 0:
+		{
+			if(m_config_widget)
+				m_config_widget.reset();
+		}
+		break;
+
+		case 1:
+		{
+			m_config_widget = std::make_shared<CPlaneConfig>(new CPlaneConfig());
+			qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(1, m_config_widget.get());
+		}
+		break;
+	}
+}
+
+void CMainWindow::openRawlog()
 {
 	QString path;
 
@@ -80,8 +114,6 @@ void CMainWindow::loadRawlog()
 
 	m_recent_file = file_name;
 
-	m_ui->run_calib_button->setDisabled(false);
-	m_ui->proceed_calib_button->setDisabled(false);
 	m_ui->status_bar->showMessage("Rawlog loaded!");
 }
 
@@ -138,14 +170,12 @@ void CMainWindow::itemClicked(const QModelIndex &index)
 	}
 }
 
-
-void CMainWindow::runCalib()
+void CMainWindow::initCalibChanged(int index)
 {
-	m_planeMatching = new CPlaneMatching();
-	m_planeMatching->run(m_model, m_ui);
+	std::cout << index;
 }
 
-void CMainWindow::proceedCalib()
+std::array<double,6> CMainWindow::getInitCalib()
 {
-
+	return m_init_calib;
 }

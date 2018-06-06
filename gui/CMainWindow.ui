@@ -13,6 +13,9 @@
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="accessibleName">
+   <string>mainwindow</string>
+  </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout_2">
     <item>
@@ -27,24 +30,6 @@
     </item>
    </layout>
   </widget>
-  <widget class="QMenuBar" name="menuBar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>1023</width>
-     <height>22</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QToolBar" name="mainToolBar">
-   <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
-  </widget>
   <widget class="QStatusBar" name="status_bar"/>
   <widget class="QDockWidget" name="setup_dockwidget">
    <property name="sizePolicy">
@@ -56,13 +41,13 @@
    <property name="minimumSize">
     <size>
      <width>382</width>
-     <height>257</height>
+     <height>193</height>
     </size>
    </property>
    <property name="maximumSize">
     <size>
      <width>382</width>
-     <height>257</height>
+     <height>193</height>
     </size>
    </property>
    <property name="features">
@@ -101,30 +86,6 @@
          <item>
           <property name="text">
            <string>RGB-D - RGB-D</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="algo_label">
-         <property name="text">
-          <string>Calibration Algorithm:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QComboBox" name="algo_cbox">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <item>
-          <property name="text">
-           <string/>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Plane matching</string>
           </property>
          </item>
         </widget>
@@ -297,46 +258,12 @@
       </layout>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_5">
-       <item>
-        <widget class="QPushButton" name="load_rlog_button">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="text">
-          <string>Load Rawlog</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="run_calib_button">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="text">
-          <string>Run Calibration</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="proceed_calib_button">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="text">
-          <string>Proceed</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <widget class="QPushButton" name="save_calib_button">
+      <widget class="QPushButton" name="open_rlog_button">
        <property name="enabled">
         <bool>false</bool>
        </property>
        <property name="text">
-        <string>Save Calibration</string>
+        <string>Open Rawlog</string>
        </property>
        <property name="autoDefault">
         <bool>false</bool>
@@ -373,13 +300,89 @@
     </layout>
    </widget>
   </widget>
+  <widget class="QDockWidget" name="config_dockwidget">
+   <property name="minimumSize">
+    <size>
+     <width>337</width>
+     <height>257</height>
+    </size>
+   </property>
+   <property name="accessibleName">
+    <string>config_dock</string>
+   </property>
+   <property name="features">
+    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+   </property>
+   <property name="windowTitle">
+    <string>Algorithm Configuration</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="config_dockwidget_contents">
+    <property name="accessibleName">
+     <string>config_content</string>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout_3">
+     <item>
+      <layout class="QHBoxLayout" name="algo_group">
+       <item>
+        <widget class="QLabel" name="algo_label">
+         <property name="text">
+          <string>Calibration Algorithm:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="algo_cbox">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <item>
+          <property name="text">
+           <string/>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Plane matching</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QToolBar" name="tool_bar">
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+  </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
    <class>CViewerContainer</class>
    <extends>QWidget</extends>
-   <header>viewer/CViewerContainer.h</header>
+   <header location="global">viewer/CViewerContainer.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

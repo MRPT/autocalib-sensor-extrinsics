@@ -1,4 +1,4 @@
-#include "CObservationTreeModel.h"
+#include <observation_tree/CObservationTreeModel.h>
 
 #include <QDebug>
 

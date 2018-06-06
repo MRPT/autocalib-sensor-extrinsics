@@ -1,16 +1,11 @@
 #pragma once
 
-#include "observation_tree/CObservationTreeModel.h"
-#include "config/CCalibConfig.h"
-#include "../core/calib_solvers/CPlaneMatching.h"
+#include <observation_tree/CObservationTreeModel.h>
 
 #include <QMainWindow>
 #include <QSettings>
 
-class QGroupBox;
-class QComboBox;
-class QWidget;
-class QPushButton;
+class CPlaneMatching;
 
 namespace Ui {
 class CMainWindow;
@@ -22,16 +17,15 @@ class CMainWindow : public QMainWindow
 
 public:
 	explicit CMainWindow(QWidget *parent = 0);
-	void loadRawlog(QString);
 	~CMainWindow();
+	std::array<double, 6> getInitCalib();
 
 private slots:
 	void sensorsIndexChanged(int index);
 	void algosIndexChanged(int index);
-	void loadRawlog();
-	void runCalib();
-	void proceedCalib();
+	void openRawlog();
 	void itemClicked(const QModelIndex &);
+	void initCalibChanged(int index);
 
 private:
 	Ui::CMainWindow *m_ui;
@@ -41,7 +35,7 @@ private:
 	QString m_recent_file;
 
 	CObservationTreeModel *m_model;
-	CCalibConfig *m_calib_config;
 
-	CPlaneMatching *m_planeMatching;
+	std::shared_ptr<QWidget> m_config_widget;
+	std::array<double,6> m_init_calib;
 };
