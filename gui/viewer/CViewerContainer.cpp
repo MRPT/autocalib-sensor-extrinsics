@@ -90,6 +90,11 @@ void CViewerContainer::updateViewer(const int &viewer_id, const pcl::PointCloud<
 	}
 }
 
+Ui::CViewerContainer *CViewerContainer::getViewerPointer()
+{
+	return m_ui;
+}
+
 //void CViewerContainer::updateCalibConfig(const int &calib_algo_id)
 //{
 //	if(calib_algo_id == 0)

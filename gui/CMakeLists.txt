@@ -6,18 +6,18 @@ SET(SOURCES
 	observation_tree/CObservationTreeModel.cpp
 	observation_tree/CObservationTreeItem.cpp
 	viewer/CViewerContainer.cpp
-	config/CPlaneConfig.cpp)
+	config/CPlaneMatchingConfig.cpp)
 
 SET(FILES_TO_MOC
 	CMainWindow.h
 	observation_tree/CObservationTreeModel.h
 	viewer/CViewerContainer.h
-	config/CPlaneConfig.h)
+	config/CPlaneMatchingConfig.h)
 
 SET(FILES_TO_UIC
 	CMainWindow.ui
 	viewer/CViewerContainer.ui
-	config/CPlaneConfig.ui)
+	config/CPlaneMatchingConfig.ui)
 
 #SET(FILES_TO_RCC
 #	resources/)

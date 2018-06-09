@@ -18,14 +18,13 @@ class CMainWindow : public QMainWindow
 public:
 	explicit CMainWindow(QWidget *parent = 0);
 	~CMainWindow();
-	std::array<double, 6> getInitCalib();
 
 private slots:
 	void sensorsIndexChanged(int index);
 	void algosIndexChanged(int index);
 	void openRawlog();
 	void itemClicked(const QModelIndex &);
-	void initCalibChanged(int index);
+	void initCalibChanged(double value);
 
 private:
 	Ui::CMainWindow *m_ui;

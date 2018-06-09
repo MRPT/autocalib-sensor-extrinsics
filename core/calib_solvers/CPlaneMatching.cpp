@@ -13,10 +13,11 @@
 using namespace mrpt::obs;
 using namespace mrpt::maps;
 
-CPlaneMatching::CPlaneMatching(CObservationTreeModel *model/*, Ui::CMainWindow *main_ui*/, CPlaneMatchingParams params)
+CPlaneMatching::CPlaneMatching(CObservationTreeModel *model, Ui::CViewerContainer *viewer_ui, std::array<double, 6> init_calib, CPlaneMatchingParams params)
 {
 	m_model = model;
-	//m_main_ui = main_ui;
+	m_viewer_ui = viewer_ui;
+	m_init_calib = init_calib;
 	m_params = params;
 }
 
@@ -31,7 +32,7 @@ void CPlaneMatching::run()
 	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
 	std::stringstream stream;
 	T3DPointsProjectionParams projection_params;
-	projection_params.MAKE_DENSE = true;
+	projection_params.MAKE_DENSE = false;
 
 	root_item = m_model->getRootItem();
 
@@ -41,7 +42,7 @@ void CPlaneMatching::run()
 		for(int j = 0; j < tree_item->childCount(); j++)
 		{
 			stream << "**Extracting planes from #" << i << " set, #" << j << " observation**\n\n";
-			//m_main_ui->viewer_container->changeOutputText(QString::fromStdString(stream.str()));
+			m_viewer_ui->text_output->setText(QString::fromStdString(stream.str()));
 
 			obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(tree_item->child(j)->getObservation());
 			obs_item->load();

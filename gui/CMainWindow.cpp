@@ -1,13 +1,14 @@
 #include <CMainWindow.h>
 #include <ui_CMainWindow.h>
 #include <observation_tree/CObservationTreeModel.h>
-#include <config/CPlaneConfig.h>
+#include <config/CPlaneMatchingConfig.h>
 
 #include <mrpt/maps/CSimplePointsMap.h>
 #include <pcl/search/impl/search.hpp>
 
 #include <QFileDialog>
-#include <QSignalMapper>
+#include <QSpinBox>
+#include <QDebug>
 
 CMainWindow::CMainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -21,22 +22,12 @@ CMainWindow::CMainWindow(QWidget *parent) :
 	connect(m_ui->open_rlog_button, SIGNAL(clicked(bool)), this, SLOT(openRawlog()));
 	connect(m_ui->observations_treeview, SIGNAL(clicked(QModelIndex)), this, SLOT(itemClicked(QModelIndex)));
 
-	QSignalMapper *signal_mapper = new QSignalMapper(this);
-	signal_mapper->setMapping(m_ui->irx_sbox, 0);
-	signal_mapper->setMapping(m_ui->iry_sbox, 1);
-	signal_mapper->setMapping(m_ui->irz_sbox, 2);
-	signal_mapper->setMapping(m_ui->itx_sbox, 3);
-	signal_mapper->setMapping(m_ui->ity_sbox, 4);
-	signal_mapper->setMapping(m_ui->itz_sbox, 5);
-
-	connect(m_ui->irx_sbox, SIGNAL(valueChanged(double)), signal_mapper, SLOT(map()));
-	connect(m_ui->iry_sbox, SIGNAL(valueChanged(double)), signal_mapper, SLOT(map()));
-	connect(m_ui->irz_sbox, SIGNAL(valueChanged(double)), signal_mapper, SLOT(map()));
-	connect(m_ui->itx_sbox, SIGNAL(valueChanged(double)), signal_mapper, SLOT(map()));
-	connect(m_ui->ity_sbox, SIGNAL(valueChanged(double)), signal_mapper, SLOT(map()));
-	connect(m_ui->itz_sbox, SIGNAL(valueChanged(double)), signal_mapper, SLOT(map()));
-
-	connect(signal_mapper, SIGNAL(mapped(int)), this, SLOT(initCalibChanged(int)));
+	connect(m_ui->irx_sbox, SIGNAL(valueChanged(double)), this, SLOT(initCalibChanged(double)));
+	connect(m_ui->iry_sbox, SIGNAL(valueChanged(double)), this, SLOT(initCalibChanged(double)));
+	connect(m_ui->irz_sbox, SIGNAL(valueChanged(double)), this, SLOT(initCalibChanged(double)));
+	connect(m_ui->itx_sbox, SIGNAL(valueChanged(double)), this, SLOT(initCalibChanged(double)));
+	connect(m_ui->ity_sbox, SIGNAL(valueChanged(double)), this, SLOT(initCalibChanged(double)));
+	connect(m_ui->itz_sbox, SIGNAL(valueChanged(double)), this, SLOT(initCalibChanged(double)));
 
 	#ifndef NDEBUG
 		m_ui->open_rlog_button->setDisabled(false);
@@ -82,7 +73,7 @@ void CMainWindow::algosIndexChanged(int index)
 
 		case 1:
 		{
-			m_config_widget = std::make_shared<CPlaneConfig>(new CPlaneConfig());
+			m_config_widget = std::make_shared<CPlaneMatchingConfig>(m_model, &m_init_calib, m_ui->viewer_container->getViewerPointer(), nullptr);
 			qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(1, m_config_widget.get());
 		}
 		break;
@@ -170,12 +161,20 @@ void CMainWindow::itemClicked(const QModelIndex &index)
 	}
 }
 
-void CMainWindow::initCalibChanged(int index)
+void CMainWindow::initCalibChanged(double value)
 {
-	std::cout << index;
-}
+	QSpinBox *sbox = (QSpinBox*)sender();
 
-std::array<double,6> CMainWindow::getInitCalib()
-{
-	return m_init_calib;
+	if(sbox->accessibleName() == QString("irx"))
+		m_init_calib[0] = value;
+	else if(sbox->accessibleName() == QString("iry"))
+		m_init_calib[1] = value;
+	else if(sbox->accessibleName() == QString("irz"))
+		m_init_calib[2] = value;
+	else if(sbox->accessibleName() == QString("itx"))
+		m_init_calib[3] = value;
+	else if(sbox->accessibleName() == QString("ity"))
+		m_init_calib[4] = value;
+	else if(sbox->accessibleName() == QString("itz"))
+		m_init_calib[5] = value;
 }

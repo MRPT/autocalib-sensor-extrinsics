@@ -1,6 +1,6 @@
 #pragma once
 
-//#include <config/CPlaneConfig.h>
+//#include <config/CPlaneMatchingConfig.h>
 
 #include <QWidget>
 
@@ -25,6 +25,7 @@ public:
 	void changeOutputText(const QString &);
 	void updateViewer(const int &viewer_id, const pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, const std::string &text);
 	void updateCalibConfig(const int &calib_algo_id);
+	Ui::CViewerContainer *getViewerPointer();
 	//CPlaneMatchingParams getCalibConfigParams();
 
 private:

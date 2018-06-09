@@ -106,6 +106,9 @@
          <property name="enabled">
           <bool>false</bool>
          </property>
+         <property name="accessibleName">
+          <string>irx</string>
+         </property>
          <property name="minimum">
           <double>-359.990000000000009</double>
          </property>
@@ -128,6 +131,9 @@
         <widget class="QDoubleSpinBox" name="iry_sbox">
          <property name="enabled">
           <bool>false</bool>
+         </property>
+         <property name="accessibleName">
+          <string>iry</string>
          </property>
          <property name="minimum">
           <double>-359.990000000000009</double>
@@ -152,6 +158,9 @@
          <property name="enabled">
           <bool>false</bool>
          </property>
+         <property name="accessibleName">
+          <string>irz</string>
+         </property>
          <property name="minimum">
           <double>-359.990000000000009</double>
          </property>
@@ -174,6 +183,9 @@
         <widget class="QDoubleSpinBox" name="itx_sbox">
          <property name="enabled">
           <bool>false</bool>
+         </property>
+         <property name="accessibleName">
+          <string>itx</string>
          </property>
          <property name="minimum">
           <double>-359.990000000000009</double>
@@ -198,6 +210,9 @@
          <property name="enabled">
           <bool>false</bool>
          </property>
+         <property name="accessibleName">
+          <string>ity</string>
+         </property>
          <property name="minimum">
           <double>-359.990000000000009</double>
          </property>
@@ -220,6 +235,9 @@
         <widget class="QDoubleSpinBox" name="itz_sbox">
          <property name="enabled">
           <bool>false</bool>
+         </property>
+         <property name="accessibleName">
+          <string>itz</string>
          </property>
          <property name="minimum">
           <double>-359.990000000000009</double>
