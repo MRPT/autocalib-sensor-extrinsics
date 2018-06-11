@@ -49,9 +49,10 @@ CViewerContainer::~CViewerContainer()
 	delete m_ui;
 }
 
-void CViewerContainer::changeOutputText(const QString &text)
+void CViewerContainer::updateText(const std::string &text)
 {
-	m_ui->text_output->setText(text);
+	m_ui->text_output->moveCursor(QTextCursor::End);
+	m_ui->text_output->insertPlainText(QString::fromStdString(text) + QString("\n\n"));
 }
 
 void CViewerContainer::updateViewer(const int &viewer_id, const pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, const std::string &text)
@@ -90,28 +91,7 @@ void CViewerContainer::updateViewer(const int &viewer_id, const pcl::PointCloud<
 	}
 }
 
-Ui::CViewerContainer *CViewerContainer::getViewerPointer()
+std::function<void(const std::string&)> CViewerContainer::getUpdateTextFunctionPointer()
 {
-	return m_ui;
+	return std::bind(&CViewerContainer::updateText, this, std::placeholders::_1);
 }
-
-//void CViewerContainer::updateCalibConfig(const int &calib_algo_id)
-//{
-//	if(calib_algo_id == 0)
-//	{
-//		m_ui->config_label->setText(QString("Configuration"));
-//		m_ui->config_widget->updateWidget(new CCalibConfig());
-//	}
-
-//	else if(calib_algo_id == 1)
-//	{
-//		m_ui->config_label->setText(QString("Plane-Matching Configuration"));
-//		//CPlaneConfig *config = new CPlaneConfig();
-//	//	m_ui->config_widget->updateWidget(config);
-//	}
-//}
-
-//CPlaneMatchingParams CViewerContainer::getCalibConfigParams()
-//{
-//	return m_ui->config_widget->getParams();
-//}

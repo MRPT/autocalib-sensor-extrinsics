@@ -1,7 +1,7 @@
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 SET(SOURCES
-	main.cpp
+	../main.cpp
 	CMainWindow.cpp
 	observation_tree/CObservationTreeModel.cpp
 	observation_tree/CObservationTreeItem.cpp

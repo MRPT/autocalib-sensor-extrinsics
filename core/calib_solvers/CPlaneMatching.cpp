@@ -4,6 +4,7 @@
 #include <mrpt/math/types_math.h>
 #include <mrpt/maps/PCL_adapters.h>
 
+#include <pcl/search/impl/search.hpp>
 #include <pcl/segmentation/organized_multi_plane_segmentation.h>
 #include <pcl/ModelCoefficients.h>
 #include <pcl/features/normal_3d.h>
@@ -13,12 +14,12 @@
 using namespace mrpt::obs;
 using namespace mrpt::maps;
 
-CPlaneMatching::CPlaneMatching(CObservationTreeModel *model, Ui::CViewerContainer *viewer_ui, std::array<double, 6> init_calib, CPlaneMatchingParams params)
+CPlaneMatching::CPlaneMatching(CObservationTreeModel *model, std::function<void(const std::string &)> updateFunction, std::array<double, 6> init_calib, CPlaneMatchingParams params)
 {
 	m_model = model;
-	m_viewer_ui = viewer_ui;
 	m_init_calib = init_calib;
 	m_params = params;
+	sendTextUpdate = updateFunction;
 }
 
 CPlaneMatching::~CPlaneMatching()
@@ -27,31 +28,36 @@ CPlaneMatching::~CPlaneMatching()
 
 void CPlaneMatching::run()
 {
-	CObservationTreeItem *root_item, *tree_item;
-	CObservation3DRangeScan::Ptr obs_item;
-	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+	//CObservationTreeItem *root_item, *tree_item;
+	//CObservation3DRangeScan::Ptr obs_item;
+	//pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+	//std::stringstream stream;
+	//T3DPointsProjectionParams projection_params;
+	//projection_params.MAKE_DENSE = false;
+
+	//root_item = m_model->getRootItem();
+
+	//for(int i = 0; i < m_model->rowCount(); i++)
+	//{
+		//tree_item = root_item->child(i);
+		//for(int j = 0; j < tree_item->childCount(); j++)
+		//{
+			//stream << "**Extracting planes from #" << i << " set, #" << j << " observation**\n\n";
+			//sendTextUpdate(stream.str());
+
+			//obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(tree_item->child(j)->getObservation());
+			//obs_item->load();
+			//obs_item->project3DPointsFromDepthImageInto(*cloud, projection_params);
+			//obs_item->unload();
+
+			//detectPlanes(cloud, stream);
+		//}
+	//}
+	//
 	std::stringstream stream;
-	T3DPointsProjectionParams projection_params;
-	projection_params.MAKE_DENSE = false;
+	stream << "**Extracting planes from #0 set, #0 observation**\n\n";
+	sendTextUpdate(stream.str());
 
-	root_item = m_model->getRootItem();
-
-	for(int i = 0; i < m_model->rowCount(); i++)
-	{
-		tree_item = root_item->child(i);
-		for(int j = 0; j < tree_item->childCount(); j++)
-		{
-			stream << "**Extracting planes from #" << i << " set, #" << j << " observation**\n\n";
-			m_viewer_ui->text_output->setText(QString::fromStdString(stream.str()));
-
-			obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(tree_item->child(j)->getObservation());
-			obs_item->load();
-			obs_item->project3DPointsFromDepthImageInto(*cloud, projection_params);
-			obs_item->unload();
-
-			detectPlanes(cloud, stream);
-		}
-	}
 }
 
 void CPlaneMatching::detectPlanes(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, std::stringstream &stream)

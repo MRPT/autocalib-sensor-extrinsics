@@ -30,8 +30,8 @@ CMainWindow::CMainWindow(QWidget *parent) :
 	connect(m_ui->itz_sbox, SIGNAL(valueChanged(double)), this, SLOT(initCalibChanged(double)));
 
 	#ifndef NDEBUG
-		m_ui->open_rlog_button->setDisabled(false);
-		m_ui->algo_cbox->setDisabled(false);
+		//m_ui->open_rlog_button->setDisabled(false);
+		//m_ui->algo_cbox->setDisabled(false);
 	#endif
 
 	setWindowTitle("Automatic Calibration of Sensor Extrinsics");
@@ -49,7 +49,6 @@ CMainWindow::~CMainWindow()
 
 void CMainWindow::sensorsIndexChanged(int index)
 {
-	m_ui->algo_cbox->setDisabled(false);
 	m_ui->irx_sbox->setDisabled(false);
 	m_ui->iry_sbox->setDisabled(false);
 	m_ui->irz_sbox->setDisabled(false);
@@ -73,7 +72,7 @@ void CMainWindow::algosIndexChanged(int index)
 
 		case 1:
 		{
-			m_config_widget = std::make_shared<CPlaneMatchingConfig>(m_model, &m_init_calib, m_ui->viewer_container->getViewerPointer(), nullptr);
+			m_config_widget = std::make_shared<CPlaneMatchingConfig>(m_model, &m_init_calib, m_ui->viewer_container->getUpdateTextFunctionPointer(), nullptr);
 			qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(1, m_config_widget.get());
 		}
 		break;
@@ -106,6 +105,7 @@ void CMainWindow::openRawlog()
 	m_recent_file = file_name;
 
 	m_ui->status_bar->showMessage("Rawlog loaded!");
+	m_ui->algo_cbox->setDisabled(false);
 }
 
 void CMainWindow::itemClicked(const QModelIndex &index)
@@ -125,7 +125,7 @@ void CMainWindow::itemClicked(const QModelIndex &index)
 			obs_item = std::dynamic_pointer_cast<mrpt::obs::CObservation3DRangeScan>(m_model->observationData(index));
 
 			obs_item->getDescriptionAsText(stream);
-			m_ui->viewer_container->changeOutputText(QString::fromStdString(stream.str()));
+			m_ui->viewer_container->updateText(stream.str());
 
 			map = mrpt::make_aligned_shared<mrpt::maps::CSimplePointsMap>();
 			map->insertObservation(obs_item.get());
@@ -156,7 +156,7 @@ void CMainWindow::itemClicked(const QModelIndex &index)
 				m_ui->viewer_container->updateViewer(viewer_id, cloud, viewer_text);
 			}
 
-			m_ui->viewer_container->changeOutputText(QString::fromStdString(stream.str()));
+			m_ui->viewer_container->updateText(stream.str());
 		}
 	}
 }
