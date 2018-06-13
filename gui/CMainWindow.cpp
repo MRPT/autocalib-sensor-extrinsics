@@ -35,7 +35,8 @@ CMainWindow::CMainWindow(QWidget *parent) :
 	#endif
 
 	setWindowTitle("Automatic Calibration of Sensor Extrinsics");
-	//m_ui->viewer_container->changeOutputText(QString("Welcome to autocalib-sensor-extrinsics!"));
+	m_ui->viewer_container->updateText("Welcome to autocalib-sensor-extrinsics!");
+	m_ui->viewer_container->updateText("Choose your sensor combination to get started.");
 	m_recent_file = m_settings.value("recent").toString();
 
 	m_init_calib.fill(0);
@@ -57,6 +58,8 @@ void CMainWindow::sensorsIndexChanged(int index)
 	m_ui->itz_sbox->setDisabled(false);
 	m_ui->med_sbox->setDisabled(false);
 	m_ui->open_rlog_button->setDisabled(false);
+
+	m_ui->viewer_container->updateText("Nice! Now set your initial (rough) calibration values and load your rawlog file!");
 }
 
 void CMainWindow::algosIndexChanged(int index)
@@ -94,6 +97,8 @@ void CMainWindow::openRawlog()
 	if(file_name.isEmpty())
 		return;
 
+
+	m_ui->viewer_container->updateText("Loading Rawlog..");
 	m_ui->status_bar->showMessage("Loading Rawlog...");
 
 	if(m_model)
@@ -105,6 +110,9 @@ void CMainWindow::openRawlog()
 	m_recent_file = file_name;
 
 	m_ui->status_bar->showMessage("Rawlog loaded!");
+	m_ui->viewer_container->updateText("Rawlog loaded! Click on any observation item on the left to visualize it.");
+
+	m_ui->viewer_container->updateText("Now choose the calibration algorithm!");
 	m_ui->algo_cbox->setDisabled(false);
 }
 

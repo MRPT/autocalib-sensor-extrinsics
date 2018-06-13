@@ -28,21 +28,22 @@ CPlaneMatching::~CPlaneMatching()
 
 void CPlaneMatching::run()
 {
-	//CObservationTreeItem *root_item, *tree_item;
-	//CObservation3DRangeScan::Ptr obs_item;
-	//pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
-	//std::stringstream stream;
-	//T3DPointsProjectionParams projection_params;
-	//projection_params.MAKE_DENSE = false;
+	CObservationTreeItem *root_item, *tree_item;
+	CObservation3DRangeScan::Ptr obs_item;
+	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+	std::stringstream stream;
+	T3DPointsProjectionParams projection_params;
+	projection_params.MAKE_DENSE = false;
+	//projection_params.MAKE_ORGANIZED = true;
 
-	//root_item = m_model->getRootItem();
+	root_item = m_model->getRootItem();
 
 	//for(int i = 0; i < m_model->rowCount(); i++)
 	//{
 		//tree_item = root_item->child(i);
 		//for(int j = 0; j < tree_item->childCount(); j++)
 		//{
-			//stream << "**Extracting planes from #" << i << " set, #" << j << " observation**\n\n";
+			//stream << "Extracting planes from #" << j << " observation in obesrvation set #" << i << "..";
 			//sendTextUpdate(stream.str());
 
 			//obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(tree_item->child(j)->getObservation());
@@ -53,14 +54,22 @@ void CPlaneMatching::run()
 			//detectPlanes(cloud, stream);
 		//}
 	//}
-	//
-	std::stringstream stream;
-	stream << "**Extracting planes from #0 set, #0 observation**\n\n";
+	
+	// Testing with just the first observation
+	
+	tree_item = root_item->child(0);
+	stream << "Extracting planes from #0 observation in observation set #0..";
 	sendTextUpdate(stream.str());
 
+	obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(tree_item->child(0)->getObservation());
+	obs_item->load();
+	obs_item->project3DPointsFromDepthImageInto(*cloud, projection_params);
+	obs_item->unload();
+
+	//detectPlanes(cloud);
 }
 
-void CPlaneMatching::detectPlanes(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, std::stringstream &stream)
+void CPlaneMatching::detectPlanes(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud)
 {
 	unsigned min_inliers = m_params.min_inliers_frac * cloud->size();
 
@@ -93,7 +102,9 @@ void CPlaneMatching::detectPlanes(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, st
 	multi_plane_segmentation.segmentAndRefine(regions, model_coefficients, inlier_indices, labels, label_indices, boundary_indices);
 	double plane_extract_end = pcl::getTime();
 
+	std::stringstream stream;
 	stream << regions.size() << " plane(s) detected\n" << "Time elapsed: " << double(plane_extract_end - plane_extract_start) << std::endl;
+	sendTextUpdate(stream.str());
 }
 
 void CPlaneMatching::proceed()

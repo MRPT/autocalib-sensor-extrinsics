@@ -1,6 +1,8 @@
 #pragma once
 
+#ifndef Q_MOC_RUN
 #include <observation_tree/CObservationTreeItem.h>
+#endif
 
 #include <QAbstractItemModel>
 #include <QModelIndex>

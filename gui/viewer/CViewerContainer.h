@@ -1,7 +1,5 @@
 #pragma once
 
-//#include <config/CPlaneMatchingConfig.h>
-
 #include <QWidget>
 
 #include <pcl/point_cloud.h>

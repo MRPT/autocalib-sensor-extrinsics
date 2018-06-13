@@ -1,6 +1,8 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.5.1)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.8.0)
 
 PROJECT(autocalib-sensor-extrinsics)
+
+SET(CMAKE_CXX_STANDARD 17)
 
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -11,14 +13,6 @@ ENDIF()
 # Set the maximum level of warnings:
 SET(EXTRA_WARNINGS OFF CACHE BOOL "Enable extra warnings apart from -Wall")
 MARK_AS_ADVANCED(EXTRA_WARNINGS)
-
-# GNU GCC options ================================
-IF(CMAKE_COMPILER_IS_GNUCXX)
-	# Enable C++17 features in GCC 4.7+
-	IF (NOT CMAKE_GCC_VERSION LESS 47)
-	        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y") #-std=c++11 | -std=c++1y | -std=c++14 | -std=c++17
-	ENDIF (NOT CMAKE_GCC_VERSION LESS 47)
-ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
 # Shared options between GCC and CLANG:
 # ======================================
@@ -54,7 +48,6 @@ IF (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR CMAKE_COMPILER_IS_GNUCXX)
 
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_CPP_FLAGS}")
 ENDIF ()
-
 
 # Project dependencies
 # ======================================

@@ -30,16 +30,14 @@ void CPlaneMatchingConfig::runCalib()
 	params.min_inliers_frac = m_ui->minimum_threshold_sbox->value();
 
 	CPlaneMatching *plane_matching = new CPlaneMatching(m_model, sendTextUpdate, *m_init_calib, params);
-	sendTextUpdate("Running plane-matching algorithm");
+	sendTextUpdate("Running plane-matching algorithm\n++++++++++++++++++++");
 	plane_matching->run();
 }
 
 void CPlaneMatchingConfig::proceedCalib()
 {
-
 }
 
 void CPlaneMatchingConfig::saveCalib()
 {
-
 }

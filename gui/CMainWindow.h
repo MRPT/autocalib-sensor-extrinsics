@@ -1,11 +1,11 @@
 #pragma once
 
+#ifndef Q_MOC_RUN
 #include <observation_tree/CObservationTreeModel.h>
+#endif
 
 #include <QMainWindow>
 #include <QSettings>
-
-class CPlaneMatching;
 
 namespace Ui {
 class CMainWindow;

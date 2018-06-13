@@ -41,7 +41,7 @@ int CObservationTreeItem::row() const
 
 CObservationTreeItem *CObservationTreeItem::parentItem()
 {
-	return m_parentitem;
+	return this->m_parentitem;
 }
 
 QVariant CObservationTreeItem::displayData() const

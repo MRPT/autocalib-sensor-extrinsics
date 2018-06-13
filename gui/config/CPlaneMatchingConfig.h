@@ -1,7 +1,9 @@
 #pragma once
 
+#ifndef Q_MOC_RUN
 #include <calib_solvers/CPlaneMatching.h>
 #include <observation_tree/CObservationTreeModel.h>
+#endif
 
 #include <QWidget>
 

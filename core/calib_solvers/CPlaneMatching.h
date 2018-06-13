@@ -17,7 +17,7 @@ public:
 	~CPlaneMatching();
 	void run();
 	void proceed();
-	void detectPlanes(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, std::stringstream &stream);
+	void detectPlanes(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud);
 
 private:
 	CObservationTreeModel *m_model;
