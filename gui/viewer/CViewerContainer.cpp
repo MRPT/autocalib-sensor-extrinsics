@@ -7,7 +7,7 @@ CViewerContainer::CViewerContainer(QWidget *parent) :
 {
 	m_ui->setupUi(this);
 
-	m_viewer_cloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
+	m_viewer_cloud.reset(new pcl::PointCloud<pcl::PointXYZRGBA>);
 	m_viewer_text.reset(new std::string("No input"));
 
 	m_input1_viewer.reset(new pcl::visualization::PCLVisualizer("input1_viewer", false));
@@ -49,13 +49,18 @@ CViewerContainer::~CViewerContainer()
 	delete m_ui;
 }
 
+void CViewerContainer::onEvent(const std::string &msg)
+{
+	updateText(msg);
+}
+
 void CViewerContainer::updateText(const std::string &text)
 {
 	m_ui->text_output->moveCursor(QTextCursor::End);
 	m_ui->text_output->insertPlainText(QString::fromStdString(text) + QString("\n\n"));
 }
 
-void CViewerContainer::updateViewer(const int &viewer_id, const pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, const std::string &text)
+void CViewerContainer::updateViewer(const int &viewer_id, const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const std::string &text)
 {
 	switch(viewer_id)
 	{
@@ -89,9 +94,4 @@ void CViewerContainer::updateViewer(const int &viewer_id, const pcl::PointCloud<
 		}
 		break;
 	}
-}
-
-std::function<void(const std::string&)> CViewerContainer::getUpdateTextFunctionPointer()
-{
-	return std::bind(&CViewerContainer::updateText, this, std::placeholders::_1);
 }

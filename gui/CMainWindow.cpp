@@ -2,6 +2,7 @@
 #include <ui_CMainWindow.h>
 #include <observation_tree/CObservationTreeModel.h>
 #include <config/CPlaneMatchingConfig.h>
+#include <calib_solvers/CPlaneMatching.h>
 
 #include <mrpt/maps/CSimplePointsMap.h>
 #include <pcl/search/impl/search.hpp>
@@ -75,7 +76,7 @@ void CMainWindow::algosIndexChanged(int index)
 
 		case 1:
 		{
-			m_config_widget = std::make_shared<CPlaneMatchingConfig>(m_model, &m_init_calib, m_ui->viewer_container->getUpdateTextFunctionPointer(), nullptr);
+			m_config_widget = std::make_shared<CPlaneMatchingConfig>();
 			qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(1, m_config_widget.get());
 		}
 		break;
@@ -97,8 +98,7 @@ void CMainWindow::openRawlog()
 	if(file_name.isEmpty())
 		return;
 
-
-	m_ui->viewer_container->updateText("Loading Rawlog..");
+	m_ui->viewer_container->updateText("Loading Rawlog...");
 	m_ui->status_bar->showMessage("Loading Rawlog...");
 
 	if(m_model)
@@ -123,7 +123,7 @@ void CMainWindow::itemClicked(const QModelIndex &index)
 		std::stringstream stream;
 		mrpt::obs::CObservation3DRangeScan::Ptr obs_item;
 		mrpt::maps::CPointsMap::Ptr map;
-		pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+		pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>());
 		int viewer_id = 3;
 		std::string viewer_text;
 
@@ -141,6 +141,7 @@ void CMainWindow::itemClicked(const QModelIndex &index)
 
 			viewer_id = m_model->m_obs_labels.indexOf(QString::fromStdString(obs_item->sensorLabel + " : " + obs_item->GetRuntimeClass()->className)) + 1;
 			viewer_text = m_model->data(index.parent()).toString().toStdString();
+
 			m_ui->viewer_container->updateViewer(viewer_id, cloud, viewer_text);
 		}
 
@@ -161,7 +162,8 @@ void CMainWindow::itemClicked(const QModelIndex &index)
 
 				viewer_id = m_model->m_obs_labels.indexOf(QString::fromStdString(obs_item->sensorLabel + " : " + obs_item->GetRuntimeClass()->className)) + 1;
 				viewer_text = (m_model->data(index)).toString().toStdString();
-				m_ui->viewer_container->updateViewer(viewer_id, cloud, viewer_text);
+
+			m_ui->viewer_container->updateViewer(viewer_id, cloud, viewer_text);
 			}
 
 			m_ui->viewer_container->updateText(stream.str());
@@ -185,4 +187,11 @@ void CMainWindow::initCalibChanged(double value)
 		m_init_calib[4] = value;
 	else if(sbox->accessibleName() == QString("itz"))
 		m_init_calib[5] = value;
+}
+
+void CMainWindow::runCalib(TPlaneMatchingParams params)
+{
+	CPlaneMatching *plane_matching = new CPlaneMatching(m_model, m_init_calib, params);
+	plane_matching->addSubscriber(m_ui->viewer_container);
+	plane_matching->run();
 }

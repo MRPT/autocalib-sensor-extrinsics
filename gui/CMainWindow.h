@@ -2,6 +2,7 @@
 
 #ifndef Q_MOC_RUN
 #include <observation_tree/CObservationTreeModel.h>
+#include <calib_solvers/TPlaneMatchingParams.h>
 #endif
 
 #include <QMainWindow>
@@ -18,6 +19,7 @@ class CMainWindow : public QMainWindow
 public:
 	explicit CMainWindow(QWidget *parent = 0);
 	~CMainWindow();
+	void runCalib(TPlaneMatchingParams params);
 
 private slots:
 	void sensorsIndexChanged(int index);
@@ -33,8 +35,8 @@ private:
 	QSettings m_settings;
 	QString m_recent_file;
 
+	std::array<double,6> m_init_calib;
 	CObservationTreeModel *m_model;
 
 	std::shared_ptr<QWidget> m_config_widget;
-	std::array<double,6> m_init_calib;
 };

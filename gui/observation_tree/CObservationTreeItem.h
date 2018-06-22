@@ -3,10 +3,8 @@
 #include <QList>
 #include <QVariant>
 
-#ifndef Q_MOC_RUN
 #include <mrpt/obs/CObservation.h>
 #include <mrpt/obs/CObservation3DRangeScan.h>
-#endif
 
 //The type of each item that is stored internally in a tree structure by CObservationTreeModel
 

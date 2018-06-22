@@ -2,7 +2,7 @@
 
 //Structure definition for the plane matching algorithms parameters
 
-struct CPlaneMatchingParams
+struct TPlaneMatchingParams
 {
 	double angle_threshold;
 	double dist_threshold;

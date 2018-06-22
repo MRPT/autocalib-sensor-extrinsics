@@ -8,8 +8,9 @@ SET(SRC
 	utils/planes.h
 	utils/correspondences.h
 	utils/solver.h
+	utils/CSubscriber.h
 	calib_solvers/CPlaneMatching.h
-	calib_solvers/CPlaneMatchingParams.h
+	calib_solvers/TPlaneMatchingParams.h
 
 	utils/lines.cpp
 	utils/planes.cpp

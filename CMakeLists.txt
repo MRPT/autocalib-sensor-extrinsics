@@ -70,7 +70,7 @@ ADD_DEFINITIONS(${PCL_DEFINITIONS})
 FIND_PACKAGE(Boost 1.46.0 REQUIRED system filesystem unit_test_framework serialization)
 
 # Qt5 GUI library
-FIND_PACKAGE(Qt5Widgets)
+FIND_PACKAGE(Qt5 COMPONENTS Widgets REQUIRED)
 
 # Set the path to this project' sources
 ADD_DEFINITIONS(-DPROJECT_SOURCE_PATH="${PROJECT_SOURCE_DIR}")
