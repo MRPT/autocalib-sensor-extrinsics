@@ -54,6 +54,11 @@ void CViewerContainer::onEvent(const std::string &msg)
 	updateText(msg);
 }
 
+void CViewerContainer::onCloud(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud)
+{
+	updateViewer(3, cloud, "Segmented Planes");
+}
+
 void CViewerContainer::updateText(const std::string &text)
 {
 	m_ui->text_output->moveCursor(QTextCursor::End);
@@ -62,36 +67,41 @@ void CViewerContainer::updateText(const std::string &text)
 
 void CViewerContainer::updateViewer(const int &viewer_id, const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const std::string &text)
 {
-	switch(viewer_id)
+	pcl::visualization::PointCloudColorHandlerRGBAField<pcl::PointXYZRGBA> viewer_color_handler(cloud);
+
+	if(!(cloud->empty()))
 	{
-		case 1:
+		switch(viewer_id)
 		{
-			m_input1_viewer->updatePointCloud(cloud, "cloud");
-			m_input1_viewer->addCoordinateSystem(0.3);
-			m_input1_viewer->resetCamera();
-			m_input1_viewer->updateText(text, 10, 10, 1, 1, 1, "text");
-			m_ui->input1_viz->update();
-		}
-		break;
+			case 1:
+			{
+				m_input1_viewer->updatePointCloud(cloud, viewer_color_handler, "cloud");
+				m_input1_viewer->resetCamera();
+				m_input1_viewer->updateText(text, 10, 10, 1, 1, 1, "text");
+				m_input1_viewer->addCoordinateSystem(0.3);
+				m_ui->input1_viz->update();
+			}
+			break;
 
-		case 2:
-		{
-			m_input2_viewer->updatePointCloud(cloud, "cloud");
-			m_input2_viewer->addCoordinateSystem(0.3);
-			m_input2_viewer->resetCamera();
-			m_input2_viewer->updateText(text, 10, 10, 1, 1, 1, "text");
-			m_ui->input2_viz->update();
-		}
-		break;
+			case 2:
+			{
+				m_input2_viewer->updatePointCloud(cloud, viewer_color_handler, "cloud");
+				m_input2_viewer->resetCamera();
+				m_input2_viewer->updateText(text, 10, 10, 1, 1, 1, "text");
+				m_input2_viewer->addCoordinateSystem(0.3);
+				m_ui->input2_viz->update();
+			}
+			break;
 
-		case 3:
-		{
-			m_output_viewer->updatePointCloud(cloud, "cloud");
-			m_output_viewer->addCoordinateSystem(0.3);
-			m_output_viewer->resetCamera();
-			m_output_viewer->updateText(text, 10, 10, 1, 1, 1, "text");
-			m_ui->result_viz->update();
+			case 3:
+			{
+				m_output_viewer->updatePointCloud(cloud, viewer_color_handler, "cloud");
+				m_output_viewer->resetCamera();
+				m_output_viewer->updateText(text, 10, 10, 1, 1, 1, "text");
+				m_output_viewer->addCoordinateSystem(0.3);
+				m_ui->result_viz->update();
+			}
+			break;
 		}
-		break;
 	}
 }

@@ -15,7 +15,7 @@ public:
 	~CPlaneMatchingConfig();
 
 private slots:
-	void runCalib();
+	void startCalib();
 	void proceedCalib();
 	void saveCalib();
 

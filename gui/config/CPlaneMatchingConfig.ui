@@ -6,9 +6,21 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>382</width>
+    <height>311</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>382</width>
+    <height>16777215</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>Form</string>
@@ -34,10 +46,10 @@
      <item>
       <widget class="QLabel" name="segment_label">
        <property name="text">
-        <string>Plane Segmentation</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Plane Segmentation&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="textFormat">
-        <enum>Qt::PlainText</enum>
+        <enum>Qt::RichText</enum>
        </property>
       </widget>
      </item>
@@ -57,22 +69,15 @@
     </layout>
    </item>
    <item>
-    <widget class="Line" name="line">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-    </widget>
-   </item>
-   <item>
     <layout class="QFormLayout" name="segment_form">
-     <item row="0" column="0">
+     <item row="5" column="0">
       <widget class="QLabel" name="angle_threshold_label">
        <property name="text">
         <string>Angle Threshold:</string>
        </property>
       </widget>
      </item>
-     <item row="0" column="1">
+     <item row="5" column="1">
       <widget class="QDoubleSpinBox" name="angle_threshold_sbox">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -85,14 +90,14 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="0">
+     <item row="6" column="0">
       <widget class="QLabel" name="minimum_inliers_label">
        <property name="text">
         <string>Minimum Inliers Rate:</string>
        </property>
       </widget>
      </item>
-     <item row="1" column="1">
+     <item row="6" column="1">
       <widget class="QDoubleSpinBox" name="minimum_threshold_sbox">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -107,18 +112,18 @@
         <double>0.010000000000000</double>
        </property>
        <property name="value">
-        <double>0.005000000000000</double>
+        <double>0.001000000000000</double>
        </property>
       </widget>
      </item>
-     <item row="2" column="0">
+     <item row="7" column="0">
       <widget class="QLabel" name="distance_threshold_label">
        <property name="text">
         <string>Distance Threshold:</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="1">
+     <item row="7" column="1">
       <widget class="QDoubleSpinBox" name="distance_threshold_sbox">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -130,7 +135,93 @@
         <double>0.010000000000000</double>
        </property>
        <property name="value">
-        <double>0.040000000000000</double>
+        <double>0.050000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="normal_estimation_method_label">
+       <property name="text">
+        <string>Normal Estimation Method:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QComboBox" name="ne_method_cbox">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <item>
+        <property name="text">
+         <string>COVARIANCE_MATRIX</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>AVERAGE_3D_GRADIENT</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>AVERAGE_DEPTH_CHANGE</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="depth_change_threshold_label">
+       <property name="text">
+        <string>Maximum Depth Change Factor:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QDoubleSpinBox" name="max_depth_change_factor_sbox">
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+       <property name="value">
+        <double>0.020000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="normal_smoothing_size_label">
+       <property name="text">
+        <string>Normal Smoothing Size:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QDoubleSpinBox" name="normal_smoothing_size_sbox">
+       <property name="singleStep">
+        <double>0.500000000000000</double>
+       </property>
+       <property name="value">
+        <double>10.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="depth_smoothing_label">
+       <property name="text">
+        <string>Depth Dependent Smoothing:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QCheckBox" name="depth_dependent_smoothing_check">
+       <property name="text">
+        <string/>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+       <property name="tristate">
+        <bool>false</bool>
        </property>
       </widget>
      </item>
@@ -139,9 +230,9 @@
    <item>
     <layout class="QHBoxLayout" name="plane_config_button_groups">
      <item>
-      <widget class="QPushButton" name="run_calib_button">
+      <widget class="QPushButton" name="start_calib_button">
        <property name="text">
-        <string>Run Calibration</string>
+        <string>Start Calibration</string>
        </property>
       </widget>
      </item>
@@ -176,6 +267,18 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>ne_method_cbox</tabstop>
+  <tabstop>depth_dependent_smoothing_check</tabstop>
+  <tabstop>max_depth_change_factor_sbox</tabstop>
+  <tabstop>normal_smoothing_size_sbox</tabstop>
+  <tabstop>angle_threshold_sbox</tabstop>
+  <tabstop>minimum_threshold_sbox</tabstop>
+  <tabstop>distance_threshold_sbox</tabstop>
+  <tabstop>start_calib_button</tabstop>
+  <tabstop>proceed_calib_button</tabstop>
+  <tabstop>save_calib_button</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

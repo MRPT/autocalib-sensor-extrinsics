@@ -2,7 +2,7 @@
 
 #include <calib_solvers/TPlaneMatchingParams.h>
 #include <observation_tree/CObservationTreeModel.h>
-#include <utils/CSubscriber.h>
+#include <utils/CObserver.h>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -18,13 +18,16 @@ public:
 	~CPlaneMatching();
 	void run();
 	void proceed();
-	void detectPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud);
-	void addSubscriber(CSubscriber *subscriber);
+	std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> extractPlanes();
+	void runSegmentation(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud);
+	void addObserver(CObserver *observer);
 	void publishEvent(const std::string &msg);
+	void publishCloud(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud);
 
 private:
 	CObservationTreeModel *m_model;
 	std::array<double,6> m_init_calib;
 	TPlaneMatchingParams m_params;
-	std::vector<CSubscriber*> m_subscribers;
+	std::vector<CObserver*> m_observers;
+	std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> m_extracted_plane_clouds;
 };

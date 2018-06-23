@@ -12,7 +12,6 @@
 #include <pcl/common/time.h>
 
 using namespace mrpt::obs;
-using namespace mrpt::maps;
 
 CPlaneMatching::CPlaneMatching(CObservationTreeModel *model, std::array<double, 6> init_calib, TPlaneMatchingParams params)
 {
@@ -25,113 +24,129 @@ CPlaneMatching::~CPlaneMatching()
 {
 }
 
-void CPlaneMatching::addSubscriber(CSubscriber *subscriber)
+void CPlaneMatching::addObserver(CObserver *observer)
 {
-	m_subscribers.push_back(subscriber);
+	m_observers.push_back(observer);
 }
 
 void CPlaneMatching::publishEvent(const std::string &msg)
 {
-	for(CSubscriber *subscriber : m_subscribers)
+	for(CObserver *observer : m_observers)
 	{
-		subscriber->onEvent(msg);
+		observer->onEvent(msg);
+	}
+}
+
+void CPlaneMatching::publishCloud(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud)
+{
+	for(CObserver *observer : m_observers)
+	{
+		observer->onCloud(cloud);
 	}
 }
 
 void CPlaneMatching::run()
 {
-
-	publishEvent("**Running plane matching calibration algorithm**");
-	CObservationTreeItem *root_item, *tree_item;
-	CObservation3DRangeScan::Ptr obs_item;
-	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>());
-	std::stringstream stream;
-	T3DPointsProjectionParams projection_params;
-	projection_params.MAKE_DENSE = false;
-	projection_params.MAKE_ORGANIZED = true;
-
-	root_item = m_model->getRootItem();
-
-	//for(int i = 0; i < m_model->rowCount(); i++)
-	//{
-		//tree_item = root_item->child(i);
-		//for(int j = 0; j < tree_item->childCount(); j++)
-		//{
-			//stream << "Extracting planes from #" << j << " observation in obesrvation set #" << i << "..";
-			//sendTextUpdate(stream.str());
-
-			//obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(tree_item->child(j)->getObservation());
-			//obs_item->load();
-			//obs_item->project3DPointsFromDepthImageInto(*cloud, projection_params);
-			//obs_item->unload();
-
-			//detectPlanes(cloud, stream);
-		//}
-	//}
-	
-	// Testing with just the first observation
-	
-	tree_item = root_item->child(0);
-	stream << "Extracting planes from #0 observation in observation set #0..";
-	publishEvent(stream.str());
-
-	obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(tree_item->child(0)->getObservation());
-	obs_item->load();
-	obs_item->project3DPointsFromDepthImageInto(*cloud, projection_params);
-	obs_item->unload();
-
-	//detectPlanes(cloud);
+	// For running all steps at a time
 }
 
-void CPlaneMatching::detectPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud)
+std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> CPlaneMatching::extractPlanes()
 {
-//	double plane_extract_start = pcl::getTime();
-//	unsigned min_inliers = m_params.min_inliers_frac * cloud->size();
+	publishEvent("****Running plane matching calibration algorithm****");
 
-//	pcl::IntegralImageNormalEstimation<pcl::PointXYZRGBA, pcl::Normal> normal_estimation;
-//	normal_estimation.setNormalEstimationMethod(normal_estimation.COVARIANCE_MATRIX);
-//	normal_estimation.setMaxDepthChangeFactor(0.02f);
-//	normal_estimation.setNormalSmoothingSize(10.0f);
-//	normal_estimation.setDepthDependentSmoothing(true);
+	CObservationTreeItem *root_item, *tree_item;
+	CObservation3DRangeScan::Ptr obs_item;
+	root_item = m_model->getRootItem();
 
-//	pcl::PointCloud<pcl::Normal>::Ptr normal_cloud(new pcl::PointCloud<pcl::Normal>);
-//	normal_estimation.setInputCloud(cloud);
-//	normal_estimation.compute(*normal_cloud);
+	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>());
 
-//	pcl::OrganizedMultiPlaneSegmentation<pcl::PointXYZRGBA, pcl::Normal, pcl::Label> multi_plane_segmentation;
-//	multi_plane_segmentation.setMinInliers(min_inliers);
-//	multi_plane_segmentation.setAngularThreshold(m_params.angle_threshold);
-//	multi_plane_segmentation.setDistanceThreshold(m_params.dist_threshold);
-//	multi_plane_segmentation.setInputNormals(normal_cloud);
-//	multi_plane_segmentation.setInputCloud(cloud);
+	T3DPointsProjectionParams params;
+	params.MAKE_DENSE = false;
+	params.MAKE_ORGANIZED = true;
 
-//	std::vector<pcl::PlanarRegion<pcl::PointXYZRGBA>, Eigen::aligned_allocator<pcl::PlanarRegion<pcl::PointXYZRGBA>>> regions;
-//	std::vector<pcl::ModelCoefficients> model_coefficients;
-//	std::vector<pcl::PointIndices> inlier_indices;
-//	pcl::PointCloud<pcl::Label>::Ptr labels(new pcl::PointCloud<pcl::Label>);
-//	std::vector<pcl::PointIndices> label_indices;
-//	std::vector<pcl::PointIndices> boundary_indices;
+// Testing with just the first observation
 
-//	multi_plane_segmentation.segmentAndRefine(regions, model_coefficients, inlier_indices, labels, label_indices, boundary_indices);
-//	double plane_extract_end = pcl::getTime();
+	tree_item = root_item->child(10);
+	obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(tree_item->child(0)->getObservation());
+	obs_item->project3DPointsFromDepthImageInto(*cloud, params);
 
-//	std::stringstream stream;
-//	stream << regions.size() << " plane(s) detected\n" << "Time elapsed: " << double(plane_extract_end - plane_extract_start) << std::endl;
+	runSegmentation(cloud);
 
-//	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr segmented_cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
+// For all observations
 
-//	segmented_cloud->points = cloud->points;
-
-//	for(size_t i = 0; i < inlier_indices.size(); i++)
+//	for(int i = 0; i < root_item->childCount(); i++)
 //	{
-//		std::vector<int> indices = inlier_indices[i].indices;
-//		for(size_t j = 0; j < indices.size(); j++)
+//		tree_item = root_item->child(i);
+//		for(int j = 0; j < tree_item->childCount(); j++)
 //		{
-//			(segmented_cloud->points[indices[j]]).r = 255;
-//			(segmented_cloud->points[indices[j]]).g = 0;
-//			(segmented_cloud->points[indices[j]]).b = 0;
+//			publishEvent("**Extracting planes from #" + std::to_string(j) + " observation in observation set #" + std::to_string(i) + "**");
+
+//			obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(tree_item->child(j)->getObservation());
+//			obs_item->project3DPointsFromDepthImageInto(*cloud, params);
+//			runSegmentation(cloud);
 //		}
 //	}
+
+	return m_extracted_plane_clouds;
+}
+
+void CPlaneMatching::runSegmentation(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud)
+{
+	double plane_extract_start = pcl::getTime();
+	unsigned min_inliers = m_params.min_inliers_frac * cloud->size();
+
+	pcl::IntegralImageNormalEstimation<pcl::PointXYZRGBA, pcl::Normal> normal_estimation;
+
+	if(m_params.normal_estimation_method == 0)
+		normal_estimation.setNormalEstimationMethod(normal_estimation.COVARIANCE_MATRIX);
+	else if(m_params.normal_estimation_method == 1)
+		normal_estimation.setNormalEstimationMethod(normal_estimation.AVERAGE_3D_GRADIENT);
+	else
+		normal_estimation.setNormalEstimationMethod(normal_estimation.AVERAGE_DEPTH_CHANGE);
+
+	normal_estimation.setDepthDependentSmoothing(m_params.depth_dependent_smoothing);
+	normal_estimation.setMaxDepthChangeFactor(m_params.max_depth_change_factor);
+	normal_estimation.setNormalSmoothingSize(m_params.normal_smoothing_size);
+
+	pcl::PointCloud<pcl::Normal>::Ptr normal_cloud(new pcl::PointCloud<pcl::Normal>);
+	normal_estimation.setInputCloud(cloud);
+	normal_estimation.compute(*normal_cloud);
+
+	pcl::OrganizedMultiPlaneSegmentation<pcl::PointXYZRGBA, pcl::Normal, pcl::Label> multi_plane_segmentation;
+	multi_plane_segmentation.setMinInliers(min_inliers);
+	multi_plane_segmentation.setAngularThreshold(m_params.angle_threshold);
+	multi_plane_segmentation.setDistanceThreshold(m_params.dist_threshold);
+	multi_plane_segmentation.setInputNormals(normal_cloud);
+	multi_plane_segmentation.setInputCloud(cloud);
+
+	std::vector<pcl::PlanarRegion<pcl::PointXYZRGBA>, Eigen::aligned_allocator<pcl::PlanarRegion<pcl::PointXYZRGBA>>> regions;
+	std::vector<pcl::ModelCoefficients> model_coefficients;
+	std::vector<pcl::PointIndices> inlier_indices;
+	pcl::PointCloud<pcl::Label>::Ptr labels(new pcl::PointCloud<pcl::Label>);
+	std::vector<pcl::PointIndices> label_indices;
+	std::vector<pcl::PointIndices> boundary_indices;
+
+	multi_plane_segmentation.segmentAndRefine(regions, model_coefficients, inlier_indices, labels, label_indices, boundary_indices);
+	double plane_extract_end = pcl::getTime();
+
+	std::stringstream stream;
+	stream << inlier_indices.size() << " plane(s) detected\n" << "Time elapsed: " << double(plane_extract_end - plane_extract_start) << std::endl;
+
+	publishEvent(stream.str());
+
+	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr segmented_cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
+
+	for(size_t i = 0; i < inlier_indices.size(); i++)
+	{
+		std::vector<int> indices = inlier_indices[i].indices;
+		for(size_t j = 0; j < indices.size(); j++)
+		{
+			segmented_cloud->points.push_back(cloud->points[indices[j]]);
+		}
+	}
+
+	publishCloud(segmented_cloud);
+	m_extracted_plane_clouds.push_back(segmented_cloud);
 }
 
 void CPlaneMatching::proceed()

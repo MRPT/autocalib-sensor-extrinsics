@@ -4,12 +4,15 @@
 #include <config/CPlaneMatchingConfig.h>
 #include <calib_solvers/CPlaneMatching.h>
 
-#include <mrpt/maps/CSimplePointsMap.h>
+#include <mrpt/obs/CObservation3DRangeScan.h>
+#include <mrpt/maps/PCL_adapters.h>
 #include <pcl/search/impl/search.hpp>
 
 #include <QFileDialog>
 #include <QSpinBox>
 #include <QDebug>
+
+using namespace mrpt::obs;
 
 CMainWindow::CMainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -20,7 +23,7 @@ CMainWindow::CMainWindow(QWidget *parent) :
 
 	connect(m_ui->sensors_cbox, SIGNAL(currentIndexChanged(int)), this, SLOT(sensorsIndexChanged(int)));
 	connect(m_ui->algo_cbox, SIGNAL(currentIndexChanged(int)), this, SLOT(algosIndexChanged(int)));
-	connect(m_ui->open_rlog_button, SIGNAL(clicked(bool)), this, SLOT(openRawlog()));
+	connect(m_ui->load_rlog_button, SIGNAL(clicked(bool)), this, SLOT(loadRawlog()));
 	connect(m_ui->observations_treeview, SIGNAL(clicked(QModelIndex)), this, SLOT(itemClicked(QModelIndex)));
 
 	connect(m_ui->irx_sbox, SIGNAL(valueChanged(double)), this, SLOT(initCalibChanged(double)));
@@ -58,7 +61,7 @@ void CMainWindow::sensorsIndexChanged(int index)
 	m_ui->ity_sbox->setDisabled(false);
 	m_ui->itz_sbox->setDisabled(false);
 	m_ui->med_sbox->setDisabled(false);
-	m_ui->open_rlog_button->setDisabled(false);
+	m_ui->load_rlog_button->setDisabled(false);
 
 	m_ui->viewer_container->updateText("Nice! Now set your initial (rough) calibration values and load your rawlog file!");
 }
@@ -83,7 +86,7 @@ void CMainWindow::algosIndexChanged(int index)
 	}
 }
 
-void CMainWindow::openRawlog()
+void CMainWindow::loadRawlog()
 {
 	QString path;
 
@@ -121,51 +124,47 @@ void CMainWindow::itemClicked(const QModelIndex &index)
 	if(index.isValid())
 	{
 		std::stringstream stream;
-		mrpt::obs::CObservation3DRangeScan::Ptr obs_item;
-		mrpt::maps::CPointsMap::Ptr map;
-		pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>());
-		int viewer_id = 3;
 		std::string viewer_text;
+		int viewer_id = 3;
 
-		// check if observation was clicked
+		CObservation3DRangeScan::Ptr obs_item;
+		pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
+
+		T3DPointsProjectionParams params;
+		params.MAKE_DENSE = false;
+		params.MAKE_ORGANIZED = false;
+
+		// check if observation item was clicked
 		if((index.parent()).isValid())
 		{
-			obs_item = std::dynamic_pointer_cast<mrpt::obs::CObservation3DRangeScan>(m_model->observationData(index));
-
+			obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(m_model->observationData(index));
+			obs_item->project3DPointsFromDepthImageInto(*cloud, params);
 			obs_item->getDescriptionAsText(stream);
-			m_ui->viewer_container->updateText(stream.str());
-
-			map = mrpt::make_aligned_shared<mrpt::maps::CSimplePointsMap>();
-			map->insertObservation(obs_item.get());
-			map->getPCLPointCloud(*cloud);
 
 			viewer_id = m_model->m_obs_labels.indexOf(QString::fromStdString(obs_item->sensorLabel + " : " + obs_item->GetRuntimeClass()->className)) + 1;
 			viewer_text = m_model->data(index.parent()).toString().toStdString();
 
+			m_ui->viewer_container->updateText(stream.str());
 			m_ui->viewer_container->updateViewer(viewer_id, cloud, viewer_text);
 		}
 
-		// else parent item was clicked
+		// else set-item was clicked
 		else
 		{
 			CObservationTreeItem *item = static_cast<CObservationTreeItem*>(index.internalPointer());
 
 			for(int i = 0; i < item->childCount(); i++)
 			{
-				obs_item = std::dynamic_pointer_cast<mrpt::obs::CObservation3DRangeScan>((item->child(i))->getObservation());
+				obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>((item->child(i))->getObservation());
+				obs_item->project3DPointsFromDepthImageInto(*cloud, params);
 				obs_item->getDescriptionAsText(stream);
-				stream << "-----------------------------------------------------------------------------------------------------------------------------\n";
-
-				map = mrpt::make_aligned_shared<mrpt::maps::CSimplePointsMap>();
-				map->insertObservation(obs_item.get());
-				map->getPCLPointCloud(*cloud);
 
 				viewer_id = m_model->m_obs_labels.indexOf(QString::fromStdString(obs_item->sensorLabel + " : " + obs_item->GetRuntimeClass()->className)) + 1;
 				viewer_text = (m_model->data(index)).toString().toStdString();
+				stream << "-----------------------------------------------------------------------------------------------------------------------------\n";
 
-			m_ui->viewer_container->updateViewer(viewer_id, cloud, viewer_text);
+				m_ui->viewer_container->updateViewer(viewer_id, cloud, viewer_text);
 			}
-
 			m_ui->viewer_container->updateText(stream.str());
 		}
 	}
@@ -192,6 +191,6 @@ void CMainWindow::initCalibChanged(double value)
 void CMainWindow::runCalib(TPlaneMatchingParams params)
 {
 	CPlaneMatching *plane_matching = new CPlaneMatching(m_model, m_init_calib, params);
-	plane_matching->addSubscriber(m_ui->viewer_container);
-	plane_matching->run();
+	plane_matching->addObserver(m_ui->viewer_container);
+	std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> plane_clouds = plane_matching->extractPlanes();
 }

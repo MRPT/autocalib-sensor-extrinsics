@@ -24,7 +24,7 @@ public:
 private slots:
 	void sensorsIndexChanged(int index);
 	void algosIndexChanged(int index);
-	void openRawlog();
+	void loadRawlog();
 	void itemClicked(const QModelIndex &);
 	void initCalibChanged(double value);
 

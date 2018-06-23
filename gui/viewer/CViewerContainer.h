@@ -1,6 +1,6 @@
 #pragma once
 
-#include <utils/CSubscriber.h>
+#include <utils/CObserver.h>
 #include <QWidget>
 
 #include <pcl/point_cloud.h>
@@ -14,7 +14,7 @@ namespace Ui {
 class CViewerContainer;
 }
 
-class CViewerContainer : public QWidget, public CSubscriber
+class CViewerContainer : public QWidget, public CObserver
 {
 	Q_OBJECT
 
@@ -25,6 +25,7 @@ public:
 	void updateViewer(const int &viewer_id, const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const std::string &text);
 	void updateCalibConfig(const int &calib_algo_id);
 	virtual void onEvent(const std::string &msg);
+	virtual void onCloud(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud);
 
 private:
 	std::shared_ptr<pcl::visualization::PCLVisualizer> m_input1_viewer;

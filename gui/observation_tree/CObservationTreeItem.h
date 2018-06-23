@@ -11,7 +11,7 @@
 class CObservationTreeItem
 {
 	public:
-		CObservationTreeItem(const QVariant &data, const mrpt::obs::CObservation::Ptr observation = 0, CObservationTreeItem *parentItem = 0);
+		CObservationTreeItem(const QVariant &data, const mrpt::obs::CObservation::Ptr observation = 0 /*null when it is just a set (holder) item*/, CObservationTreeItem *parentItem = 0);
 		~CObservationTreeItem();
 
 		void appendChild(CObservationTreeItem *child);
