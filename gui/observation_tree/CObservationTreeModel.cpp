@@ -20,9 +20,10 @@ CObservationTreeModel::CObservationTreeModel(const std::string &rawlog_filename,
 
 	bool read = true;
 	uint obs_count = 0, obs_sets_count = 0;
-	QStringList obs_labels_in_set;
+	//One set of observations that are captured at approximately the same time
 	std::vector<CObservation::Ptr> obs_set;
 	QString obs_label;
+	QStringList obs_labels_in_set;
 
 	while(read)
 	{
@@ -58,10 +59,11 @@ CObservationTreeModel::CObservationTreeModel(const std::string &rawlog_filename,
 
 				else
 				{
+					// Add a "set holder item" or a parent item
 					m_rootitem->appendChild(new CObservationTreeItem(QString("Observations set #" + QString::number(obs_sets_count++)), 0, m_rootitem));
 
 					auto iter2 = obs_set.begin();
-					for(iter = obs_labels_in_set.begin(); iter < obs_labels_in_set.end(), iter2 < obs_set.end(); iter++, iter2++)
+					for(iter = obs_labels_in_set.begin(); (iter < obs_labels_in_set.end()) && (iter2 < obs_set.end()); iter++, iter2++)
 					{
 						m_rootitem->child(m_rootitem->childCount() - 1)->appendChild(new CObservationTreeItem(*iter, *iter2, m_rootitem->child(m_rootitem->childCount() - 1)));
 					}

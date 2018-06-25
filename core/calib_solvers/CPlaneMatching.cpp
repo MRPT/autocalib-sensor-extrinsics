@@ -33,15 +33,18 @@ void CPlaneMatching::publishEvent(const std::string &msg)
 {
 	for(CObserver *observer : m_observers)
 	{
-		observer->onEvent(msg);
+		observer->onReceivingText(msg);
 	}
 }
 
-void CPlaneMatching::publishCloud(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud)
+void CPlaneMatching::publishPlaneCloud(const int &set_num, const int &cloud_num, const int &sensor_id)
 {
+	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud;
+	cloud = m_extracted_plane_clouds_sets[set_num][cloud_num];
+
 	for(CObserver *observer : m_observers)
 	{
-		observer->onCloud(cloud);
+		observer->onReceivingPlaneCloud(sensor_id, cloud);
 	}
 }
 
@@ -50,7 +53,7 @@ void CPlaneMatching::run()
 	// For running all steps at a time
 }
 
-std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> CPlaneMatching::extractPlanes()
+void CPlaneMatching::extractPlanes()
 {
 	publishEvent("****Running plane matching calibration algorithm****");
 
@@ -58,39 +61,45 @@ std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> CPlaneMatching::extractPlan
 	CObservation3DRangeScan::Ptr obs_item;
 	root_item = m_model->getRootItem();
 
-	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>());
-
 	T3DPointsProjectionParams params;
 	params.MAKE_DENSE = false;
 	params.MAKE_ORGANIZED = true;
 
-// Testing with just the first observation
+	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
+	std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> extracted_plane_clouds;
 
-	tree_item = root_item->child(10);
-	obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(tree_item->child(0)->getObservation());
-	obs_item->project3DPointsFromDepthImageInto(*cloud, params);
+	//for(int i = 0; i < root_item->childCount(); i++)
+	// using only few observations for memory reasons
+	for(int i = 0; i < 17; i++)
+	{
+		tree_item = root_item->child(i);
+		extracted_plane_clouds.clear();
 
-	runSegmentation(cloud);
+		for(int j = 0; j < tree_item->childCount(); j++)
+		{
+			pcl::PointCloud<pcl::PointXYZRGBA>::Ptr extracted_planes(new pcl::PointCloud<pcl::PointXYZRGBA>);
+			publishEvent("**Extracting planes from #" + std::to_string(j) + " observation in observation set #" + std::to_string(i) + "**");
 
-// For all observations
+			obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(tree_item->child(j)->getObservation());
+			obs_item->project3DPointsFromDepthImageInto(*cloud, params);
+			runSegmentation(cloud, extracted_planes);
+			extracted_plane_clouds.push_back(extracted_planes);
+		}
 
-//	for(int i = 0; i < root_item->childCount(); i++)
-//	{
-//		tree_item = root_item->child(i);
-//		for(int j = 0; j < tree_item->childCount(); j++)
-//		{
-//			publishEvent("**Extracting planes from #" + std::to_string(j) + " observation in observation set #" + std::to_string(i) + "**");
+		m_extracted_plane_clouds_sets.push_back(extracted_plane_clouds);
+	}
 
-//			obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(tree_item->child(j)->getObservation());
-//			obs_item->project3DPointsFromDepthImageInto(*cloud, params);
-//			runSegmentation(cloud);
-//		}
-//	}
+//	tree_item = root_item->child(5);
+//	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr extracted_planes(new pcl::PointCloud<pcl::PointXYZRGBA>);
+//	publishEvent("**Extracting planes from #" + std::to_string(2) + " observation in observation set #" + std::to_string(5) + "**");
+//	obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(tree_item->child(0)->getObservation());
+//	obs_item->project3DPointsFromDepthImageInto(*cloud, params);
+//	runSegmentation(cloud, extracted_planes);
 
-	return m_extracted_plane_clouds;
+//	m_observers[0]->onReceivingPlaneCloud(2, extracted_planes);
 }
 
-void CPlaneMatching::runSegmentation(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud)
+void CPlaneMatching::runSegmentation(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &extracted_planes)
 {
 	double plane_extract_start = pcl::getTime();
 	unsigned min_inliers = m_params.min_inliers_frac * cloud->size();
@@ -134,19 +143,14 @@ void CPlaneMatching::runSegmentation(const pcl::PointCloud<pcl::PointXYZRGBA>::P
 
 	publishEvent(stream.str());
 
-	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr segmented_cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
-
 	for(size_t i = 0; i < inlier_indices.size(); i++)
 	{
 		std::vector<int> indices = inlier_indices[i].indices;
 		for(size_t j = 0; j < indices.size(); j++)
 		{
-			segmented_cloud->points.push_back(cloud->points[indices[j]]);
+			extracted_planes->points.push_back(cloud->points[indices[j]]);
 		}
 	}
-
-	publishCloud(segmented_cloud);
-	m_extracted_plane_clouds.push_back(segmented_cloud);
 }
 
 void CPlaneMatching::proceed()

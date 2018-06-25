@@ -23,9 +23,11 @@ public:
 	~CViewerContainer();
 	void updateText(const std::string &);
 	void updateViewer(const int &viewer_id, const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const std::string &text);
+	void addPlanes(const int &viewer_id, const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud);
 	void updateCalibConfig(const int &calib_algo_id);
-	virtual void onEvent(const std::string &msg);
-	virtual void onCloud(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud);
+	bool viewerContainsCloud(const int &viewer_id, const std::string &id);
+	virtual void onReceivingText(const std::string &msg);
+	virtual void onReceivingPlaneCloud(const int &obs_type, const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud);
 
 private:
 	std::shared_ptr<pcl::visualization::PCLVisualizer> m_input1_viewer;

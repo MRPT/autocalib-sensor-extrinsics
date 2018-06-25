@@ -8,6 +8,6 @@
 class CObserver
 {
 public:
-	virtual void onEvent(const std::string &msg) = 0;
-	virtual void onCloud(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud) = 0;
+	virtual void onReceivingText(const std::string &msg) = 0;
+	virtual void onReceivingPlaneCloud(const int &sensor_id, const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud) = 0;
 };

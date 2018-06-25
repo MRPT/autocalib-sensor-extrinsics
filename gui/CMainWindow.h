@@ -3,6 +3,7 @@
 #ifndef Q_MOC_RUN
 #include <observation_tree/CObservationTreeModel.h>
 #include <calib_solvers/TPlaneMatchingParams.h>
+#include <calib_solvers/CPlaneMatching.h>
 #endif
 
 #include <QMainWindow>
@@ -39,4 +40,6 @@ private:
 	CObservationTreeModel *m_model;
 
 	std::shared_ptr<QWidget> m_config_widget;
+	CPlaneMatching *m_plane_matching; /* to be replaced by a generic calib algo object */
+	bool m_calib_started;
 };

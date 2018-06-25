@@ -15,8 +15,7 @@ class CObservationTreeModel : public QAbstractItemModel
 	Q_OBJECT
 
 	public:
-		explicit CObservationTreeModel(
-			const std::string &rawlog_filename, QObject *parent = 0);
+		explicit CObservationTreeModel(const std::string &rawlog_filename, QObject *parent = 0);
 		~CObservationTreeModel();
 
 		QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
