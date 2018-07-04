@@ -1,21 +1,50 @@
 #include <observation_tree/CObservationTreeModel.h>
 
-#include <QDebug>
+#include <QProgressDialog>
 
 #include <mrpt/io/CFileGZInputStream.h>
 #include <mrpt/serialization/CArchive.h>
 #include <mrpt/rtti/CObject.h>
+#include <mrpt/system/CTicTac.h>
 
 using namespace mrpt::io;
 using namespace mrpt::serialization;
 using namespace mrpt::obs;
+using namespace mrpt::system;
 
 CObservationTreeModel::CObservationTreeModel(const std::string &rawlog_filename, QObject *parent)
-	: QAbstractItemModel(parent)
+    : QAbstractItemModel(parent),
+      m_rawlog_filename(rawlog_filename)
 {
+}
+
+CObservationTreeModel::~CObservationTreeModel()
+{
+	delete m_rootitem;
+}
+
+void CObservationTreeModel::addTextObserver(CTextObserver *observer)
+{
+	m_text_observers.push_back(observer);
+}
+
+void CObservationTreeModel::publishText(const std::string &msg)
+{
+	for(CTextObserver *observer : m_text_observers)
+	{
+		observer->onReceivingText(msg);
+	}
+}
+
+void CObservationTreeModel::loadModel()
+{
+	CTicTac stop_watch;
+	double time_to_load;
+	stop_watch.Tic();
+
 	m_rootitem = new CObservationTreeItem(QString("root"));
 
-	CFileGZInputStream rawlog(rawlog_filename);
+	CFileGZInputStream rawlog(m_rawlog_filename);
 	CSerializable::Ptr obj;
 
 	bool read = true;
@@ -24,6 +53,12 @@ CObservationTreeModel::CObservationTreeModel(const std::string &rawlog_filename,
 	std::vector<CObservation::Ptr> obs_set;
 	QString obs_label;
 	QStringList obs_labels_in_set;
+
+	uint64_t rlog_size = rawlog.getTotalBytesCount() >> 10;
+	QProgressDialog progress_dialog("Loading rawlog file..", "Abort", 0, rlog_size);
+	progress_dialog.setWindowTitle("Load Progress");
+	progress_dialog.setWindowModality(Qt::WindowModal);
+	progress_dialog.setMinimumDuration(0);
 
 	while(read)
 	{
@@ -39,6 +74,7 @@ CObservationTreeModel::CObservationTreeModel(const std::string &rawlog_filename,
 			if(obs_count == 1)
 			{
 				m_obs_labels.push_back(obs_label);
+				m_count_in_label.push_back(0);
 				obs_labels_in_set.push_back(obs_label);
 				obs_set.push_back(obs);
 				continue;
@@ -48,7 +84,10 @@ CObservationTreeModel::CObservationTreeModel(const std::string &rawlog_filename,
 			{
 				auto iter = std::find(m_obs_labels.begin(), m_obs_labels.end(), obs_label);
 				if(iter == m_obs_labels.end())
+				{
 					m_obs_labels.push_back(obs_label);
+					m_count_in_label.push_back(0);
+				}
 
 				iter = std::find(obs_labels_in_set.begin(), obs_labels_in_set.end(), obs_label);
 				if(iter == obs_labels_in_set.end())
@@ -65,6 +104,7 @@ CObservationTreeModel::CObservationTreeModel(const std::string &rawlog_filename,
 					auto iter2 = obs_set.begin();
 					for(iter = obs_labels_in_set.begin(); (iter < obs_labels_in_set.end()) && (iter2 < obs_set.end()); iter++, iter2++)
 					{
+						m_count_in_label[m_obs_labels.indexOf(*iter)]++;
 						m_rootitem->child(m_rootitem->childCount() - 1)->appendChild(new CObservationTreeItem(*iter, *iter2, m_rootitem->child(m_rootitem->childCount() - 1)));
 					}
 
@@ -74,18 +114,60 @@ CObservationTreeModel::CObservationTreeModel(const std::string &rawlog_filename,
 					obs_set.push_back(obs);
 				}
 			}
+
+			if(progress_dialog.wasCanceled())
+			{
+				read = false;
+				delete m_rootitem;
+				m_rootitem = nullptr;
+			}
+
+			progress_dialog.setValue(rawlog.getPosition() >> 10);
 		}
 
 		catch(std::exception &e)
 		{
+			if(obs_set.size() > 0)
+			{
+				m_rootitem->appendChild(new CObservationTreeItem(QString("Observations set #" + QString::number(obs_sets_count++)), 0, m_rootitem));
+
+				auto iter2 = obs_set.begin();
+				for(auto iter = obs_labels_in_set.begin(); (iter < obs_labels_in_set.end()) && (iter2 < obs_set.end()); iter++, iter2++)
+				{
+					m_count_in_label[m_obs_labels.indexOf(*iter)]++;
+					m_rootitem->child(m_rootitem->childCount() - 1)->appendChild(new CObservationTreeItem(*iter, *iter2, m_rootitem->child(m_rootitem->childCount() - 1)));
+				}
+
+				obs_labels_in_set.clear();
+				obs_set.clear();
+			}
+
 			read = false;
+			time_to_load = stop_watch.Tac();
+			publishText("Rawlog loaded. Click on any observation item on the left to visualize it.");
+
+			std::string stats_string;
+			stats_string = "STATS:";
+			stats_string += "\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - ";
+			stats_string += "\nTime elapsed: " + std::to_string(time_to_load) + " seconds";
+			stats_string += "\nNumber of observations loaded: " + std::to_string(obs_count);
+			stats_string += "\nNumber of unique sensors found in rawlog: " + std::to_string(m_obs_labels.count());
+			stats_string += "\nNumber of observation sets formed: " + std::to_string(obs_sets_count);
+			stats_string += "\n\nSummary of sensors found in rawlog:";
+			stats_string += "\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - ";
+
+			for(size_t i = 0; i < m_obs_labels.count(); i++)
+			{
+				stats_string += "\nSensor #" + std::to_string(i);
+				stats_string += "\nSensor label : Class :: " + m_obs_labels[i].toStdString();
+				stats_string += "\nNumber of observations: " + std::to_string(m_count_in_label[i]) + "\n";
+			}
+
+			publishText(stats_string);
 		}
 	}
-}
 
-CObservationTreeModel::~CObservationTreeModel()
-{
-	delete m_rootitem;
+	progress_dialog.setValue(rlog_size);
 }
 
 QModelIndex CObservationTreeModel::index(int row, int column, const QModelIndex &parent) const
@@ -177,4 +259,9 @@ Qt::ItemFlags CObservationTreeModel::flags(const QModelIndex &index) const
 CObservationTreeItem *CObservationTreeModel::getRootItem() const
 {
 	return this->m_rootitem;
+}
+
+QStringList CObservationTreeModel::getObsLabels() const
+{
+	return this->m_obs_labels;
 }

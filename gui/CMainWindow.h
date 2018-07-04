@@ -1,10 +1,8 @@
 #pragma once
 
-#ifndef Q_MOC_RUN
 #include <observation_tree/CObservationTreeModel.h>
 #include <calib_solvers/TPlaneMatchingParams.h>
 #include <calib_solvers/CPlaneMatching.h>
-#endif
 
 #include <QMainWindow>
 #include <QSettings>

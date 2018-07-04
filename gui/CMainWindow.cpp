@@ -98,29 +98,36 @@ void CMainWindow::loadRawlog()
 	if(file_name.isEmpty())
 		return;
 
-	m_ui->viewer_container->updateText("Loading Rawlog...");
 	m_ui->status_bar->showMessage("Loading Rawlog...");
+	m_ui->algo_cbox->setDisabled(true);
+	m_recent_file = file_name;
 
 	if(m_model)
 		delete m_model;
 
 	m_model = new CObservationTreeModel(file_name.toStdString(), m_ui->observations_treeview);
-	m_ui->observations_treeview->setModel(m_model);
+	m_model->addTextObserver(m_ui->viewer_container);
+	m_model->loadModel();
 
-	m_recent_file = file_name;
+	if((m_model->getRootItem()) != nullptr)
+	{
+		m_ui->observations_treeview->setModel(m_model);
+		m_ui->status_bar->showMessage("Rawlog loaded!");
+		m_ui->viewer_container->updateText("Select the calibration algorithm to continue.");
+		m_ui->algo_cbox->setDisabled(false);
+	}
 
-	m_ui->status_bar->showMessage("Rawlog loaded!");
-	m_ui->viewer_container->updateText("Rawlog loaded! Click on any observation item on the left to visualize it.");
-
-	m_ui->viewer_container->updateText("Now choose the calibration algorithm!");
-	m_ui->algo_cbox->setDisabled(false);
+	else
+	{
+		m_ui->status_bar->showMessage("Loading aborted!");
+		m_ui->viewer_container->updateText("Loading was aborted. Try again.");
+	}
 }
 
 void CMainWindow::itemClicked(const QModelIndex &index)
 {
 	if(index.isValid())
 	{
-
 		CObservationTreeItem *item = static_cast<CObservationTreeItem*>(index.internalPointer());
 
 		std::stringstream update_stream;
@@ -147,7 +154,7 @@ void CMainWindow::itemClicked(const QModelIndex &index)
 			map->insertObservation(obs_item.get());
 			map->getPCLPointCloud(*cloud);
 
-			sensor_id = m_model->m_obs_labels.indexOf(QString::fromStdString(obs_item->sensorLabel + " : " + obs_item->GetRuntimeClass()->className)) + 1;
+			sensor_id = m_model->getObsLabels().indexOf(QString::fromStdString(obs_item->sensorLabel + " : " + obs_item->GetRuntimeClass()->className)) + 1;
 			viewer_id = sensor_id;
 
 			viewer_text = (m_model->data(index.parent())).toString().toStdString();
@@ -171,7 +178,7 @@ void CMainWindow::itemClicked(const QModelIndex &index)
 				map->insertObservation(obs_item.get());
 				map->getPCLPointCloud(*cloud);
 
-				sensor_id = m_model->m_obs_labels.indexOf(QString::fromStdString(obs_item->sensorLabel + " : " + obs_item->GetRuntimeClass()->className)) + 1;
+				sensor_id = m_model->getObsLabels().indexOf(QString::fromStdString(obs_item->sensorLabel + " : " + obs_item->GetRuntimeClass()->className)) + 1;
 				viewer_id = sensor_id;
 
 				viewer_text = (m_model->data(index)).toString().toStdString();
@@ -209,7 +216,8 @@ void CMainWindow::initCalibChanged(double value)
 void CMainWindow::runCalib(TPlaneMatchingParams params /* to be replaced by a generic calib parameters object */)
 {
 	m_plane_matching = new CPlaneMatching(m_model, m_init_calib, params);
-	m_plane_matching->addObserver(m_ui->viewer_container);
+	m_plane_matching->addTextObserver(m_ui->viewer_container);
+	m_plane_matching->addPlanesObserver(m_ui->viewer_container);
 	m_plane_matching->extractPlanes();
 	m_calib_started = true;
 }

@@ -1,20 +1,20 @@
 #pragma once
 
-#include <utils/CObserver.h>
+#include <utils/CTextObserver.h>
+#include <utils/CPlanesObserver.h>
+
 #include <QWidget>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/visualization/pcl_visualizer.h>
-
 #include <vtkRenderWindow.h>
-#include <functional>
 
 namespace Ui {
 class CViewerContainer;
 }
 
-class CViewerContainer : public QWidget, public CObserver
+class CViewerContainer : public QWidget, public CTextObserver, public CPlanesObserver
 {
 	Q_OBJECT
 

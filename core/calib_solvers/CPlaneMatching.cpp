@@ -24,14 +24,19 @@ CPlaneMatching::~CPlaneMatching()
 {
 }
 
-void CPlaneMatching::addObserver(CObserver *observer)
+void CPlaneMatching::addTextObserver(CTextObserver *observer)
 {
-	m_observers.push_back(observer);
+	m_text_observers.push_back(observer);
 }
 
-void CPlaneMatching::publishEvent(const std::string &msg)
+void CPlaneMatching::addPlanesObserver(CPlanesObserver *observer)
 {
-	for(CObserver *observer : m_observers)
+	m_planes_observers.push_back(observer);
+}
+
+void CPlaneMatching::publishText(const std::string &msg)
+{
+	for(CTextObserver *observer : m_text_observers)
 	{
 		observer->onReceivingText(msg);
 	}
@@ -42,7 +47,7 @@ void CPlaneMatching::publishPlaneCloud(const int &set_num, const int &cloud_num,
 	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud;
 	cloud = m_extracted_plane_clouds_sets[set_num][cloud_num];
 
-	for(CObserver *observer : m_observers)
+	for(CPlanesObserver *observer : m_planes_observers)
 	{
 		observer->onReceivingPlaneCloud(sensor_id, cloud);
 	}
@@ -55,7 +60,7 @@ void CPlaneMatching::run()
 
 void CPlaneMatching::extractPlanes()
 {
-	publishEvent("****Running plane matching calibration algorithm****");
+	publishText("****Running plane matching calibration algorithm****");
 
 	CObservationTreeItem *root_item, *tree_item;
 	CObservation3DRangeScan::Ptr obs_item;
@@ -78,7 +83,7 @@ void CPlaneMatching::extractPlanes()
 		for(int j = 0; j < tree_item->childCount(); j++)
 		{
 			pcl::PointCloud<pcl::PointXYZRGBA>::Ptr extracted_planes(new pcl::PointCloud<pcl::PointXYZRGBA>);
-			publishEvent("**Extracting planes from #" + std::to_string(j) + " observation in observation set #" + std::to_string(i) + "**");
+			publishText("**Extracting planes from #" + std::to_string(j) + " observation in observation set #" + std::to_string(i) + "**");
 
 			obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(tree_item->child(j)->getObservation());
 			obs_item->project3DPointsFromDepthImageInto(*cloud, params);
@@ -141,7 +146,7 @@ void CPlaneMatching::runSegmentation(const pcl::PointCloud<pcl::PointXYZRGBA>::P
 	std::stringstream stream;
 	stream << inlier_indices.size() << " plane(s) detected\n" << "Time elapsed: " << double(plane_extract_end - plane_extract_start) << std::endl;
 
-	publishEvent(stream.str());
+	publishText(stream.str());
 
 	for(size_t i = 0; i < inlier_indices.size(); i++)
 	{

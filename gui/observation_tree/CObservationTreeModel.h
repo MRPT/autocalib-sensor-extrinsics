@@ -1,8 +1,7 @@
 #pragma once
 
-#ifndef Q_MOC_RUN
 #include <observation_tree/CObservationTreeItem.h>
-#endif
+#include <utils/CTextObserver.h>
 
 #include <QAbstractItemModel>
 #include <QModelIndex>
@@ -17,6 +16,9 @@ class CObservationTreeModel : public QAbstractItemModel
 	public:
 		explicit CObservationTreeModel(const std::string &rawlog_filename, QObject *parent = 0);
 		~CObservationTreeModel();
+	    void loadModel();
+		void addTextObserver(CTextObserver *observer);
+		void publishText(const std::string &msg);
 
 		QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
 		mrpt::obs::CObservation::Ptr observationData(const QModelIndex &index) const;
@@ -26,9 +28,13 @@ class CObservationTreeModel : public QAbstractItemModel
 		int rowCount(const QModelIndex &parent = QModelIndex()) const;
 		int columnCount(const QModelIndex &parent = QModelIndex()) const;
 		CObservationTreeItem *getRootItem() const;
-
-		QStringList m_obs_labels;
+		QStringList getObsLabels() const;
 
 	private:
 		CObservationTreeItem *m_rootitem;
+		QStringList m_obs_labels;
+		//store count of observations of each observation type
+		std::vector<int> m_count_in_label;
+		std::string m_rawlog_filename;
+		std::vector<CTextObserver*> m_text_observers;
 };

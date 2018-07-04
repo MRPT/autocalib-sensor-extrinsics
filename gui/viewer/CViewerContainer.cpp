@@ -65,6 +65,53 @@ void CViewerContainer::updateText(const std::string &text)
 	m_ui->text_output->insertPlainText(QString::fromStdString(text) + QString("\n\n"));
 }
 
+//bool CViewerContainer::viewerContainsCloud(const int &viewer_id, const std::string &id)
+//{
+//	pcl::visualization::CloudActorMapPtr cloud_actor_map;
+//	pcl::visualization::ShapeActorMapPtr shape_actor_map;
+//	pcl::visualization::CoordinateActorMapPtr coordinate_actor_map;
+
+//	switch(viewer_id)
+//	{
+//	case 1:
+//	{
+//		cloud_actor_map = m_input1_viewer->cloud_actor_map_;
+//		shape_actor_map = m_input1_viewer->shape_actor_map_;
+//		coordinate_actor_map = m_input1_viewer->coordinate_actor_map_;
+
+//		return(cloud_actor_map->find (id) != cloud_actor_map->end () ||
+//				shape_actor_map->find (id) != shape_actor_map->end () ||
+//				coordinate_actor_map->find (id) != coordinate_actor_map-> end());
+//	}
+//	break;
+
+//	case 2:
+//	{
+//		cloud_actor_map = m_input2_viewer->cloud_actor_map_;
+//		shape_actor_map = m_input2_viewer->shape_actor_map_;
+//		coordinate_actor_map = m_input2_viewer->coordinate_actor_map_;
+
+//		return(cloud_actor_map->find (id) != cloud_actor_map->end () ||
+//				shape_actor_map->find (id) != shape_actor_map->end () ||
+//				coordinate_actor_map->find (id) != coordinate_actor_map-> end());
+//	}
+//	break;
+
+//	case 3:
+//	{
+//		cloud_actor_map = m_output_viewer->cloud_actor_map_;
+//		shape_actor_map = m_output_viewer->shape_actor_map_;
+//		coordinate_actor_map = m_output_viewer->coordinate_actor_map_;
+
+//		return(cloud_actor_map->find (id) != cloud_actor_map->end () ||
+//				shape_actor_map->find (id) != shape_actor_map->end () ||
+//				coordinate_actor_map->find (id) != coordinate_actor_map-> end());
+
+//	}
+//	break;
+//	}
+//}
+
 bool CViewerContainer::viewerContainsCloud(const int &viewer_id, const std::string &id)
 {
 	pcl::visualization::CloudActorMapPtr cloud_actor_map;
@@ -143,11 +190,11 @@ void CViewerContainer::addPlanes(const int &viewer_id, const pcl::PointCloud<pcl
 	{
 	case 1:
 	{
-		if(!viewerContainsCloud(viewer_id, "planes"))
-			m_input1_viewer->addPointCloud(cloud, viewer_color_handler, "planes");
+		if(viewerContainsCloud(viewer_id, "planes"))
+			m_input1_viewer->removePointCloud("planes");
 		else
-			m_input1_viewer->updatePointCloud(cloud, viewer_color_handler, "planes");
 
+		m_input1_viewer->addPointCloud(cloud, viewer_color_handler, "planes");
 		m_input1_viewer->resetCamera();
 		m_input1_viewer->addCoordinateSystem(0.3);
 		m_ui->input1_viz->update();
@@ -156,11 +203,10 @@ void CViewerContainer::addPlanes(const int &viewer_id, const pcl::PointCloud<pcl
 
 	case 2:
 	{
-		if(!viewerContainsCloud(viewer_id, "planes"))
-			m_input2_viewer->addPointCloud(cloud, viewer_color_handler, "planes");
-		else
-			m_input2_viewer->updatePointCloud(cloud, viewer_color_handler, "planes");
+		if(viewerContainsCloud(viewer_id, "planes"))
+			m_input2_viewer->removePointCloud("planes");
 
+		m_input2_viewer->addPointCloud(cloud, viewer_color_handler, "planes");
 		m_input2_viewer->resetCamera();
 		m_input2_viewer->addCoordinateSystem(0.3);
 		m_ui->input2_viz->update();
@@ -169,11 +215,10 @@ void CViewerContainer::addPlanes(const int &viewer_id, const pcl::PointCloud<pcl
 
 	case 3:
 	{
-		if(!viewerContainsCloud(viewer_id, "planes"))
-			m_output_viewer->addPointCloud(cloud, viewer_color_handler, "planes");
-		else
-			m_output_viewer->updatePointCloud(cloud, viewer_color_handler, "planes");
+		if(viewerContainsCloud(viewer_id, "planes"))
+			m_output_viewer->removePointCloud("planes");
 
+		m_output_viewer->addPointCloud(cloud, viewer_color_handler, "planes");
 		m_output_viewer->resetCamera();
 		m_output_viewer->addCoordinateSystem(0.3);
 		m_ui->result_viz->update();

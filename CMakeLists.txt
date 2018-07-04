@@ -18,15 +18,15 @@ MARK_AS_ADVANCED(EXTRA_WARNINGS)
 # ======================================
 IF (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR CMAKE_COMPILER_IS_GNUCXX)
 	IF(CMAKE_BUILD_TYPE MATCHES "Debug")
-        	SET(EXTRA_CPP_FLAGS "${EXTRA_CPP_FLAGS} -g")
+		SET(EXTRA_CPP_FLAGS "${EXTRA_CPP_FLAGS} -g")
 		ADD_DEFINITIONS( -D_DEBUG)
         	ADD_DEFINITIONS( -DDEBUG)
 	ENDIF(CMAKE_BUILD_TYPE MATCHES "Debug")
 
         # Whole program optimization
 	IF(WHOLE_PROGRAM_OPTIMIZATION)
-        	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --combine")
-        	SET(EXES_CXX_FLAGS "${EXES_CXX_FLAGS} -fwhole-program --combine")
+	        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --combine")
+		SET(EXES_CXX_FLAGS "${EXES_CXX_FLAGS} -fwhole-program --combine")
 	ENDIF(WHOLE_PROGRAM_OPTIMIZATION)
 
         # "-mtune=native" generates code optimized for the detected current processor.
@@ -37,13 +37,13 @@ IF (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR CMAKE_COMPILER_IS_GNUCXX)
 	SET( OPTIMIZE_NATIVE ${opt_native_def} CACHE BOOL "GCC/clang optimizations for current processor (-mtune=native). Requires GCC 4.2+")
 
 	IF(CMAKE_BUILD_TYPE STREQUAL "Debug")  # Not in debug!
-        	SET(OPTIMIZE_NATIVE OFF)
+		SET(OPTIMIZE_NATIVE OFF)
 	ENDIF(CMAKE_BUILD_TYPE STREQUAL "Debug")
 
         # "-ffast-math"
 	SET( OPTIMIZE_FFAST-MATH OFF CACHE BOOL "GCC/clang optimization for floating math (-ffast-math).")
 	IF(OPTIMIZE_FFAST-MATH)
-        	SET(EXTRA_CPP_FLAGS "${EXTRA_CPP_FLAGS} -ffast-math")
+		SET(EXTRA_CPP_FLAGS "${EXTRA_CPP_FLAGS} -ffast-math")
 	ENDIF(OPTIMIZE_FFAST-MATH)
 
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_CPP_FLAGS}")
@@ -64,7 +64,7 @@ FIND_PACKAGE(VTK REQUIRED)
 FIND_PACKAGE(PCL REQUIRED)
 INCLUDE_DIRECTORIES(${PCL_INCLUDE_DIRS})
 LINK_DIRECTORIES(${PCL_LIBRARY_DIRS})
-ADD_DEFINITIONS(${PCL_DEFINITIONS})
+#ADD_DEFINITIONS(${PCL_DEFINITIONS})
 
 # BOOST is required for the unit tests
 FIND_PACKAGE(Boost 1.46.0 REQUIRED system filesystem unit_test_framework serialization)
