@@ -2,6 +2,7 @@
 #include <ui_CMainWindow.h>
 #include <observation_tree/CObservationTreeModel.h>
 #include <config/CPlaneMatchingConfig.h>
+#include <config/CLineMatchingConfig.h>
 #include <calib_solvers/CPlaneMatching.h>
 
 #include <mrpt/obs/CObservation3DRangeScan.h>
@@ -71,15 +72,22 @@ void CMainWindow::algosIndexChanged(int index)
 	{
 		if(m_config_widget)
 			m_config_widget.reset();
+		break;
 	}
-	break;
 
 	case 1:
 	{
 		m_config_widget = std::make_shared<CPlaneMatchingConfig>();
-		qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(1, m_config_widget.get());
+		qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(2, m_config_widget.get());
+		break;
 	}
-	break;
+
+	case 2:
+	{
+		m_config_widget = std::make_shared<CLineMatchingConfig>();
+		qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(2, m_config_widget.get());
+		break;
+	}
 	}
 }
 
@@ -137,6 +145,7 @@ void CMainWindow::itemClicked(const QModelIndex &index)
 		CObservation3DRangeScan::Ptr obs_item;
 		mrpt::maps::CPointsMap::Ptr map;
 		pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
+		mrpt::img::CImage image;
 
 		//T3DPointsProjectionParams params;
 		//params.MAKE_DENSE = false;
@@ -154,12 +163,17 @@ void CMainWindow::itemClicked(const QModelIndex &index)
 			map->insertObservation(obs_item.get());
 			map->getPCLPointCloud(*cloud);
 
+			//image = cv::cvarrToMat(obs_item->intensityImage.getAs<IplImage>());
+			image = obs_item->intensityImage;
+
+
 			sensor_id = m_model->getObsLabels().indexOf(QString::fromStdString(obs_item->sensorLabel + " : " + obs_item->GetRuntimeClass()->className)) + 1;
 			viewer_id = sensor_id;
 
 			viewer_text = (m_model->data(index.parent())).toString().toStdString();
 
 			m_ui->viewer_container->updateViewer(viewer_id, cloud, viewer_text);
+			m_ui->viewer_container->updateImageViewer(viewer_id, image);
 
 			if(m_calib_started)
 				m_plane_matching->publishPlaneCloud(item->parentItem()->row(), item->row(), sensor_id);
@@ -178,6 +192,9 @@ void CMainWindow::itemClicked(const QModelIndex &index)
 				map->insertObservation(obs_item.get());
 				map->getPCLPointCloud(*cloud);
 
+				//image = cv::cvarrToMat(obs_item->intensityImage.getAs<IplImage>());
+				image = obs_item->intensityImage;
+
 				sensor_id = m_model->getObsLabels().indexOf(QString::fromStdString(obs_item->sensorLabel + " : " + obs_item->GetRuntimeClass()->className)) + 1;
 				viewer_id = sensor_id;
 
@@ -185,6 +202,7 @@ void CMainWindow::itemClicked(const QModelIndex &index)
 				update_stream << "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n";
 
 				m_ui->viewer_container->updateViewer(viewer_id, cloud, viewer_text);
+				m_ui->viewer_container->updateImageViewer(viewer_id, image);
 
 				if(m_calib_started)
 					m_plane_matching->publishPlaneCloud(item->row(), i, sensor_id);
@@ -213,11 +231,18 @@ void CMainWindow::initCalibChanged(double value)
 		m_init_calib[5] = value;
 }
 
-void CMainWindow::runCalib(TPlaneMatchingParams params /* to be replaced by a generic calib parameters object */)
+void CMainWindow::runPlaneMatchingCalib(TPlaneMatchingParams params /* to be replaced by a generic calib parameters object */)
 {
 	m_plane_matching = new CPlaneMatching(m_model, m_init_calib, params);
 	m_plane_matching->addTextObserver(m_ui->viewer_container);
 	m_plane_matching->addPlanesObserver(m_ui->viewer_container);
 	m_plane_matching->extractPlanes();
+	m_calib_started = true;
+}
+
+void CMainWindow::runLineMatchingCalib()
+{
+	m_line_matching = new CLineMatching(m_model);
+	m_line_matching->extractLines();
 	m_calib_started = true;
 }

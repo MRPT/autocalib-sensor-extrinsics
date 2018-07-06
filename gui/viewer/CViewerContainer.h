@@ -1,14 +1,17 @@
 #pragma once
 
+#include <mrpt/gui/CQtGlCanvasBase.h>
 #include <utils/CTextObserver.h>
 #include <utils/CPlanesObserver.h>
 
 #include <QWidget>
 
+#include <mrpt/img/CImage.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/visualization/pcl_visualizer.h>
 #include <vtkRenderWindow.h>
+#include <opencv2/core/core.hpp>
 
 namespace Ui {
 class CViewerContainer;
@@ -23,6 +26,7 @@ public:
 	~CViewerContainer();
 	void updateText(const std::string &);
 	void updateViewer(const int &viewer_id, const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const std::string &text);
+	void updateImageViewer(const int &viewer_id, mrpt::img::CImage &image);
 	void addPlanes(const int &viewer_id, const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud);
 	void updateCalibConfig(const int &calib_algo_id);
 	bool viewerContainsCloud(const int &viewer_id, const std::string &id);

@@ -93,15 +93,6 @@ void CPlaneMatching::extractPlanes()
 
 		m_extracted_plane_clouds_sets.push_back(extracted_plane_clouds);
 	}
-
-//	tree_item = root_item->child(5);
-//	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr extracted_planes(new pcl::PointCloud<pcl::PointXYZRGBA>);
-//	publishEvent("**Extracting planes from #" + std::to_string(2) + " observation in observation set #" + std::to_string(5) + "**");
-//	obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(tree_item->child(0)->getObservation());
-//	obs_item->project3DPointsFromDepthImageInto(*cloud, params);
-//	runSegmentation(cloud, extracted_planes);
-
-//	m_observers[0]->onReceivingPlaneCloud(2, extracted_planes);
 }
 
 void CPlaneMatching::runSegmentation(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &extracted_planes)

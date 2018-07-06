@@ -12,12 +12,15 @@ SET(SRC
 	utils/CTextObserver.h
 	calib_solvers/CPlaneMatching.h
 	calib_solvers/TPlaneMatchingParams.h
+	calib_solvers/CLineMatching.h
+	calib_solvers/TLineMatchingParams.h
 
 	utils/lines.cpp
 	utils/planes.cpp
 	utils/correspondences.cpp
 	utils/solver.cpp
 	calib_solvers/CPlaneMatching.cpp
+	calib_solvers/CLineMatching.cpp
 )
 
 # CORE library encapsulates the methods and types for the calibration algorithms

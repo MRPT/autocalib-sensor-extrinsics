@@ -3,6 +3,7 @@
 #include <observation_tree/CObservationTreeModel.h>
 #include <calib_solvers/TPlaneMatchingParams.h>
 #include <calib_solvers/CPlaneMatching.h>
+#include <calib_solvers/CLineMatching.h>
 
 #include <QMainWindow>
 #include <QSettings>
@@ -18,7 +19,8 @@ class CMainWindow : public QMainWindow
 public:
 	explicit CMainWindow(QWidget *parent = 0);
 	~CMainWindow();
-	void runCalib(TPlaneMatchingParams params);
+	void runPlaneMatchingCalib(TPlaneMatchingParams params);
+	void runLineMatchingCalib();
 
 private slots:
 	void sensorsIndexChanged(int index);
@@ -39,5 +41,6 @@ private:
 
 	std::shared_ptr<QWidget> m_config_widget;
 	CPlaneMatching *m_plane_matching; /* to be replaced by a generic calib algo object */
+	CLineMatching *m_line_matching;
 	bool m_calib_started;
 };

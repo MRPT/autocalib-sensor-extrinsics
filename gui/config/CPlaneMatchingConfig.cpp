@@ -1,6 +1,5 @@
 #include <config/CPlaneMatchingConfig.h>
 #include <ui_CPlaneMatchingConfig.h>
-#include <QDebug>
 #include <CMainWindow.h>
 
 CPlaneMatchingConfig::CPlaneMatchingConfig(QWidget *parent) :
@@ -32,7 +31,7 @@ void CPlaneMatchingConfig::startCalib()
 	params.dist_threshold = m_ui->distance_threshold_sbox->value();
 	params.min_inliers_frac = m_ui->minimum_threshold_sbox->value();
 
-	static_cast<CMainWindow*>(parentWidget()->parentWidget()->parentWidget())->runCalib(params);
+	static_cast<CMainWindow*>(parentWidget()->parentWidget()->parentWidget())->runPlaneMatchingCalib(params);
 }
 
 void CPlaneMatchingConfig::proceedCalib()

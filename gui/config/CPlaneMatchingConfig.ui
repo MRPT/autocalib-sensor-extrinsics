@@ -44,7 +44,7 @@
    <item>
     <layout class="QHBoxLayout" name="segment_group_label">
      <item>
-      <widget class="QLabel" name="segment_label">
+      <widget class="QLabel" name="label">
        <property name="text">
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Plane Segmentation&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
@@ -54,7 +54,7 @@
       </widget>
      </item>
      <item>
-      <spacer name="segment_group_spacer">
+      <spacer name="label_spacer">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
@@ -69,7 +69,7 @@
     </layout>
    </item>
    <item>
-    <layout class="QFormLayout" name="segment_form">
+    <layout class="QFormLayout" name="segment_group_form">
      <item row="5" column="0">
       <widget class="QLabel" name="angle_threshold_label">
        <property name="text">
@@ -228,7 +228,7 @@
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="plane_config_button_groups">
+    <layout class="QHBoxLayout" name="button_group">
      <item>
       <widget class="QPushButton" name="start_calib_button">
        <property name="text">
@@ -253,7 +253,7 @@
     </layout>
    </item>
    <item>
-    <spacer name="plane_config_spacer">
+    <spacer name="spacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>

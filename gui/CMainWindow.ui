@@ -394,6 +394,11 @@
            <string>Plane matching</string>
           </property>
          </item>
+         <item>
+          <property name="text">
+           <string>Line Matching</string>
+          </property>
+         </item>
         </widget>
        </item>
       </layout>
