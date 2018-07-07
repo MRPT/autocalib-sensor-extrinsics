@@ -3,12 +3,14 @@
 #include <mrpt/obs/CObservation3DRangeScan.h>
 #include <mrpt/math/types_math.h>
 #include <mrpt/maps/PCL_adapters.h>
+#include <mrpt/pbmap/PbMap.h>
 
 #include <pcl/search/impl/search.hpp>
 #include <pcl/segmentation/organized_multi_plane_segmentation.h>
 #include <pcl/ModelCoefficients.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/features/integral_image_normal.h>
+#include <pcl/filters/extract_indices.h>
 #include <pcl/common/time.h>
 
 using namespace mrpt::obs;
@@ -133,6 +135,63 @@ void CPlaneMatching::runSegmentation(const pcl::PointCloud<pcl::PointXYZRGBA>::P
 
 	multi_plane_segmentation.segmentAndRefine(regions, model_coefficients, inlier_indices, labels, label_indices, boundary_indices);
 	double plane_extract_end = pcl::getTime();
+
+    // Create a vector with the planes detected in this keyframe, and calculate their parameters (normal, center, pointclouds, etc.)
+
+    mrpt::pbmap::PbMap pbmap; // Save all the segmented planes into a PbMap
+    float max_curvature_plane = 0.03;
+    for (size_t i = 0; i < regions.size (); i++)
+    {
+//      std::cout << "curv " << regions[i].getCurvature() << std::endl;
+      if(regions[i].getCurvature() > max_curvature_plane)
+        continue;
+
+      mrpt::pbmap::Plane plane;
+      plane.v3center = regions[i].getCentroid ();
+      plane.v3normal = Eigen::Vector3f(model_coefficients[i].values[0], model_coefficients[i].values[1], model_coefficients[i].values[2]);
+      plane.d = model_coefficients[i].values[3];
+      // Force the normal vector to point towards the camera
+      if( model_coefficients[i].values[3] < 0)
+      {
+        plane.v3normal = -plane.v3normal;
+        plane.d = -plane.d;
+      }
+      plane.curvature = regions[i].getCurvature();
+//      cout << "normal " << plane.v3normal.transpose() << " center " << regions[i].getCentroid().transpose() << " " << plane.v3center.transpose() << endl;
+//    cout << "D " << -(plane.v3normal.dot(plane.v3center)) << " " << plane.d << endl;
+
+      // Extract the planar inliers from the input cloud
+      pcl::ExtractIndices<pcl::PointXYZRGBA> extract;
+      extract.setInputCloud ( cloud );
+      extract.setIndices ( boost::make_shared<const pcl::PointIndices> (inlier_indices[i]) );
+      extract.setNegative (false);
+      extract.filter (*plane.planePointCloudPtr);    // Write the planar point cloud
+      plane.inliers = inlier_indices[i].indices;
+//    cout << "Extract inliers\n";
+
+      pcl::PointCloud<pcl::PointXYZRGBA>::Ptr contourPtr(new pcl::PointCloud<pcl::PointXYZRGBA>);
+      contourPtr->points = regions[i].getContour();
+      plane.calcConvexHull(contourPtr);
+      plane.computeMassCenterAndArea();
+
+      // Check whether this region correspond to the same plane as a previous one (this situation may happen when there exists a small discontinuity in the observation)
+      bool isSamePlane = false;
+      for (size_t j = 0; j < pbmap.vPlanes.size(); j++)
+        if( pbmap.vPlanes[j].isSamePlane(plane, 0.998, 0.1, 0.4) ) // The planes are merged if they are the same
+        {
+//          cout << "Merge local region\n";
+          isSamePlane = true;
+          pbmap.vPlanes[j].mergePlane(plane);
+
+          break;
+        }
+      if(!isSamePlane)
+      {
+//          plane.calcMainColor();
+        plane.id = pbmap.vPlanes.size();
+        pbmap.vPlanes.push_back(plane);
+      }
+    }
 
 	std::stringstream stream;
 	stream << inlier_indices.size() << " plane(s) detected\n" << "Time elapsed: " << double(plane_extract_end - plane_extract_start) << std::endl;
