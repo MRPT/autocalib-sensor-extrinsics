@@ -1,4 +1,6 @@
 #include <calib_solvers/CPlaneMatching.h>
+#include <calib_solvers/calib_from_planes3D.h>
+#include <utils/planes.h>
 
 #include <mrpt/obs/CObservation3DRangeScan.h>
 #include <mrpt/math/types_math.h>
@@ -75,6 +77,18 @@ void CPlaneMatching::extractPlanes()
 	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
 	std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> extracted_plane_clouds;
 
+    CalibFromPlanes3D calib(2);
+    TPlaneSegmentationParams seg_params;
+    seg_params.normal_estimation_method = m_params.normal_estimation_method;
+    seg_params.depth_dependent_smoothing = m_params.depth_dependent_smoothing;
+    seg_params.max_depth_change_factor = m_params.max_depth_change_factor;
+    seg_params.normal_smoothing_size = m_params.normal_smoothing_size;
+    seg_params.angle_threshold = m_params.angle_threshold;
+    seg_params.dist_threshold = m_params.dist_threshold;
+    seg_params.min_inliers_frac = m_params.min_inliers_frac;
+    seg_params.max_curvature = 0.1;
+
+    calib.vvv_planes.resize(17); // [pair_id][sensor_id][plane_id]
 	//for(int i = 0; i < root_item->childCount(); i++)
 	// using only few observations for memory reasons
 	for(int i = 0; i < 17; i++)
@@ -82,19 +96,38 @@ void CPlaneMatching::extractPlanes()
 		tree_item = root_item->child(i);
 		extracted_plane_clouds.clear();
 
+        calib.vvv_planes[i] = std::vector< std::vector< PlaneCHull > >(tree_item->childCount());
 		for(int j = 0; j < tree_item->childCount(); j++)
 		{
-			pcl::PointCloud<pcl::PointXYZRGBA>::Ptr extracted_planes(new pcl::PointCloud<pcl::PointXYZRGBA>);
 			publishText("**Extracting planes from #" + std::to_string(j) + " observation in observation set #" + std::to_string(i) + "**");
 
 			obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(tree_item->child(j)->getObservation());
 			obs_item->project3DPointsFromDepthImageInto(*cloud, params);
-            extractPlanes(cloud, extracted_planes);
-			extracted_plane_clouds.push_back(extracted_planes);
+            std::cout << cloud->size() << " " << cloud->height << "x" << cloud->width << "\n";
+            // Let's try to visualize the point cloud in color
+            for (size_t i = 0; i < cloud->size(); ++i) {
+                std::cout << obs_item->intensityImage.get_unsafe(i%640, i/640, 0)[2] << " ";
+                cloud->points[i].r = static_cast<unsigned char>(obs_item->intensityImage.get_unsafe(i%640, i/640, 0)[2]);
+                cloud->points[i].g = static_cast<unsigned char>(obs_item->intensityImage.get_unsafe(i%640, i/640, 1)[1]);
+                cloud->points[i].b = static_cast<unsigned char>(obs_item->intensityImage.get_unsafe(i%640, i/640, 2)[0]);
+            }
+
+            pcl::PointCloud<pcl::PointXYZRGBA>::Ptr extracted_planes(new pcl::PointCloud<pcl::PointXYZRGBA>);
+//            extractPlanes(cloud, extracted_planes);
+            extracted_plane_clouds.push_back(extracted_planes);
+
+            size_t n_planes = segmentPlanes(cloud, seg_params, calib.vvv_planes[i][j]);
+            //std::cout << calib.vvv_planes[i][j].size() << " extractPlanes\n";
 		}
 
 		m_extracted_plane_clouds_sets.push_back(extracted_plane_clouds);
-	}
+
+        // Check for potential plane matches
+        calib.findPotentialMatches(calib.vvv_planes[i], i);
+    }
+
+    //calib.computeCalibration_rot(ExtrinsicCalib::m_init_calib);
+
 }
 
 void CPlaneMatching::extractPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &extracted_planes)

@@ -144,8 +144,9 @@ void CMainWindow::itemClicked(const QModelIndex &index)
 		int viewer_id, sensor_id;
 
 		CObservation3DRangeScan::Ptr obs_item;
-        //mrpt::maps::CPointsMap::Ptr map;
-        mrpt::maps::CColouredPointsMap::Ptr map;
+        mrpt::maps::CPointsMap::Ptr map;
+//        mrpt::maps::CColouredPointsMap::Ptr map;
+
         pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
 		mrpt::img::CImage image;
 
@@ -161,11 +162,14 @@ void CMainWindow::itemClicked(const QModelIndex &index)
 			obs_item->getDescriptionAsText(update_stream);
 
 			//For quicker load and display of the cloud
-            //map = mrpt::make_aligned_shared<mrpt::maps::CSimplePointsMap>();
+//            map = mrpt::make_aligned_shared<mrpt::maps::CSimplePointsMap>();
             map = mrpt::make_aligned_shared<mrpt::maps::CColouredPointsMap>();
+//            map->colorScheme.scheme = mrpt::maps::CColouredPointsMap::cmFromIntensityImage;
+
             map->insertObservation(obs_item.get());
-            //map->getPCLPointCloud(*cloud);
-            map->getPCLPointCloudXYZRGB(*cloud);
+            map->getPCLPointCloud(*cloud);
+//            map->getPCLPointCloudXYZRGB(*cloud);
+            std::cout << cloud->size() << " " << cloud->height << "x" << cloud->width << "\n";
 
 			//image = cv::cvarrToMat(obs_item->intensityImage.getAs<IplImage>());
 			image = obs_item->intensityImage;
@@ -192,11 +196,11 @@ void CMainWindow::itemClicked(const QModelIndex &index)
 				//obs_item->project3DPointsFromDepthImageInto(*cloud, params);
 				obs_item->getDescriptionAsText(update_stream);
 
-                //map = mrpt::make_aligned_shared<mrpt::maps::CSimplePointsMap>();
+//                map = mrpt::make_aligned_shared<mrpt::maps::CSimplePointsMap>();
                 map = mrpt::make_aligned_shared<mrpt::maps::CColouredPointsMap>();
                 map->insertObservation(obs_item.get());
-                //map->getPCLPointCloud(*cloud);
-                map->getPCLPointCloudXYZRGB(*cloud);
+                map->getPCLPointCloud(*cloud);
+//                map->getPCLPointCloudXYZRGB(*cloud);
 
 				//image = cv::cvarrToMat(obs_item->intensityImage.getAs<IplImage>());
 				image = obs_item->intensityImage;

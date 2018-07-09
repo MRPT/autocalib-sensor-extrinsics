@@ -23,8 +23,8 @@ SET(SRC
 	utils/solver.cpp
 	calib_solvers/CPlaneMatching.cpp
 	calib_solvers/CLineMatching.cpp
-	calib_solvers/extrinsic_calib.h
-	calib_solvers/calib_from_planes3D.h
+        calib_solvers/extrinsic_calib.cpp
+        calib_solvers/calib_from_planes3D.cpp
 )
 
 # CORE library encapsulates the methods and types for the calibration algorithms
