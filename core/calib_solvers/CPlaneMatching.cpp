@@ -89,7 +89,7 @@ void CPlaneMatching::extractPlanes()
 
 			obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(tree_item->child(j)->getObservation());
 			obs_item->project3DPointsFromDepthImageInto(*cloud, params);
-			runSegmentation(cloud, extracted_planes);
+            extractPlanes(cloud, extracted_planes);
 			extracted_plane_clouds.push_back(extracted_planes);
 		}
 
@@ -97,7 +97,7 @@ void CPlaneMatching::extractPlanes()
 	}
 }
 
-void CPlaneMatching::runSegmentation(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &extracted_planes)
+void CPlaneMatching::extractPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &extracted_planes)
 {
 	double plane_extract_start = pcl::getTime();
 	unsigned min_inliers = m_params.min_inliers_frac * cloud->size();
@@ -191,6 +191,10 @@ void CPlaneMatching::runSegmentation(const pcl::PointCloud<pcl::PointXYZRGBA>::P
         plane.id = pbmap.vPlanes.size();
         pbmap.vPlanes.push_back(plane);
       }
+    }
+    for (size_t i = 0; i < pbmap.vPlanes.size (); i++)
+    {
+        std::cout << i << " normal " << pbmap.vPlanes[i].v3normal.transpose() << "\n";
     }
 
 	std::stringstream stream;
