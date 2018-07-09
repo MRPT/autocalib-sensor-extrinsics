@@ -4,6 +4,7 @@
 #include <QVariant>
 
 #include <mrpt/obs/CObservation.h>
+#include <mrpt/system/datetime.h>
 #include <mrpt/obs/CObservation3DRangeScan.h>
 
 /**
@@ -16,14 +17,15 @@
 class CObservationTreeItem
 {
 	public:
-		CObservationTreeItem(const QVariant &data, const mrpt::obs::CObservation::Ptr observation = 0 /*null when it is just a set (holder) item*/, CObservationTreeItem *parentItem = 0);
+	    CObservationTreeItem(const QString &data, const mrpt::obs::CObservation::Ptr observation = 0 /*null when it is just a set (holder) item*/, CObservationTreeItem *parentItem = 0);
 		~CObservationTreeItem();
 
 		void appendChild(CObservationTreeItem *child);
 		QVariant displayData() const;
 		mrpt::obs::CObservation::Ptr getObservation() const;
+		mrpt::system::TTimeStamp getTimeStamp() const;
 		CObservationTreeItem *child(int row);
-		/** Returns the number of child items it contains */
+		/** Returns the number of child items the item contains. */
 		int childCount() const;
 		/** Returns the row count of the item within its parent. */
 		int row() const;
@@ -32,7 +34,7 @@ class CObservationTreeItem
 
 	private:
 		QList<CObservationTreeItem*> m_childitems;
-		QVariant m_displaydata;
+		QString m_displaydata;
 		mrpt::obs::CObservation::Ptr m_observation;
 		CObservationTreeItem *m_parentitem;
 };

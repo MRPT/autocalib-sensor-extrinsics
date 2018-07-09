@@ -43,6 +43,8 @@ void CObservationTreeModel::loadModel(const std::string &rawlog_filename)
 	double time_to_load;
 	stop_watch.Tic();
 
+	mrpt::system::TTimeStamp prev_ts, curr_ts, next_ts;
+
 	m_rootitem = new CObservationTreeItem(QString("root"));
 
 	CFileGZInputStream rawlog(m_rawlog_filename);
@@ -72,6 +74,7 @@ void CObservationTreeModel::loadModel(const std::string &rawlog_filename)
 
 			sensor_label = QString::fromStdString(obs->sensorLabel);
 			obs_label = QString::fromStdString(obs->sensorLabel + " : " + (obs->GetRuntimeClass()->className));
+			curr_ts = obs->timestamp;
 
 			if(obs_count == 1)
 			{

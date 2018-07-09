@@ -2,6 +2,12 @@
 
 A GUI app for calibrating the extrinsics between range and visual sensors.
 
+<br>
+<img src="doc/images/july-10.png" width = "500"/>
+<br>
+
+NOTE : Work in progress.
+
 ## Dependencies
 
 * MRPT (built in Debug mode)

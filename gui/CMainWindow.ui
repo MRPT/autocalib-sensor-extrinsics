@@ -314,12 +314,53 @@
     <number>1</number>
    </attribute>
    <widget class="QWidget" name="observations_dockwidget_contents">
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
+    <layout class="QVBoxLayout" name="verticalLayout_6">
      <item>
-      <widget class="QTreeView" name="observations_treeview">
-       <attribute name="headerVisible">
-        <bool>false</bool>
-       </attribute>
+      <widget class="QSplitter" name="splitter">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="handleWidth">
+        <number>8</number>
+       </property>
+       <widget class="QWidget" name="">
+        <layout class="QVBoxLayout" name="observations_treeview_group">
+         <item>
+          <widget class="QLabel" name="observations_treeview_label">
+           <property name="text">
+            <string>Tree</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QTreeView" name="observations_treeview">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>1</verstretch>
+            </sizepolicy>
+           </property>
+           <attribute name="headerVisible">
+            <bool>false</bool>
+           </attribute>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="">
+        <layout class="QVBoxLayout" name="observations_description_group">
+         <item>
+          <widget class="QLabel" name="observations_description_label">
+           <property name="text">
+            <string>Description</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QTextBrowser" name="observations_description_textbrowser"/>
+         </item>
+        </layout>
+       </widget>
       </widget>
      </item>
     </layout>

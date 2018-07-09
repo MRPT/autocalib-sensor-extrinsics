@@ -178,7 +178,6 @@ void CMainWindow::itemClicked(const QModelIndex &index)
 			//image = cv::cvarrToMat(obs_item->intensityImage.getAs<IplImage>());
 			image = obs_item->intensityImage;
 
-
 			sensor_id = m_model->getObsLabels().indexOf(QString::fromStdString(obs_item->sensorLabel + " : " + obs_item->GetRuntimeClass()->className)) + 1;
 			viewer_id = sensor_id;
 
@@ -211,7 +210,7 @@ void CMainWindow::itemClicked(const QModelIndex &index)
 				viewer_id = sensor_id;
 
 				viewer_text = (m_model->data(index)).toString().toStdString();
-				update_stream << "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n";
+				update_stream << "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n";
 
 				m_ui->viewer_container->updateViewer(viewer_id, cloud, viewer_text);
 				m_ui->viewer_container->updateImageViewer(viewer_id, image);
@@ -221,7 +220,7 @@ void CMainWindow::itemClicked(const QModelIndex &index)
 			}
 		}
 
-		m_ui->viewer_container->updateText(update_stream.str());
+		m_ui->observations_description_textbrowser->setText(QString::fromStdString(update_stream.str()));
 	}
 }
 
