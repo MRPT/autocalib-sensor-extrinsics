@@ -6,7 +6,12 @@
 #include <mrpt/obs/CObservation.h>
 #include <mrpt/obs/CObservation3DRangeScan.h>
 
-//The type of each item that is stored internally in a tree structure by CObservationTreeModel
+/**
+ * Defines the type of each item that
+ * is stored internally in CObservationTreeModel.
+ *
+ * Detailed description.
+ */
 
 class CObservationTreeItem
 {
@@ -18,8 +23,11 @@ class CObservationTreeItem
 		QVariant displayData() const;
 		mrpt::obs::CObservation::Ptr getObservation() const;
 		CObservationTreeItem *child(int row);
+		/** Returns the number of child items it contains */
 		int childCount() const;
+		/** Returns the row count of the item within its parent. */
 		int row() const;
+		/** Returns the parent item */
 		CObservationTreeItem *parentItem();
 
 	private:

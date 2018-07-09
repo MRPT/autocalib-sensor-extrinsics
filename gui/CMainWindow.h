@@ -19,6 +19,7 @@ class CMainWindow : public QMainWindow
 public:
 	explicit CMainWindow(QWidget *parent = 0);
 	~CMainWindow();
+	CObservationTreeModel* updatedRawlog();
 	void runPlaneMatchingCalib(TPlaneMatchingParams params);
 	void runLineMatchingCalib();
 

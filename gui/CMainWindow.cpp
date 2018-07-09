@@ -78,14 +78,14 @@ void CMainWindow::algosIndexChanged(int index)
 	case 1:
 	{
 		m_config_widget = std::make_shared<CPlaneMatchingConfig>();
-		qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(2, m_config_widget.get());
+		qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(4, m_config_widget.get());
 		break;
 	}
 
 	case 2:
 	{
 		m_config_widget = std::make_shared<CLineMatchingConfig>();
-		qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(2, m_config_widget.get());
+		qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(4, m_config_widget.get());
 		break;
 	}
 	}
@@ -113,9 +113,9 @@ void CMainWindow::loadRawlog()
 	if(m_model)
 		delete m_model;
 
-	m_model = new CObservationTreeModel(file_name.toStdString(), m_ui->observations_treeview);
+	m_model = new CObservationTreeModel(m_ui->observations_treeview);
 	m_model->addTextObserver(m_ui->viewer_container);
-	m_model->loadModel();
+	m_model->loadModel(file_name.toStdString());
 
 	if((m_model->getRootItem()) != nullptr)
 	{
@@ -123,6 +123,18 @@ void CMainWindow::loadRawlog()
 		m_ui->status_bar->showMessage("Rawlog loaded!");
 		m_ui->viewer_container->updateText("Select the calibration algorithm to continue.");
 		m_ui->algo_cbox->setDisabled(false);
+		m_ui->sensors_selection_list->setDisabled(false);
+
+		QStringList sensor_labels = m_model->getSensorLabels();
+
+		for(size_t i = 0; i < sensor_labels.size(); i++)
+		{
+			QListWidgetItem *item = new QListWidgetItem;
+			item->setText(sensor_labels[i]);
+			item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+			item->setCheckState(Qt::Checked);
+			m_ui->sensors_selection_list->insertItem(i, item);
+		}
 	}
 
 	else
@@ -231,18 +243,55 @@ void CMainWindow::initCalibChanged(double value)
 		m_init_calib[5] = value;
 }
 
+CObservationTreeModel* CMainWindow::updatedRawlog()
+{
+	QStringList selected_sensor_labels;
+	QListWidgetItem *item;
+
+	for(size_t i = 0; i < m_ui->sensors_selection_list->count(); i++)
+	{
+		item = m_ui->sensors_selection_list->item(i);
+		if(item->checkState() == Qt::Checked)
+			selected_sensor_labels.push_back(item->text());
+	}
+
+	if(!(selected_sensor_labels.size() > 1))
+		return nullptr;
+	else
+		//TODO - create a new clipped model object for > 2 sensors
+		return m_model;
+}
+
 void CMainWindow::runPlaneMatchingCalib(TPlaneMatchingParams params /* to be replaced by a generic calib parameters object */)
 {
-	m_plane_matching = new CPlaneMatching(m_model, m_init_calib, params);
-	m_plane_matching->addTextObserver(m_ui->viewer_container);
-	m_plane_matching->addPlanesObserver(m_ui->viewer_container);
-	m_plane_matching->extractPlanes();
-	m_calib_started = true;
+	CObservationTreeModel *model;
+	model = updatedRawlog();
+
+	if(model != nullptr)
+	{
+		m_plane_matching = new CPlaneMatching(model, m_init_calib, params);
+		m_plane_matching->addTextObserver(m_ui->viewer_container);
+		m_plane_matching->addPlanesObserver(m_ui->viewer_container);
+		m_plane_matching->extractPlanes();
+		m_calib_started = true;
+	}
+
+	else
+		m_ui->viewer_container->updateText("Error. Choose atleast two sensors!");
 }
 
 void CMainWindow::runLineMatchingCalib()
 {
-	m_line_matching = new CLineMatching(m_model);
-	m_line_matching->extractLines();
-	m_calib_started = true;
+	CObservationTreeModel *model;
+	model = updatedRawlog();
+
+	if(model != nullptr)
+	{
+		m_line_matching = new CLineMatching(model);
+		//m_line_matching->extractLines();
+		m_calib_started = true;
+	}
+
+	else
+		m_ui->viewer_container->updateText("Error. Choose atleast two sensors!");
 }
