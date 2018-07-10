@@ -1,14 +1,18 @@
 #include <calib_solvers/CPlaneMatching.h>
+#include <calib_solvers/calib_from_planes3D.h>
+#include <utils/planes.h>
 
 #include <mrpt/obs/CObservation3DRangeScan.h>
 #include <mrpt/math/types_math.h>
 #include <mrpt/maps/PCL_adapters.h>
+#include <mrpt/pbmap/PbMap.h>
 
 #include <pcl/search/impl/search.hpp>
 #include <pcl/segmentation/organized_multi_plane_segmentation.h>
 #include <pcl/ModelCoefficients.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/features/integral_image_normal.h>
+#include <pcl/filters/extract_indices.h>
 #include <pcl/common/time.h>
 
 using namespace mrpt::obs;
@@ -44,12 +48,9 @@ void CPlaneMatching::publishText(const std::string &msg)
 
 void CPlaneMatching::publishPlaneCloud(const int &set_num, const int &cloud_num, const int &sensor_id)
 {
-	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud;
-	cloud = m_extracted_plane_clouds_sets[set_num][cloud_num];
-
 	for(CPlanesObserver *observer : m_planes_observers)
 	{
-		observer->onReceivingPlaneCloud(sensor_id, cloud);
+        observer->onReceivingPlaneCloud(sensor_id, m_extracted_plane_clouds_sets[set_num]);
 	}
 }
 
@@ -71,83 +72,70 @@ void CPlaneMatching::extractPlanes()
 	params.MAKE_ORGANIZED = true;
 
 	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
-	std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> extracted_plane_clouds;
 
+    CalibFromPlanes3D calib(2);
+    TPlaneSegmentationParams seg_params;
+    seg_params.normal_estimation_method = m_params.normal_estimation_method;
+    seg_params.depth_dependent_smoothing = m_params.depth_dependent_smoothing;
+    seg_params.max_depth_change_factor = m_params.max_depth_change_factor;
+    seg_params.normal_smoothing_size = m_params.normal_smoothing_size;
+    seg_params.angle_threshold = m_params.angle_threshold;
+    seg_params.dist_threshold = m_params.dist_threshold;
+    seg_params.min_inliers_frac = m_params.min_inliers_frac;
+    seg_params.max_curvature = 0.1;
+
+    calib.vvv_planes.resize(17); // [pair_id][sensor_id][plane_id]
 	//for(int i = 0; i < root_item->childCount(); i++)
 	// using only few observations for memory reasons
-	for(int i = 0; i < 17; i++)
+    for(int i = 0; i < 5; i++)
 	{
 		tree_item = root_item->child(i);
-		extracted_plane_clouds.clear();
 
+        std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> extracted_plane_clouds;
+        calib.vvv_planes[i] = std::vector< std::vector< PlaneCHull > >(tree_item->childCount());
 		for(int j = 0; j < tree_item->childCount(); j++)
 		{
-			pcl::PointCloud<pcl::PointXYZRGBA>::Ptr extracted_planes(new pcl::PointCloud<pcl::PointXYZRGBA>);
 			publishText("**Extracting planes from #" + std::to_string(j) + " observation in observation set #" + std::to_string(i) + "**");
 
 			obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(tree_item->child(j)->getObservation());
 			obs_item->project3DPointsFromDepthImageInto(*cloud, params);
-			runSegmentation(cloud, extracted_planes);
-			extracted_plane_clouds.push_back(extracted_planes);
-		}
+            std::cout << cloud->size() << " " << cloud->height << "x" << cloud->width << "\n";
+            // Let's try to visualize the point cloud in color
+//            for (size_t i = 0; i < cloud->size(); ++i) {
+//                cloud->points[i].rgb = obs_item->intensityImage.getAsFloat(i%640, i/640);
+////                cloud->points[i].r = static_cast<uint8_t>(obs_item->intensityImage.get_unsafe(i%640, i/640, 0));
+////                cloud->points[i].g = static_cast<uint8_t>(obs_item->intensityImage.get_unsafe(i%640, i/640, 1));
+////                cloud->points[i].b = static_cast<uint8_t>(obs_item->intensityImage.get_unsafe(i%640, i/640, 2));
+//            }
+
+            pcl::PointCloud<pcl::PointXYZRGBA>::Ptr extracted_planes(new pcl::PointCloud<pcl::PointXYZRGBA>);
+//            extractPlanes(cloud, extracted_planes);
+//            extracted_plane_clouds.push_back(extracted_planes);
+
+            size_t n_planes = segmentPlanes(cloud, seg_params, calib.vvv_planes[i][j]);
+            //std::cout << n_planes << " extractPlanes\n";
+
+            for(size_t ii = 0; ii < n_planes; ii++)
+            {
+                std::vector<int> & indices = calib.vvv_planes[i][j][ii].v_inliers;
+                for(size_t k = 0; k < indices.size(); k++)
+                {
+                    extracted_planes->points.push_back(cloud->points[indices[k]]);
+                }
+            }
+            extracted_plane_clouds.push_back(extracted_planes);
+        }
 
 		m_extracted_plane_clouds_sets.push_back(extracted_plane_clouds);
-	}
+
+        // Check for potential plane matches
+        calib.findPotentialMatches(calib.vvv_planes[i], i);
+    }
+
+    //calib.computeCalibration_rot(ExtrinsicCalib::m_init_calib);
+
 }
 
-void CPlaneMatching::runSegmentation(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &extracted_planes)
-{
-	double plane_extract_start = pcl::getTime();
-	unsigned min_inliers = m_params.min_inliers_frac * cloud->size();
-
-	pcl::IntegralImageNormalEstimation<pcl::PointXYZRGBA, pcl::Normal> normal_estimation;
-
-	if(m_params.normal_estimation_method == 0)
-		normal_estimation.setNormalEstimationMethod(normal_estimation.COVARIANCE_MATRIX);
-	else if(m_params.normal_estimation_method == 1)
-		normal_estimation.setNormalEstimationMethod(normal_estimation.AVERAGE_3D_GRADIENT);
-	else
-		normal_estimation.setNormalEstimationMethod(normal_estimation.AVERAGE_DEPTH_CHANGE);
-
-	normal_estimation.setDepthDependentSmoothing(m_params.depth_dependent_smoothing);
-	normal_estimation.setMaxDepthChangeFactor(m_params.max_depth_change_factor);
-	normal_estimation.setNormalSmoothingSize(m_params.normal_smoothing_size);
-
-	pcl::PointCloud<pcl::Normal>::Ptr normal_cloud(new pcl::PointCloud<pcl::Normal>);
-	normal_estimation.setInputCloud(cloud);
-	normal_estimation.compute(*normal_cloud);
-
-	pcl::OrganizedMultiPlaneSegmentation<pcl::PointXYZRGBA, pcl::Normal, pcl::Label> multi_plane_segmentation;
-	multi_plane_segmentation.setMinInliers(min_inliers);
-	multi_plane_segmentation.setAngularThreshold(m_params.angle_threshold);
-	multi_plane_segmentation.setDistanceThreshold(m_params.dist_threshold);
-	multi_plane_segmentation.setInputNormals(normal_cloud);
-	multi_plane_segmentation.setInputCloud(cloud);
-
-	std::vector<pcl::PlanarRegion<pcl::PointXYZRGBA>, Eigen::aligned_allocator<pcl::PlanarRegion<pcl::PointXYZRGBA>>> regions;
-	std::vector<pcl::ModelCoefficients> model_coefficients;
-	std::vector<pcl::PointIndices> inlier_indices;
-	pcl::PointCloud<pcl::Label>::Ptr labels(new pcl::PointCloud<pcl::Label>);
-	std::vector<pcl::PointIndices> label_indices;
-	std::vector<pcl::PointIndices> boundary_indices;
-
-	multi_plane_segmentation.segmentAndRefine(regions, model_coefficients, inlier_indices, labels, label_indices, boundary_indices);
-	double plane_extract_end = pcl::getTime();
-
-	std::stringstream stream;
-	stream << inlier_indices.size() << " plane(s) detected\n" << "Time elapsed: " << double(plane_extract_end - plane_extract_start) << std::endl;
-
-	publishText(stream.str());
-
-	for(size_t i = 0; i < inlier_indices.size(); i++)
-	{
-		std::vector<int> indices = inlier_indices[i].indices;
-		for(size_t j = 0; j < indices.size(); j++)
-		{
-			extracted_planes->points.push_back(cloud->points[indices[j]]);
-		}
-	}
-}
 
 void CPlaneMatching::proceed()
 {

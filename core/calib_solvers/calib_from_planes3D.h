@@ -1,0 +1,79 @@
+/* +------------------------------------------------------------------------+
+   |                     Mobile Robot Programming Toolkit (MRPT)            |
+   |                          http://www.mrpt.org/                          |
+   |                                                                        |
+   | Copyright (c) 2005-2018, Individual contributors, see AUTHORS file     |
+   | See: http://www.mrpt.org/Authors - All rights reserved.                |
+   | Released under BSD License. See details in http://www.mrpt.org/License |
+   +------------------------------------------------------------------------+ */
+#pragma once
+
+#include "extrinsic_calib.h"
+#include <utils/planes.h>
+//#include <mrpt/pbmap/PbMap.h>
+//#include <mrpt/pbmap/Miscellaneous.h>
+#include <map>
+
+/*! Exploit 3D plane observations from set a of sensors to perform extrinsic calibration.
+ *  Plane correspondences are analogous to the control points used to create panoramic images with a regular camera).
+ *  It allows to estimate the extrinsic calibration between RGB-D sensors like Asus XPL.
+ *
+ */
+//template <int num_sensors, typename Scalar = double>
+class CalibFromPlanes3D : public ExtrinsicCalib//<num_sensors, Scalar>
+{
+  public:
+
+    /*! The segmented planes, the vector indexes to access them are [sensor_id][obs_id][plane_id] */
+    std::vector< std::vector< std::vector< PlaneCHull > > > vvv_planes; // [pair_id][sensor_id][plane_id]
+
+    /*! The plane correspondences between the different sensors. The map indexes correspond to the sensor IDs,
+     * each matrix as as many rows as potential plane correspondences, with 4 columns for: obs_id1, plane_id1, obs_id2, plane_id2. */
+    std::map<size_t, std::map<size_t, std::vector< std::array<size_t,4> > > > mmv_plane_corresp;
+
+    /*! Covariance matrices */
+    std::vector< Eigen::Matrix<Scalar,3,3>, Eigen::aligned_allocator<Eigen::Matrix<Scalar,3,3> > > covariance_rot;
+    std::vector< Eigen::Matrix<Scalar,3,3>, Eigen::aligned_allocator<Eigen::Matrix<Scalar,3,3> > > m_covariance_trans;
+
+    /*! Constructor */
+    CalibFromPlanes3D(size_t n_sensors = 2);
+
+    /*! Destructor */
+    virtual ~CalibFromPlanes3D(){}
+
+    /** Search for potentail plane Matches.
+        \param plane_obs  */
+    void findPotentialMatches(const std::vector< std::vector< PlaneCHull > > & plane_obs, size_t obs_id);
+
+    /** Calculate the residual error of the correspondences.
+        \param sensor_poses relative poses of the sensors
+        \return the residual */
+    //virtual Scalar computeCalibResidual(std::array<mrpt::math::CMatrixFixedNumeric<Scalar,4,4>, num_sensors> sensor_poses);
+//    virtual Scalar computeCalibResidual(const std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > & sensor_poses);
+
+    /** Calculate the angular residual error of the correspondences.
+        \param sensor_poses relative poses of the sensors
+        \return the residual */
+    virtual Scalar computeCalibResidual_rot(const std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > & sensor_poses);
+
+//    /** Calculate the translational residual error of the correspondences.
+//        \param sensor_poses relative poses of the sensors
+//        \return the residual */
+//    virtual Scalar computeCalibResidual_trans(const std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > & sensor_poses);
+
+//    /** Compute Calibration.
+//        \param sensor_poses initial calibration
+//        \return the residual */
+//    virtual Scalar computeCalibration(const std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > & sensor_poses);
+
+    /** Compute Calibration (only rotation).
+        \param sensor_poses initial calibration
+        \return the residual */
+    virtual Scalar computeCalibration_rot(const std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > & sensor_poses);
+
+//    /** Compute Calibration (only translation).
+//        \param sensor_poses initial calibration
+//        \return the residual */
+//    virtual Scalar computeCalibration_trans(const std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > & sensor_poses);
+
+};
