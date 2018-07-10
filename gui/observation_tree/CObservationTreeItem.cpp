@@ -4,7 +4,7 @@
 
 using namespace mrpt::obs;
 
-CObservationTreeItem::CObservationTreeItem(const QVariant &data, const CObservation::Ptr observation, CObservationTreeItem *parent)
+CObservationTreeItem::CObservationTreeItem(const QString &data, const CObservation::Ptr observation, CObservationTreeItem *parent)
 {
 	m_parentitem = parent;
 	m_displaydata = data;
@@ -47,6 +47,11 @@ CObservationTreeItem *CObservationTreeItem::parentItem()
 QVariant CObservationTreeItem::displayData() const
 {
 	return this->m_displaydata;
+}
+
+mrpt::system::TTimeStamp CObservationTreeItem::getTimeStamp() const
+{
+	return this->m_observation->timestamp;
 }
 
 CObservation::Ptr CObservationTreeItem::getObservation() const

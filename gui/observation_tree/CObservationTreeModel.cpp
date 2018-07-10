@@ -12,9 +12,8 @@ using namespace mrpt::serialization;
 using namespace mrpt::obs;
 using namespace mrpt::system;
 
-CObservationTreeModel::CObservationTreeModel(const std::string &rawlog_filename, QObject *parent)
-    : QAbstractItemModel(parent),
-      m_rawlog_filename(rawlog_filename)
+CObservationTreeModel::CObservationTreeModel(QObject *parent)
+    : QAbstractItemModel(parent)
 {
 }
 
@@ -36,11 +35,15 @@ void CObservationTreeModel::publishText(const std::string &msg)
 	}
 }
 
-void CObservationTreeModel::loadModel()
+void CObservationTreeModel::loadModel(const std::string &rawlog_filename)
 {
+	m_rawlog_filename = rawlog_filename;
+
 	CTicTac stop_watch;
 	double time_to_load;
 	stop_watch.Tic();
+
+	mrpt::system::TTimeStamp prev_ts, curr_ts, next_ts;
 
 	m_rootitem = new CObservationTreeItem(QString("root"));
 
@@ -51,7 +54,7 @@ void CObservationTreeModel::loadModel()
 	uint obs_count = 0, obs_sets_count = 0;
 	//One set of observations that are captured at approximately the same time
 	std::vector<CObservation::Ptr> obs_set;
-	QString obs_label;
+	QString sensor_label, obs_label;
 	QStringList obs_labels_in_set;
 
 	uint64_t rlog_size = rawlog.getTotalBytesCount() >> 10;
@@ -69,10 +72,13 @@ void CObservationTreeModel::loadModel()
 			CObservation::Ptr obs = std::dynamic_pointer_cast<CObservation>(obj);
 			obs_count++;
 
+			sensor_label = QString::fromStdString(obs->sensorLabel);
 			obs_label = QString::fromStdString(obs->sensorLabel + " : " + (obs->GetRuntimeClass()->className));
+			curr_ts = obs->timestamp;
 
 			if(obs_count == 1)
 			{
+				m_sensor_labels.push_back(sensor_label);
 				m_obs_labels.push_back(obs_label);
 				m_count_in_label.push_back(0);
 				obs_labels_in_set.push_back(obs_label);
@@ -85,6 +91,7 @@ void CObservationTreeModel::loadModel()
 				auto iter = std::find(m_obs_labels.begin(), m_obs_labels.end(), obs_label);
 				if(iter == m_obs_labels.end())
 				{
+					m_sensor_labels.push_back(sensor_label);
 					m_obs_labels.push_back(obs_label);
 					m_count_in_label.push_back(0);
 				}
@@ -259,6 +266,11 @@ Qt::ItemFlags CObservationTreeModel::flags(const QModelIndex &index) const
 CObservationTreeItem *CObservationTreeModel::getRootItem() const
 {
 	return this->m_rootitem;
+}
+
+QStringList CObservationTreeModel::getSensorLabels() const
+{
+	return this->m_sensor_labels;
 }
 
 QStringList CObservationTreeModel::getObsLabels() const
