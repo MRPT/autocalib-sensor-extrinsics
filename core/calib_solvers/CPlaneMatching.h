@@ -20,12 +20,6 @@ public:
 	void run();
 	void proceed();
 	void extractPlanes();
-
-    /** Segment planes from an organized point cloud.
-        \param cloud organized point cloud
-        \return the residual */
-    void extractPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &extracted_planes);
-
 	void addTextObserver(CTextObserver *observer);
 	void addPlanesObserver(CPlanesObserver *observer);
 	void publishText(const std::string &msg);

@@ -38,7 +38,8 @@ class PlaneCHull : public Plane
 {
   public:
     pcl::PointCloud<pcl::PointXYZRGBA>::Ptr ConvexHullPtr;
-    std::vector<std::vector<size_t> > vv_hull_indices;
+    std::vector<size_t> v_hull_indices;
+    std::vector<int> v_inliers;
 //    std::vector<cv::Point2D> vConvexHull2D;
 };
 
@@ -56,5 +57,14 @@ struct TPlaneSegmentationParams
     double min_inliers_frac;
     double max_curvature;
 };
+
+//// Define some colours to draw bolobs, patches, etc.
+//static const unsigned char red [10] = {255,   0,   0, 255, 255,   0, 255, 204,   0, 255};
+//static const unsigned char grn [10] = {  0, 255,   0, 255,   0, 255, 160,  51, 128, 222};
+//static const unsigned char blu [10] = {  0,   0, 255,   0, 255, 255, 0  , 204,   0, 173};
+
+static const double nred [10] = {1.0,   0,   0, 1.0, 1.0,   0, 1.0, 0.8,   0, 1.0};
+static const double ngrn [10] = {  0, 1.0,   0, 1.0,   0, 1.0, 0.6, 0.2, 0.5, 0.9};
+static const double nblu [10] = {  0,   0, 1.0,   0, 1.0, 1.0,   0, 0.8,   0, 0.7};
 
 size_t segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr & cloud, const TPlaneSegmentationParams & params, std::vector<PlaneCHull> & planes);

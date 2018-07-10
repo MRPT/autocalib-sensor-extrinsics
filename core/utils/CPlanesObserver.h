@@ -6,5 +6,5 @@
 class CPlanesObserver
 {
 public:
-	virtual void onReceivingPlaneCloud(const int &sensor_id, const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud) = 0;
+    virtual void onReceivingPlaneCloud(const int &sensor_id, const std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> &cloud) = 0;
 };

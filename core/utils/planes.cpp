@@ -92,20 +92,21 @@ size_t segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const
         extract.filter (*plane.planePointCloudPtr);    // Write the planar point cloud
         plane.inliers = inlier_indices[i].indices;
 
+        planes[i].v3normal = plane.v3normal;
+        planes[i].d = plane.d;
+        planes[i].v_inliers = inlier_indices[i].indices;
+
         pcl::PointCloud<pcl::PointXYZRGBA>::Ptr contourPtr(new pcl::PointCloud<pcl::PointXYZRGBA>);
         contourPtr->points = regions[i].getContour();
-        std::vector<size_t> indices_convex_hull;
-        plane.calcConvexHull(contourPtr, indices_convex_hull);
+        plane.calcConvexHull(contourPtr, planes[i].v_hull_indices);
         plane.computeMassCenterAndArea();
         //std::cout << "Extract inliers " << inlier_indices[i].indices.size() << " " << boundary_indices[i].indices.size() << " " << contourPtr->points.size() << "\n";
 
-        for (size_t j = 0; j < indices_convex_hull.size(); j++)
-            indices_convex_hull[j] = boundary_indices[i].indices[indices_convex_hull[j]];
+        for (size_t j = 0; j < planes[i].v_hull_indices.size(); j++)
+            planes[i].v_hull_indices[j] = boundary_indices[i].indices[planes[i].v_hull_indices[j]];
 
         //std::cout << i << " normal " << plane.v3normal.transpose() << "\n";
-        planes[i].v3normal = plane.v3normal;
-        planes[i].d = plane.d;
-        planes[i].vv_hull_indices.push_back(indices_convex_hull);
+
 
 //        // Check whether this region correspond to the same plane as a previous one (this situation may happen when there exists a small discontinuity in the observation)
 //        bool isSamePlane = false;
@@ -132,8 +133,6 @@ size_t segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const
 
     std::stringstream stream;
     stream << inlier_indices.size() << " plane(s) detected\n" << "Time elapsed: " << double(plane_extract_end - plane_extract_start) << std::endl;
-
-    //publishText(stream.str());
 
 //    for(size_t i = 0; i < inlier_indices.size(); i++)
 //    {
