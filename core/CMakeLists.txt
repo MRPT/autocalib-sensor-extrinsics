@@ -5,18 +5,18 @@ INCLUDE_DIRECTORIES(${PCL_INCLUDE_DIRS})
 # List the source files of CORE
 SET(SRC
 	utils/lines.h
-	utils/planes.h
+	utils/CPlanes.h
 	utils/correspondences.h
 	utils/solver.h
-	calib_solvers/extrinsic_calib.h
-	calib_solvers/calib_from_planes3D.h
+	calib_solvers/CExtrinsicCalib.h
+	calib_solvers/CCalibFromPlanes.h
 
 	utils/lines.cpp
-	utils/planes.cpp
+	utils/CPlanes.cpp
 	utils/correspondences.cpp
 	utils/solver.cpp
-        calib_solvers/extrinsic_calib.cpp
-        calib_solvers/calib_from_planes3D.cpp
+	calib_solvers/CExtrinsicCalib.cpp
+	calib_solvers/CCalibFromPlanes.cpp
 )
 
 # CORE library encapsulates the methods and types for the calibration algorithms

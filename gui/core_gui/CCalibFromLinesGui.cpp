@@ -1,4 +1,4 @@
-#include <core_wrappers/CCalibFromLinesWrapper.h>
+#include <core_gui/CCalibFromLinesGui.h>
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -6,17 +6,17 @@
 
 using namespace mrpt::obs;
 
-CCalibFromLinesWrapper::CCalibFromLinesWrapper(CObservationTreeModel *model) :
+CCalibFromLinesGui::CCalibFromLinesGui(CObservationTreeModel *model) :
     m_model(model)
 	
 {
 }
 
-CCalibFromLinesWrapper::~CCalibFromLinesWrapper()
+CCalibFromLinesGui::~CCalibFromLinesGui()
 {
 }
 
-void CCalibFromLinesWrapper::extractLines()
+void CCalibFromLinesGui::extractLines()
 {
 	CObservationTreeItem *root_item, *tree_item;
 	CObservation3DRangeScan::Ptr obs_item;
@@ -29,7 +29,7 @@ void CCalibFromLinesWrapper::extractLines()
 	// std::vector<cv::Vec4i> segments = runSegmentation(image);
 }
 
-std::vector<cv::Vec4i> CCalibFromLinesWrapper::runSegmentation(const cv::Mat &image)
+std::vector<cv::Vec4i> CCalibFromLinesGui::runSegmentation(const cv::Mat &image)
 {
 
 //	int low_threshold = 150;

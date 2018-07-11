@@ -73,21 +73,19 @@ void CObservationTreeModel::loadModel(const std::string &rawlog_filename)
 			if(obs_count == 1)
 			{
 				m_sensor_labels.push_back(sensor_label);
-				m_obs_labels.push_back(obs_label);
 				m_count_of_label.push_back(1);
 			}
 
 			else
 			{
-				auto iter = std::find(m_obs_labels.begin(), m_obs_labels.end(), obs_label);
-				if(iter == m_obs_labels.end())
+				auto iter = std::find(m_sensor_labels.begin(), m_sensor_labels.end(), sensor_label);
+				if(iter == m_sensor_labels.end())
 				{
 					m_sensor_labels.push_back(sensor_label);
-					m_obs_labels.push_back(obs_label);
 					m_count_of_label.push_back(0);
 				}
 
-				m_count_of_label[m_obs_labels.indexOf(*iter)]++;
+				m_count_of_label[m_sensor_labels.indexOf(*iter)]++;
 			}
 
 
@@ -114,15 +112,15 @@ void CObservationTreeModel::loadModel(const std::string &rawlog_filename)
 			stats_string += "\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - ";
 			stats_string += "\nTime elapsed: " + std::to_string(time_to_load) + " seconds";
 			stats_string += "\nNumber of observations loaded: " + std::to_string(obs_count);
-			stats_string += "\nNumber of unique sensors found in rawlog: " + std::to_string(m_obs_labels.count());
+			stats_string += "\nNumber of unique sensors found in rawlog: " + std::to_string(m_sensor_labels.count());
 			//stats_string += "\nNumber of observation sets formed: " + std::to_string(obs_sets_count);
 			stats_string += "\n\nSummary of sensors found in rawlog:";
 			stats_string += "\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - ";
 
-			for(size_t i = 0; i < m_obs_labels.count(); i++)
+			for(size_t i = 0; i < m_sensor_labels.count(); i++)
 			{
 				stats_string += "\nSensor #" + std::to_string(i);
-				stats_string += "\nSensor label : Class :: " + m_obs_labels[i].toStdString();
+				stats_string += "\nSensor label : Class :: " + m_sensor_labels[i].toStdString();
 				stats_string += "\nNumber of observations: " + std::to_string(m_count_of_label[i]) + "\n";
 			}
 
@@ -315,9 +313,4 @@ void CObservationTreeModel::setRootItem(CObservationTreeItem *new_rootitem)
 QStringList CObservationTreeModel::getSensorLabels() const
 {
 	return this->m_sensor_labels;
-}
-
-QStringList CObservationTreeModel::getObsLabels() const
-{
-	return this->m_obs_labels;
 }

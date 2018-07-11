@@ -3,7 +3,7 @@
 #include <observation_tree/CObservationTreeModel.h>
 #include <config/CPlaneMatchingConfig.h>
 #include <config/CLineMatchingConfig.h>
-#include <core_wrappers/CCalibFromPlanesWrapper.h>
+#include <core_gui/CCalibFromPlanesGui.h>
 
 #include <mrpt/obs/CObservation3DRangeScan.h>
 #include <mrpt/maps/PCL_adapters.h>
@@ -17,18 +17,28 @@
 
 using namespace mrpt::obs;
 
-CMainWindow::CMainWindow(QWidget *parent) :
-	QMainWindow(parent),
+CMainWindow::CMainWindow(const std::string &config_file_name, QWidget *parent) :
+    QMainWindow(parent),
+    m_config_file(config_file_name),
 	m_model(nullptr),
     m_sync_model(nullptr),
 	m_ui(new Ui::CMainWindow)
 {
 	m_ui->setupUi(this);
 
+	m_ui->irx_sbox->setValue(m_config_file.read_double("initial_calibration", "irx", 0.0, true));
+	m_ui->iry_sbox->setValue(m_config_file.read_double("initial_calibration", "iry", 0.0, true));
+	m_ui->irz_sbox->setValue(m_config_file.read_double("initial_calibration", "irz", 0.0, true));
+	m_ui->itx_sbox->setValue(m_config_file.read_double("initial_calibration", "itx", 0.0, true));
+	m_ui->ity_sbox->setValue(m_config_file.read_double("initial_calibration", "ity", 0.0, true));
+	m_ui->itz_sbox->setValue(m_config_file.read_double("initial_calibration", "itz", 0.0, true));
+
+	m_ui->observations_delay_sbox->setValue(m_config_file.read_int("grouping_observations", "max_delay", 30, true));
+
 	connect(m_ui->load_rlog_button, SIGNAL(clicked(bool)), this, SLOT(loadRawlog()));
 	connect(m_ui->algo_cbox, SIGNAL(currentIndexChanged(int)), this, SLOT(algosIndexChanged(int)));
 	connect(m_ui->observations_treeview, SIGNAL(clicked(QModelIndex)), this, SLOT(itemClicked(QModelIndex)));
-	connect(m_ui->sync_observations_button, SIGNAL(clicked(bool)), this, SLOT(syncObservations()));
+	connect(m_ui->sync_observations_button, SIGNAL(clicked(bool)), this, SLOT(syncObservationsClicked()));
 
 	connect(m_ui->irx_sbox, SIGNAL(valueChanged(double)), this, SLOT(initCalibChanged(double)));
 	connect(m_ui->iry_sbox, SIGNAL(valueChanged(double)), this, SLOT(initCalibChanged(double)));
@@ -43,7 +53,12 @@ CMainWindow::CMainWindow(QWidget *parent) :
 	m_ui->viewer_container->updateText("Set your initial (rough) calibration values and load your rawlog file to get started.");
 	m_recent_file = m_settings.value("recent").toString();
 
-	m_init_calib.fill(0);
+	m_init_calib[0] = m_ui->irx_sbox->value();
+	m_init_calib[1] = m_ui->iry_sbox->value();
+	m_init_calib[2] = m_ui->irz_sbox->value();
+	m_init_calib[3] = m_ui->itz_sbox->value();
+	m_init_calib[4] = m_ui->ity_sbox->value();
+	m_init_calib[5] = m_ui->itz_sbox->value();
 }
 
 CMainWindow::~CMainWindow()
@@ -65,15 +80,15 @@ void CMainWindow::algosIndexChanged(int index)
 
 	case 1:
 	{
-		m_config_widget = std::make_shared<CPlaneMatchingConfig>();
-		qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(4, m_config_widget.get());
+		m_config_widget = std::make_shared<CPlaneMatchingConfig>(m_config_file);
+		qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(3, m_config_widget.get());
 		break;
 	}
 
 	case 2:
 	{
 		m_config_widget = std::make_shared<CLineMatchingConfig>();
-		qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(4, m_config_widget.get());
+		qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(3, m_config_widget.get());
 		break;
 	}
 	}
@@ -97,7 +112,7 @@ void CMainWindow::loadRawlog()
 	m_ui->status_bar->showMessage("Loading Rawlog...");
 	m_ui->observations_treeview->setDisabled(true);
 	m_ui->observations_description_textbrowser->setDisabled(true);
-	m_ui->observations_delay->setDisabled(true);
+	m_ui->observations_delay_sbox->setDisabled(true);
 	m_ui->sensors_selection_list->setDisabled(true);
 	m_ui->sync_observations_button->setDisabled(true);
 	m_ui->grouped_observations_treeview->setDisabled(true);
@@ -119,7 +134,7 @@ void CMainWindow::loadRawlog()
 		m_ui->viewer_container->updateText("Select the calibration algorithm to continue.");
 		m_ui->observations_description_textbrowser->setDisabled(false);
 		m_ui->sensors_selection_list->setDisabled(false);
-		m_ui->observations_delay->setDisabled(false);
+		m_ui->observations_delay_sbox->setDisabled(false);
 		m_ui->sync_observations_button->setDisabled(false);
 
 		QStringList sensor_labels = m_model->getSensorLabels();
@@ -141,7 +156,7 @@ void CMainWindow::loadRawlog()
 	}
 }
 
-void CMainWindow::syncObservations()
+void CMainWindow::syncObservationsClicked()
 {
 	QStringList selected_sensor_labels;
 	QListWidgetItem *item;
@@ -174,7 +189,7 @@ void CMainWindow::syncObservations()
 			m_sync_model->getRootItem()->appendChild(m_model->getRootItem()->child(i));
 		}
 
-		m_sync_model->syncObservations(selected_sensor_labels, m_ui->observations_delay->value());
+		m_sync_model->syncObservations(selected_sensor_labels, m_ui->observations_delay_sbox->value());
 
 		if(m_sync_model->getRootItem()->childCount() > 0)
 		{
@@ -215,7 +230,7 @@ void CMainWindow::itemClicked(const QModelIndex &index)
 			//image = cv::cvarrToMat(obs_item->intensityImage.getAs<IplImage>());
 		image = obs_item->intensityImage;
 
-		sensor_id = m_model->getObsLabels().indexOf(QString::fromStdString(obs_item->sensorLabel + " : " + obs_item->GetRuntimeClass()->className)) + 1;
+		sensor_id = m_model->getSensorLabels().indexOf(QString::fromStdString(obs_item->sensorLabel)) + 1;
 		viewer_id = sensor_id;
 
 		viewer_text = (m_model->data(index)).toString().toStdString();
@@ -252,7 +267,7 @@ void CMainWindow::runPlaneMatchingCalib(TPlaneMatchingParams params /* to be rep
 {
 	if(m_sync_model != nullptr)
 	{
-		m_plane_matching = new CCalibFromPlanesWrapper(m_sync_model, m_init_calib, params);
+		m_plane_matching = new CCalibFromPlanesGui(m_sync_model, m_init_calib, params);
 		m_plane_matching->addTextObserver(m_ui->viewer_container);
 		m_plane_matching->addPlanesObserver(m_ui->viewer_container);
 		m_plane_matching->extractPlanes();
@@ -267,11 +282,27 @@ void CMainWindow::runLineMatchingCalib()
 {
 	if(m_sync_model != nullptr)
 	{
-		m_line_matching = new CCalibFromLinesWrapper(m_sync_model);
+		m_line_matching = new CCalibFromLinesGui(m_sync_model);
 		//m_line_matching->extractLines();
 		m_calib_started = true;
 	}
 
 	else
 		m_ui->viewer_container->updateText("Error. Choose atleast two sensors!");
+}
+
+void CMainWindow::saveParams()
+{
+	m_config_file.write<double>("initial_calibration", "irx", m_ui->irx_sbox->value());
+	m_config_file.write<double>("initial_calibration", "iry", m_ui->iry_sbox->value());
+	m_config_file.write<double>("initial_calibration", "irz", m_ui->irz_sbox->value());
+	m_config_file.write<double>("initial_calibration", "itx", m_ui->itx_sbox->value());
+	m_config_file.write<double>("initial_calibration", "ity", m_ui->ity_sbox->value());
+	m_config_file.write<double>("initial_calibration", "itz", m_ui->itz_sbox->value());
+
+	m_config_file.write<int>("grouping_observations", "max_delay", m_ui->observations_delay_sbox->value());
+
+	m_config_file.writeNow();
+
+	m_ui->status_bar->showMessage("Parameters saved!");
 }

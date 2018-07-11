@@ -17,7 +17,7 @@ typedef float Scalar;
 /** Store the plane extracted from a depth image (or point cloud) defined by some geometric characteristics.
  */
 //template<typename Scalar>
-class Plane
+class CPlane
 {
   public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -34,7 +34,7 @@ class Plane
 /** Store the plane's geometric characteristics and its convex hull.
  */
 //template<typename Scalar>
-class PlaneCHull : public Plane
+class CPlaneCHull : public CPlane
 {
   public:
     pcl::PointCloud<pcl::PointXYZRGBA>::Ptr ConvexHullPtr;
@@ -67,4 +67,4 @@ static const double nred [10] = {1.0,   0,   0, 1.0, 1.0,   0, 1.0, 0.8,   0, 1.
 static const double ngrn [10] = {  0, 1.0,   0, 1.0,   0, 1.0, 0.6, 0.2, 0.5, 0.9};
 static const double nblu [10] = {  0,   0, 1.0,   0, 1.0, 1.0,   0, 0.8,   0, 0.7};
 
-size_t segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr & cloud, const TPlaneSegmentationParams & params, std::vector<PlaneCHull> & planes);
+size_t segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr & cloud, const TPlaneSegmentationParams & params, std::vector<CPlaneCHull> & planes);

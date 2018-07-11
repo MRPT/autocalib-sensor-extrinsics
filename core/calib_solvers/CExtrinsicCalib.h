@@ -33,16 +33,16 @@ template<typename Scalar> inline Eigen::Matrix<Scalar,3,3> skew(const Eigen::Mat
  * double). Defaults to double.
  */
 //template <int num_sensors, typename Scalar = double>
-class ExtrinsicCalib
+class CExtrinsicCalib
 {
 public:
     /** Default constructor. */
-    ExtrinsicCalib(size_t n_sensors) :
+	CExtrinsicCalib(size_t n_sensors) :
         num_sensors(n_sensors),
         m_conditioning(n_sensors, 0.){}
 
     /** Destructor: */
-    virtual ~ExtrinsicCalib(){}
+	virtual ~CExtrinsicCalib(){}
 
     size_t num_sensors;
 

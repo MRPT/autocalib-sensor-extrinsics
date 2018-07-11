@@ -13,11 +13,11 @@
 /**
  * Provides a GUI wrapper around the core calibration from planes classes.
  */
-class CCalibFromPlanesWrapper
+class CCalibFromPlanesGui
 {
 public:
-	CCalibFromPlanesWrapper(CObservationTreeModel *model, std::array<double,6> init_calib, TPlaneMatchingParams params);
-	~CCalibFromPlanesWrapper();
+	CCalibFromPlanesGui(CObservationTreeModel *model, std::array<double,6> init_calib, TPlaneMatchingParams params);
+	~CCalibFromPlanesGui();
 	void run();
 	void proceed();
 	void extractPlanes();

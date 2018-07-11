@@ -1,6 +1,6 @@
-#include "CCalibFromPlanesWrapper.h"
-#include <calib_solvers/calib_from_planes3D.h>
-#include <utils/planes.h>
+#include "CCalibFromPlanesGui.h"
+#include <calib_solvers/CCalibFromPlanes.h>
+#include <utils/CPlanes.h>
 
 #include <mrpt/obs/CObservation3DRangeScan.h>
 #include <mrpt/math/types_math.h>
@@ -17,28 +17,28 @@
 
 using namespace mrpt::obs;
 
-CCalibFromPlanesWrapper::CCalibFromPlanesWrapper(CObservationTreeModel *model, std::array<double, 6> init_calib, TPlaneMatchingParams params)
+CCalibFromPlanesGui::CCalibFromPlanesGui(CObservationTreeModel *model, std::array<double, 6> init_calib, TPlaneMatchingParams params)
 {
 	m_model = model;
 	m_init_calib = init_calib;
 	m_params = params;
 }
 
-CCalibFromPlanesWrapper::~CCalibFromPlanesWrapper()
+CCalibFromPlanesGui::~CCalibFromPlanesGui()
 {
 }
 
-void CCalibFromPlanesWrapper::addTextObserver(CTextObserver *observer)
+void CCalibFromPlanesGui::addTextObserver(CTextObserver *observer)
 {
 	m_text_observers.push_back(observer);
 }
 
-void CCalibFromPlanesWrapper::addPlanesObserver(CPlanesObserver *observer)
+void CCalibFromPlanesGui::addPlanesObserver(CPlanesObserver *observer)
 {
 	m_planes_observers.push_back(observer);
 }
 
-void CCalibFromPlanesWrapper::publishText(const std::string &msg)
+void CCalibFromPlanesGui::publishText(const std::string &msg)
 {
 	for(CTextObserver *observer : m_text_observers)
 	{
@@ -46,7 +46,7 @@ void CCalibFromPlanesWrapper::publishText(const std::string &msg)
 	}
 }
 
-void CCalibFromPlanesWrapper::publishPlaneCloud(const int &set_num, const int &cloud_num, const int &sensor_id)
+void CCalibFromPlanesGui::publishPlaneCloud(const int &set_num, const int &cloud_num, const int &sensor_id)
 {
 	for(CPlanesObserver *observer : m_planes_observers)
 	{
@@ -54,12 +54,12 @@ void CCalibFromPlanesWrapper::publishPlaneCloud(const int &set_num, const int &c
 	}
 }
 
-void CCalibFromPlanesWrapper::run()
+void CCalibFromPlanesGui::run()
 {
 	// For running all steps at a time
 }
 
-void CCalibFromPlanesWrapper::extractPlanes()
+void CCalibFromPlanesGui::extractPlanes()
 {
 	publishText("****Running plane matching calibration algorithm****");
 
@@ -73,7 +73,7 @@ void CCalibFromPlanesWrapper::extractPlanes()
 
 	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
 
-    CalibFromPlanes3D calib(2);
+	CCalibFromPlanes calib(2);
     TPlaneSegmentationParams seg_params;
     seg_params.normal_estimation_method = m_params.normal_estimation_method;
     seg_params.depth_dependent_smoothing = m_params.depth_dependent_smoothing;
@@ -92,7 +92,7 @@ void CCalibFromPlanesWrapper::extractPlanes()
 		tree_item = root_item->child(i);
 
         std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> extracted_plane_clouds;
-        calib.vvv_planes[i] = std::vector< std::vector< PlaneCHull > >(tree_item->childCount());
+		calib.vvv_planes[i] = std::vector< std::vector< CPlaneCHull > >(tree_item->childCount());
 		for(int j = 0; j < tree_item->childCount(); j++)
 		{
 			publishText("**Extracting planes from #" + std::to_string(j) + " observation in observation set #" + std::to_string(i) + "**");
@@ -137,6 +137,6 @@ void CCalibFromPlanesWrapper::extractPlanes()
 }
 
 
-void CCalibFromPlanesWrapper::proceed()
+void CCalibFromPlanesGui::proceed()
 {
 }

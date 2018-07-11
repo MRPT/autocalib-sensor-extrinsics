@@ -33,8 +33,8 @@ class CObservationTreeModel : public QAbstractItemModel
 		int columnCount(const QModelIndex &parent = QModelIndex()) const;
 		CObservationTreeItem *getRootItem() const;
 		void setRootItem(CObservationTreeItem *new_rootitem);
+		/** Returns a list of the unique sensor labels found in the rawlog. */
 		QStringList getSensorLabels() const;
-		QStringList getObsLabels() const;
 
 		/** Groups observations together based on their time stamp proximity.
 		 * Stores the results back in the same model.
@@ -43,11 +43,13 @@ class CObservationTreeModel : public QAbstractItemModel
 		void syncObservations(const QStringList &selected_sensor_labels, const int &max_delay = 1000);
 
 	private:
+		/** The root parent item from which all the other observations originate. */
 		CObservationTreeItem *m_rootitem;
+		/** The unique sensor labels found in the rawlog. */
 		QStringList m_sensor_labels;
-		QStringList m_obs_labels;
-		/** store count of observations of each observation type */
+		/** store count of observations of each observation type. */
 		std::vector<int> m_count_of_label;
+		/** The name of the file the rawlog was loaded from. */
 		std::string m_rawlog_filename;
 		std::vector<CTextObserver*> m_text_observers;
 };

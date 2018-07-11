@@ -7,7 +7,7 @@
    | Released under BSD License. See details in http://www.mrpt.org/License    |
    +---------------------------------------------------------------------------+ */
 
-#include "planes.h"
+#include "CPlanes.h"
 #include <mrpt/pbmap/PbMap.h>
 
 #include <pcl/search/impl/search.hpp>
@@ -19,7 +19,7 @@
 #include <pcl/common/time.h>
 
 //using namespace SegmentPlanes;
-size_t segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const TPlaneSegmentationParams & params, std::vector<PlaneCHull> & planes)
+size_t segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const TPlaneSegmentationParams & params, std::vector<CPlaneCHull> & planes)
 {
     double plane_extract_start = pcl::getTime();
     unsigned min_inliers = params.min_inliers_frac * cloud->size();
@@ -64,7 +64,7 @@ size_t segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const
     planes.resize( regions.size() );
     for (size_t i = 0; i < regions.size(); i++)
     {
-        PlaneCHull planehull;
+		CPlaneCHull planehull;
 
         //      std::cout << "curv " << regions[i].getCurvature() << std::endl;
         if(regions[i].getCurvature() > params.max_curvature)

@@ -8,16 +8,16 @@
    | Released under BSD License. See details in http://www.mrpt.org/License |
    +------------------------------------------------------------------------+ */
 
-#include "calib_from_planes3D.h"
+#include "CCalibFromPlanes.h"
 #include <mrpt/poses/CPose3D.h>
 
 using namespace std;
 
 //template <int num_sensors, typename Scalar>
-//CalibFromPlanes3D<num_sensors,Scalar>::CalibFromPlanes3D()
-CalibFromPlanes3D::CalibFromPlanes3D(size_t n_sensors) : ExtrinsicCalib(n_sensors)
+//CCalibFromPlanes<num_sensors,Scalar>::CCalibFromPlanes()
+CCalibFromPlanes::CCalibFromPlanes(size_t n_sensors) : CExtrinsicCalib(n_sensors)
 {
-    std::cout << "CalibFromPlanes3D... num_sensors " << num_sensors << std::endl;
+	std::cout << "CCalibFromPlanes... num_sensors " << num_sensors << std::endl;
     for(size_t sensor_id1=0; sensor_id1 < num_sensors; sensor_id1++)
     {
         mmv_plane_corresp[sensor_id1] = std::map<size_t, std::vector< std::array<size_t,4> > >();
@@ -26,15 +26,15 @@ CalibFromPlanes3D::CalibFromPlanes3D(size_t n_sensors) : ExtrinsicCalib(n_sensor
     }
 }
 
-void CalibFromPlanes3D::findPotentialMatches(const std::vector< std::vector< PlaneCHull > > & plane_obs, size_t obs_id)
+void CCalibFromPlanes::findPotentialMatches(const std::vector< std::vector< CPlaneCHull > > & plane_obs, size_t obs_id)
 {
     for (size_t i = 0; i < plane_obs.size()-1; ++i)     // Sensor i
         for (size_t j = i+1; j < plane_obs.size(); ++j) // Sensor j
             for (size_t ii = 0; ii < plane_obs[i].size(); ++ii)
                 for (size_t jj = 0; jj < plane_obs[j].size(); ++jj)
                 {
-                    Eigen::Vector3f n_ii = ExtrinsicCalib::m_init_calib[i].block(0,0,3,3)*plane_obs[i][ii].v3normal;
-                    Eigen::Vector3f n_jj = ExtrinsicCalib::m_init_calib[j].block(0,0,3,3)*plane_obs[j][jj].v3normal;
+					Eigen::Vector3f n_ii = CExtrinsicCalib::m_init_calib[i].block(0,0,3,3)*plane_obs[i][ii].v3normal;
+					Eigen::Vector3f n_jj = CExtrinsicCalib::m_init_calib[j].block(0,0,3,3)*plane_obs[j][jj].v3normal;
                     if( n_ii.dot(n_jj) > 0.9 ) // TODO, define constraint threshold in a config file, and allow user interaction
                     {
                         std::array<size_t,4> potential_match{obs_id, obs_id, ii, jj};
@@ -43,7 +43,7 @@ void CalibFromPlanes3D::findPotentialMatches(const std::vector< std::vector< Pla
                 }
 }
 
-Scalar CalibFromPlanes3D::computeCalibResidual_rot(const std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > & sensor_poses)
+Scalar CCalibFromPlanes::computeCalibResidual_rot(const std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > & sensor_poses)
 {
     Scalar sum_squared_error = 0.; // Accumulated squared error for all plane correspondences
     for(std::map<size_t, std::map<size_t, std::vector< std::array<size_t,4> > > >::iterator it_sensor_i = mmv_plane_corresp.begin();
@@ -70,9 +70,9 @@ Scalar CalibFromPlanes3D::computeCalibResidual_rot(const std::vector<mrpt::math:
     return sum_squared_error;
 }
 
-Scalar CalibFromPlanes3D::computeCalibration_rot(const std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > & sensor_poses)
+Scalar CCalibFromPlanes::computeCalibration_rot(const std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > & sensor_poses)
 {
-    cout << "CalibFromPlanes3D::computeCalibration_rot...\n";
+	cout << "CCalibFromPlanes::computeCalibration_rot...\n";
     const int n_DoF = 3 * (num_sensors - 1);
     Eigen::VectorXf update_vector(n_DoF);
     Eigen::Matrix3f jacobian_rot_i, jacobian_rot_j; // Jacobians of the rotation

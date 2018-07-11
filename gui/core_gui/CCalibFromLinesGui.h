@@ -10,11 +10,11 @@
  * Provides a GUI wrapper around the core calibration from lines classes.
  */
 
-class CCalibFromLinesWrapper
+class CCalibFromLinesGui
 {
 public:
-	CCalibFromLinesWrapper(CObservationTreeModel *model);
-	~CCalibFromLinesWrapper();
+	CCalibFromLinesGui(CObservationTreeModel *model);
+	~CCalibFromLinesGui();
 	/** Extracts lines from from all the image observation in the model. */
 	void extractLines();
 	/** Runs Canny-Hough, and Bresenham algorithm to return a vector of segments

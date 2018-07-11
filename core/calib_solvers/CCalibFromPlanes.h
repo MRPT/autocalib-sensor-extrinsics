@@ -8,8 +8,8 @@
    +------------------------------------------------------------------------+ */
 #pragma once
 
-#include "extrinsic_calib.h"
-#include <utils/planes.h>
+#include "CExtrinsicCalib.h"
+#include <utils/CPlanes.h>
 //#include <mrpt/pbmap/PbMap.h>
 //#include <mrpt/pbmap/Miscellaneous.h>
 #include <map>
@@ -20,12 +20,12 @@
  *
  */
 //template <int num_sensors, typename Scalar = double>
-class CalibFromPlanes3D : public ExtrinsicCalib//<num_sensors, Scalar>
+class CCalibFromPlanes : public CExtrinsicCalib//<num_sensors, Scalar>
 {
   public:
 
     /*! The segmented planes, the vector indexes to access them are [sensor_id][obs_id][plane_id] */
-    std::vector< std::vector< std::vector< PlaneCHull > > > vvv_planes; // [pair_id][sensor_id][plane_id]
+	std::vector< std::vector< std::vector< CPlaneCHull > > > vvv_planes; // [pair_id][sensor_id][plane_id]
 
     /*! The plane correspondences between the different sensors. The map indexes correspond to the sensor IDs,
      * each matrix as as many rows as potential plane correspondences, with 4 columns for: obs_id1, plane_id1, obs_id2, plane_id2. */
@@ -36,14 +36,14 @@ class CalibFromPlanes3D : public ExtrinsicCalib//<num_sensors, Scalar>
     std::vector< Eigen::Matrix<Scalar,3,3>, Eigen::aligned_allocator<Eigen::Matrix<Scalar,3,3> > > m_covariance_trans;
 
     /*! Constructor */
-    CalibFromPlanes3D(size_t n_sensors = 2);
+	CCalibFromPlanes(size_t n_sensors = 2);
 
     /*! Destructor */
-    virtual ~CalibFromPlanes3D(){}
+	virtual ~CCalibFromPlanes(){}
 
     /** Search for potentail plane Matches.
         \param plane_obs  */
-    void findPotentialMatches(const std::vector< std::vector< PlaneCHull > > & plane_obs, size_t obs_id);
+	void findPotentialMatches(const std::vector< std::vector< CPlaneCHull > > & plane_obs, size_t obs_id);
 
     /** Calculate the residual error of the correspondences.
         \param sensor_poses relative poses of the sensors

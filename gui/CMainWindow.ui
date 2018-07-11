@@ -482,7 +482,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QSpinBox" name="observations_delay">
+            <widget class="QSpinBox" name="observations_delay_sbox">
              <property name="enabled">
               <bool>false</bool>
              </property>
