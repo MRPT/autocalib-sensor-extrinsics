@@ -7,14 +7,14 @@
 #include <pcl/point_types.h>
 
 /**
- * The CLineMatching class - Not fully tested!
+ * Provides a GUI wrapper around the core calibration from lines classes.
  */
 
-class CLineMatching
+class CCalibFromLinesWrapper
 {
 public:
-	CLineMatching(CObservationTreeModel *model);
-	~CLineMatching();
+	CCalibFromLinesWrapper(CObservationTreeModel *model);
+	~CCalibFromLinesWrapper();
 	/** Extracts lines from from all the image observation in the model. */
 	void extractLines();
 	/** Runs Canny-Hough, and Bresenham algorithm to return a vector of segments

@@ -1,9 +1,9 @@
 #pragma once
 
 #include <observation_tree/CObservationTreeModel.h>
-#include <calib_solvers/TPlaneMatchingParams.h>
-#include <calib_solvers/CPlaneMatching.h>
-#include <calib_solvers/CLineMatching.h>
+#include <core_wrappers/TPlaneMatchingParams.h>
+#include <core_wrappers/CCalibFromPlanesWrapper.h>
+#include <core_wrappers/CCalibFromLinesWrapper.h>
 
 #include <QMainWindow>
 #include <QSettings>
@@ -42,7 +42,9 @@ private:
 	CObservationTreeModel *m_model, *m_sync_model;
 
 	std::shared_ptr<QWidget> m_config_widget;
-	CPlaneMatching *m_plane_matching; /* to be replaced by a generic calib algo object */
-	CLineMatching *m_line_matching;
+	/** Object to interact with the core calibration from planes classes */
+	CCalibFromPlanesWrapper *m_plane_matching;
+	/** Object to interact with the core calibration from lines classes */
+	CCalibFromLinesWrapper *m_line_matching;
 	bool m_calib_started;
 };

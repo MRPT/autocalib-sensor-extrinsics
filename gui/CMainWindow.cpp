@@ -3,7 +3,7 @@
 #include <observation_tree/CObservationTreeModel.h>
 #include <config/CPlaneMatchingConfig.h>
 #include <config/CLineMatchingConfig.h>
-#include <calib_solvers/CPlaneMatching.h>
+#include <core_wrappers/CCalibFromPlanesWrapper.h>
 
 #include <mrpt/obs/CObservation3DRangeScan.h>
 #include <mrpt/maps/PCL_adapters.h>
@@ -100,6 +100,8 @@ void CMainWindow::loadRawlog()
 	m_ui->observations_delay->setDisabled(true);
 	m_ui->sensors_selection_list->setDisabled(true);
 	m_ui->sync_observations_button->setDisabled(true);
+	m_ui->grouped_observations_treeview->setDisabled(true);
+	m_ui->algo_cbox->setDisabled(true);
 	m_recent_file = file_name;
 
 	if(m_model)
@@ -136,6 +138,50 @@ void CMainWindow::loadRawlog()
 	{
 		m_ui->status_bar->showMessage("Loading aborted!");
 		m_ui->viewer_container->updateText("Loading was aborted. Try again.");
+	}
+}
+
+void CMainWindow::syncObservations()
+{
+	QStringList selected_sensor_labels;
+	QListWidgetItem *item;
+
+	m_ui->grouped_observations_treeview->setDisabled(true);
+
+	for(size_t i = 0; i < m_ui->sensors_selection_list->count(); i++)
+	{
+		item = m_ui->sensors_selection_list->item(i);
+		if(item->checkState() == Qt::Checked)
+			selected_sensor_labels.push_back(item->text());
+	}
+
+	if(!(selected_sensor_labels.size() > 1))
+		m_sync_model = nullptr;
+
+	else
+	{
+		if(m_sync_model)
+		{
+			delete m_sync_model;
+		}
+
+		// creating a copy of the model
+		m_sync_model = new CObservationTreeModel(m_ui->grouped_observations_treeview);
+		m_sync_model->setRootItem(new CObservationTreeItem(QString("root")));
+
+		for(size_t i = 0; i < m_model->getRootItem()->childCount(); i++)
+		{
+			m_sync_model->getRootItem()->appendChild(m_model->getRootItem()->child(i));
+		}
+
+		m_sync_model->syncObservations(selected_sensor_labels, m_ui->observations_delay->value());
+
+		if(m_sync_model->getRootItem()->childCount() > 0)
+		{
+			m_ui->grouped_observations_treeview->setDisabled(false);
+			m_ui->grouped_observations_treeview->setModel(m_sync_model);
+			m_ui->algo_cbox->setDisabled(false);
+		}
 	}
 }
 
@@ -202,50 +248,11 @@ void CMainWindow::initCalibChanged(double value)
 		m_init_calib[5] = value;
 }
 
-void CMainWindow::syncObservations()
-{
-	QStringList selected_sensor_labels;
-	QListWidgetItem *item;
-
-	m_ui->grouped_observations_treeview->setDisabled(true);
-
-	for(size_t i = 0; i < m_ui->sensors_selection_list->count(); i++)
-	{
-		item = m_ui->sensors_selection_list->item(i);
-		if(item->checkState() == Qt::Checked)
-			selected_sensor_labels.push_back(item->text());
-	}
-
-	if(!(selected_sensor_labels.size() > 1))
-		m_sync_model = nullptr;
-
-	else
-	{
-		if(m_sync_model)
-		{
-			delete m_sync_model;
-		}
-
-		// creating a copy of the model
-		m_sync_model = new CObservationTreeModel(m_ui->grouped_observations_treeview);
-		m_sync_model->setRootItem(new CObservationTreeItem(QString("root")));
-
-		for(size_t i = 0; i < m_model->getRootItem()->childCount(); i++)
-		{
-			m_sync_model->getRootItem()->appendChild(m_model->getRootItem()->child(i));
-		}
-
-		m_sync_model->syncObservations(selected_sensor_labels, m_ui->observations_delay->value());
-		m_ui->grouped_observations_treeview->setDisabled(false);
-		m_ui->grouped_observations_treeview->setModel(m_sync_model);
-	}
-}
-
 void CMainWindow::runPlaneMatchingCalib(TPlaneMatchingParams params /* to be replaced by a generic calib parameters object */)
 {
 	if(m_sync_model != nullptr)
 	{
-		m_plane_matching = new CPlaneMatching(m_sync_model, m_init_calib, params);
+		m_plane_matching = new CCalibFromPlanesWrapper(m_sync_model, m_init_calib, params);
 		m_plane_matching->addTextObserver(m_ui->viewer_container);
 		m_plane_matching->addPlanesObserver(m_ui->viewer_container);
 		m_plane_matching->extractPlanes();
@@ -260,7 +267,7 @@ void CMainWindow::runLineMatchingCalib()
 {
 	if(m_sync_model != nullptr)
 	{
-		m_line_matching = new CLineMatching(m_sync_model);
+		m_line_matching = new CCalibFromLinesWrapper(m_sync_model);
 		//m_line_matching->extractLines();
 		m_calib_started = true;
 	}

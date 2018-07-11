@@ -3,6 +3,10 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
+/**
+ * @brief Observer (listener) that receives extracted planes for visualization from the GUI core wrappers.
+ */
+
 class CPlanesObserver
 {
 public:

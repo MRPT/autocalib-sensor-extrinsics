@@ -8,12 +8,6 @@ SET(SRC
 	utils/planes.h
 	utils/correspondences.h
 	utils/solver.h
-	utils/CPlanesObserver.h
-	utils/CTextObserver.h
-	calib_solvers/CPlaneMatching.h
-	calib_solvers/TPlaneMatchingParams.h
-	calib_solvers/CLineMatching.h
-	calib_solvers/TLineMatchingParams.h
 	calib_solvers/extrinsic_calib.h
 	calib_solvers/calib_from_planes3D.h
 
@@ -21,8 +15,6 @@ SET(SRC
 	utils/planes.cpp
 	utils/correspondences.cpp
 	utils/solver.cpp
-	calib_solvers/CPlaneMatching.cpp
-	calib_solvers/CLineMatching.cpp
         calib_solvers/extrinsic_calib.cpp
         calib_solvers/calib_from_planes3D.cpp
 )

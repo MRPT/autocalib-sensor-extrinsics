@@ -1,4 +1,4 @@
-#include <calib_solvers/CPlaneMatching.h>
+#include "CCalibFromPlanesWrapper.h"
 #include <calib_solvers/calib_from_planes3D.h>
 #include <utils/planes.h>
 
@@ -17,28 +17,28 @@
 
 using namespace mrpt::obs;
 
-CPlaneMatching::CPlaneMatching(CObservationTreeModel *model, std::array<double, 6> init_calib, TPlaneMatchingParams params)
+CCalibFromPlanesWrapper::CCalibFromPlanesWrapper(CObservationTreeModel *model, std::array<double, 6> init_calib, TPlaneMatchingParams params)
 {
 	m_model = model;
 	m_init_calib = init_calib;
 	m_params = params;
 }
 
-CPlaneMatching::~CPlaneMatching()
+CCalibFromPlanesWrapper::~CCalibFromPlanesWrapper()
 {
 }
 
-void CPlaneMatching::addTextObserver(CTextObserver *observer)
+void CCalibFromPlanesWrapper::addTextObserver(CTextObserver *observer)
 {
 	m_text_observers.push_back(observer);
 }
 
-void CPlaneMatching::addPlanesObserver(CPlanesObserver *observer)
+void CCalibFromPlanesWrapper::addPlanesObserver(CPlanesObserver *observer)
 {
 	m_planes_observers.push_back(observer);
 }
 
-void CPlaneMatching::publishText(const std::string &msg)
+void CCalibFromPlanesWrapper::publishText(const std::string &msg)
 {
 	for(CTextObserver *observer : m_text_observers)
 	{
@@ -46,7 +46,7 @@ void CPlaneMatching::publishText(const std::string &msg)
 	}
 }
 
-void CPlaneMatching::publishPlaneCloud(const int &set_num, const int &cloud_num, const int &sensor_id)
+void CCalibFromPlanesWrapper::publishPlaneCloud(const int &set_num, const int &cloud_num, const int &sensor_id)
 {
 	for(CPlanesObserver *observer : m_planes_observers)
 	{
@@ -54,12 +54,12 @@ void CPlaneMatching::publishPlaneCloud(const int &set_num, const int &cloud_num,
 	}
 }
 
-void CPlaneMatching::run()
+void CCalibFromPlanesWrapper::run()
 {
 	// For running all steps at a time
 }
 
-void CPlaneMatching::extractPlanes()
+void CCalibFromPlanesWrapper::extractPlanes()
 {
 	publishText("****Running plane matching calibration algorithm****");
 
@@ -137,6 +137,6 @@ void CPlaneMatching::extractPlanes()
 }
 
 
-void CPlaneMatching::proceed()
+void CCalibFromPlanesWrapper::proceed()
 {
 }

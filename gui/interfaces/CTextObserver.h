@@ -2,6 +2,9 @@
 
 #include <iostream>
 
+/**
+ * @brief Observer (listener) that receives text from the GUI core wrappers.
+ */
 class CTextObserver
 {
 public:

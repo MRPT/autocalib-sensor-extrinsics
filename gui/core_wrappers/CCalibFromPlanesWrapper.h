@@ -1,22 +1,23 @@
 #pragma once
 
-#include <calib_solvers/TPlaneMatchingParams.h>
+#include "TPlaneMatchingParams.h"
 #include <observation_tree/CObservationTreeModel.h>
-#include <utils/CTextObserver.h>
-#include <utils/CPlanesObserver.h>
+#include <interfaces/CTextObserver.h>
+#include <interfaces/CPlanesObserver.h>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
 #include <functional>
 
-//Class definition for the plane matching algorithm
-
-class CPlaneMatching
+/**
+ * Provides a GUI wrapper around the core calibration from planes classes.
+ */
+class CCalibFromPlanesWrapper
 {
 public:
-	CPlaneMatching(CObservationTreeModel *model, std::array<double,6> init_calib, TPlaneMatchingParams params);
-	~CPlaneMatching();
+	CCalibFromPlanesWrapper(CObservationTreeModel *model, std::array<double,6> init_calib, TPlaneMatchingParams params);
+	~CCalibFromPlanesWrapper();
 	void run();
 	void proceed();
 	void extractPlanes();

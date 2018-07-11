@@ -1,4 +1,4 @@
-#include <calib_solvers/CLineMatching.h>
+#include <core_wrappers/CCalibFromLinesWrapper.h>
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -6,17 +6,17 @@
 
 using namespace mrpt::obs;
 
-CLineMatching::CLineMatching(CObservationTreeModel *model) :
+CCalibFromLinesWrapper::CCalibFromLinesWrapper(CObservationTreeModel *model) :
     m_model(model)
 	
 {
 }
 
-CLineMatching::~CLineMatching()
+CCalibFromLinesWrapper::~CCalibFromLinesWrapper()
 {
 }
 
-void CLineMatching::extractLines()
+void CCalibFromLinesWrapper::extractLines()
 {
 	CObservationTreeItem *root_item, *tree_item;
 	CObservation3DRangeScan::Ptr obs_item;
@@ -29,7 +29,7 @@ void CLineMatching::extractLines()
 	// std::vector<cv::Vec4i> segments = runSegmentation(image);
 }
 
-std::vector<cv::Vec4i> CLineMatching::runSegmentation(const cv::Mat &image)
+std::vector<cv::Vec4i> CCalibFromLinesWrapper::runSegmentation(const cv::Mat &image)
 {
 
 //	int low_threshold = 150;

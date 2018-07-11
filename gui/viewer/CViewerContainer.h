@@ -1,8 +1,8 @@
 #pragma once
 
 #include <mrpt/gui/CQtGlCanvasBase.h>
-#include <utils/CTextObserver.h>
-#include <utils/CPlanesObserver.h>
+#include <interfaces/CTextObserver.h>
+#include <interfaces/CPlanesObserver.h>
 
 #include <QWidget>
 

@@ -7,7 +7,13 @@ SET(SOURCES
 	observation_tree/CObservationTreeItem.cpp
 	viewer/CViewerContainer.cpp
 	config/CPlaneMatchingConfig.cpp
-	config/CLineMatchingConfig.cpp)
+	config/CLineMatchingConfig.cpp
+	interfaces/CTextObserver.h
+	interfaces/CPlanesObserver.h
+	core_wrappers/CCalibFromPlanesWrapper.h
+	core_wrappers/CCalibFromPlanesWrapper.cpp
+	core_wrappers/CCalibFromLinesWrapper.h
+	core_wrappers/CCalibFromLinesWrapper.cpp)
 
 SET(FILES_TO_MOC
 	CMainWindow.h

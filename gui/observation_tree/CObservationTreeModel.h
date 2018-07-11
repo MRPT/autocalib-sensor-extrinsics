@@ -1,7 +1,7 @@
 #pragma once
 
 #include <observation_tree/CObservationTreeItem.h>
-#include <utils/CTextObserver.h>
+#include <interfaces/CTextObserver.h>
 
 #include <QAbstractItemModel>
 #include <QModelIndex>
