@@ -20,14 +20,15 @@ using namespace mrpt::obs;
 CMainWindow::CMainWindow(QWidget *parent) :
 	QMainWindow(parent),
 	m_model(nullptr),
+    m_sync_model(nullptr),
 	m_ui(new Ui::CMainWindow)
 {
 	m_ui->setupUi(this);
 
-	connect(m_ui->sensors_cbox, SIGNAL(currentIndexChanged(int)), this, SLOT(sensorsIndexChanged(int)));
-	connect(m_ui->algo_cbox, SIGNAL(currentIndexChanged(int)), this, SLOT(algosIndexChanged(int)));
 	connect(m_ui->load_rlog_button, SIGNAL(clicked(bool)), this, SLOT(loadRawlog()));
+	connect(m_ui->algo_cbox, SIGNAL(currentIndexChanged(int)), this, SLOT(algosIndexChanged(int)));
 	connect(m_ui->observations_treeview, SIGNAL(clicked(QModelIndex)), this, SLOT(itemClicked(QModelIndex)));
+	connect(m_ui->sync_observations_button, SIGNAL(clicked(bool)), this, SLOT(syncObservations()));
 
 	connect(m_ui->irx_sbox, SIGNAL(valueChanged(double)), this, SLOT(initCalibChanged(double)));
 	connect(m_ui->iry_sbox, SIGNAL(valueChanged(double)), this, SLOT(initCalibChanged(double)));
@@ -39,7 +40,7 @@ CMainWindow::CMainWindow(QWidget *parent) :
 	setWindowTitle("Automatic Calibration of Sensor Extrinsics");
 	m_calib_started = false;
 	m_ui->viewer_container->updateText("Welcome to autocalib-sensor-extrinsics!");
-	m_ui->viewer_container->updateText("Choose your sensor combination to get started.");
+	m_ui->viewer_container->updateText("Set your initial (rough) calibration values and load your rawlog file to get started.");
 	m_recent_file = m_settings.value("recent").toString();
 
 	m_init_calib.fill(0);
@@ -49,20 +50,6 @@ CMainWindow::~CMainWindow()
 {
 	m_settings.setValue("recent", m_recent_file);
 	delete m_ui;
-}
-
-void CMainWindow::sensorsIndexChanged(int index)
-{
-	m_ui->irx_sbox->setDisabled(false);
-	m_ui->iry_sbox->setDisabled(false);
-	m_ui->irz_sbox->setDisabled(false);
-	m_ui->itx_sbox->setDisabled(false);
-	m_ui->ity_sbox->setDisabled(false);
-	m_ui->itz_sbox->setDisabled(false);
-	m_ui->med_sbox->setDisabled(false);
-	m_ui->load_rlog_button->setDisabled(false);
-
-	m_ui->viewer_container->updateText("Nice! Now set your initial (rough) calibration values and load your rawlog file!");
 }
 
 void CMainWindow::algosIndexChanged(int index)
@@ -108,7 +95,11 @@ void CMainWindow::loadRawlog()
 		return;
 
 	m_ui->status_bar->showMessage("Loading Rawlog...");
-	m_ui->algo_cbox->setDisabled(true);
+	m_ui->observations_treeview->setDisabled(true);
+	m_ui->observations_description_textbrowser->setDisabled(true);
+	m_ui->observations_delay->setDisabled(true);
+	m_ui->sensors_selection_list->setDisabled(true);
+	m_ui->sync_observations_button->setDisabled(true);
 	m_recent_file = file_name;
 
 	if(m_model)
@@ -120,11 +111,14 @@ void CMainWindow::loadRawlog()
 
 	if((m_model->getRootItem()) != nullptr)
 	{
+		m_ui->observations_treeview->setDisabled(false);
 		m_ui->observations_treeview->setModel(m_model);
 		m_ui->status_bar->showMessage("Rawlog loaded!");
 		m_ui->viewer_container->updateText("Select the calibration algorithm to continue.");
-		m_ui->algo_cbox->setDisabled(false);
+		m_ui->observations_description_textbrowser->setDisabled(false);
 		m_ui->sensors_selection_list->setDisabled(false);
+		m_ui->observations_delay->setDisabled(false);
+		m_ui->sync_observations_button->setDisabled(false);
 
 		QStringList sensor_labels = m_model->getSensorLabels();
 
@@ -157,78 +151,34 @@ void CMainWindow::itemClicked(const QModelIndex &index)
 
 		CObservation3DRangeScan::Ptr obs_item;
         mrpt::maps::CPointsMap::Ptr map;
-//        mrpt::maps::CColouredPointsMap::Ptr map;
 
         pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
 		mrpt::img::CImage image;
 
-		//T3DPointsProjectionParams params;
-		//params.MAKE_DENSE = false;
-		//params.MAKE_ORGANIZED = false;
+		obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(m_model->observationData(index));
+		obs_item->getDescriptionAsText(update_stream);
 
-		// check if observation item was clicked
-		if((index.parent()).isValid())
-		{
-			obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(m_model->observationData(index));
-			//obs_item->project3DPointsFromDepthImageInto(*cloud, params);
-			obs_item->getDescriptionAsText(update_stream);
-
-			//For quicker load and display of the cloud
-//            map = mrpt::make_aligned_shared<mrpt::maps::CSimplePointsMap>();
-            map = mrpt::make_aligned_shared<mrpt::maps::CColouredPointsMap>();
+		map = mrpt::make_aligned_shared<mrpt::maps::CColouredPointsMap>();
 //            map->colorScheme.scheme = mrpt::maps::CColouredPointsMap::cmFromIntensityImage;
 
-            map->insertObservation(obs_item.get());
-            map->getPCLPointCloud(*cloud);
+		map->insertObservation(obs_item.get());
+		map->getPCLPointCloud(*cloud);
 //            map->getPCLPointCloudXYZRGB(*cloud);
-            std::cout << cloud->size() << " " << cloud->height << "x" << cloud->width << "\n";
+		std::cout << cloud->size() << " " << cloud->height << "x" << cloud->width << "\n";
 
 			//image = cv::cvarrToMat(obs_item->intensityImage.getAs<IplImage>());
-			image = obs_item->intensityImage;
+		image = obs_item->intensityImage;
 
-			sensor_id = m_model->getObsLabels().indexOf(QString::fromStdString(obs_item->sensorLabel + " : " + obs_item->GetRuntimeClass()->className)) + 1;
-			viewer_id = sensor_id;
+		sensor_id = m_model->getObsLabels().indexOf(QString::fromStdString(obs_item->sensorLabel + " : " + obs_item->GetRuntimeClass()->className)) + 1;
+		viewer_id = sensor_id;
 
-			viewer_text = (m_model->data(index.parent())).toString().toStdString();
+		viewer_text = (m_model->data(index)).toString().toStdString();
 
-			m_ui->viewer_container->updateViewer(viewer_id, cloud, viewer_text);
-			m_ui->viewer_container->updateImageViewer(viewer_id, image);
+		m_ui->viewer_container->updateViewer(viewer_id, cloud, viewer_text);
+		m_ui->viewer_container->updateImageViewer(viewer_id, image);
 
-			if(m_calib_started)
-				m_plane_matching->publishPlaneCloud(item->parentItem()->row(), item->row(), sensor_id);
-		}
-
-		// else set-item was clicked
-		else
-		{
-			for(int i = 0; i < item->childCount(); i++)
-			{
-				obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>((item->child(i))->getObservation());
-				//obs_item->project3DPointsFromDepthImageInto(*cloud, params);
-				obs_item->getDescriptionAsText(update_stream);
-
-//                map = mrpt::make_aligned_shared<mrpt::maps::CSimplePointsMap>();
-                map = mrpt::make_aligned_shared<mrpt::maps::CColouredPointsMap>();
-                map->insertObservation(obs_item.get());
-                map->getPCLPointCloud(*cloud);
-//                map->getPCLPointCloudXYZRGB(*cloud);
-
-				//image = cv::cvarrToMat(obs_item->intensityImage.getAs<IplImage>());
-				image = obs_item->intensityImage;
-
-				sensor_id = m_model->getObsLabels().indexOf(QString::fromStdString(obs_item->sensorLabel + " : " + obs_item->GetRuntimeClass()->className)) + 1;
-				viewer_id = sensor_id;
-
-				viewer_text = (m_model->data(index)).toString().toStdString();
-				update_stream << "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n";
-
-				m_ui->viewer_container->updateViewer(viewer_id, cloud, viewer_text);
-				m_ui->viewer_container->updateImageViewer(viewer_id, image);
-
-				if(m_calib_started)
-					m_plane_matching->publishPlaneCloud(item->row(), i, sensor_id);
-			}
-		}
+		if(m_calib_started)
+			m_plane_matching->publishPlaneCloud(item->parentItem()->row(), item->row(), sensor_id);
 
 		m_ui->observations_description_textbrowser->setText(QString::fromStdString(update_stream.str()));
 	}
@@ -252,10 +202,12 @@ void CMainWindow::initCalibChanged(double value)
 		m_init_calib[5] = value;
 }
 
-CObservationTreeModel* CMainWindow::updatedRawlog()
+void CMainWindow::syncObservations()
 {
 	QStringList selected_sensor_labels;
 	QListWidgetItem *item;
+
+	m_ui->grouped_observations_treeview->setDisabled(true);
 
 	for(size_t i = 0; i < m_ui->sensors_selection_list->count(); i++)
 	{
@@ -265,20 +217,35 @@ CObservationTreeModel* CMainWindow::updatedRawlog()
 	}
 
 	if(!(selected_sensor_labels.size() > 1))
-		return nullptr;
+		m_sync_model = nullptr;
+
 	else
-		//TODO - create a new clipped model object for > 2 sensors
-		return m_model;
+	{
+		if(m_sync_model)
+		{
+			delete m_sync_model;
+		}
+
+		// creating a copy of the model
+		m_sync_model = new CObservationTreeModel(m_ui->grouped_observations_treeview);
+		m_sync_model->setRootItem(new CObservationTreeItem(QString("root")));
+
+		for(size_t i = 0; i < m_model->getRootItem()->childCount(); i++)
+		{
+			m_sync_model->getRootItem()->appendChild(m_model->getRootItem()->child(i));
+		}
+
+		m_sync_model->syncObservations(selected_sensor_labels, m_ui->observations_delay->value());
+		m_ui->grouped_observations_treeview->setDisabled(false);
+		m_ui->grouped_observations_treeview->setModel(m_sync_model);
+	}
 }
 
 void CMainWindow::runPlaneMatchingCalib(TPlaneMatchingParams params /* to be replaced by a generic calib parameters object */)
 {
-	CObservationTreeModel *model;
-	model = updatedRawlog();
-
-	if(model != nullptr)
+	if(m_sync_model != nullptr)
 	{
-		m_plane_matching = new CPlaneMatching(model, m_init_calib, params);
+		m_plane_matching = new CPlaneMatching(m_sync_model, m_init_calib, params);
 		m_plane_matching->addTextObserver(m_ui->viewer_container);
 		m_plane_matching->addPlanesObserver(m_ui->viewer_container);
 		m_plane_matching->extractPlanes();
@@ -291,12 +258,9 @@ void CMainWindow::runPlaneMatchingCalib(TPlaneMatchingParams params /* to be rep
 
 void CMainWindow::runLineMatchingCalib()
 {
-	CObservationTreeModel *model;
-	model = updatedRawlog();
-
-	if(model != nullptr)
+	if(m_sync_model != nullptr)
 	{
-		m_line_matching = new CLineMatching(model);
+		m_line_matching = new CLineMatching(m_sync_model);
 		//m_line_matching->extractLines();
 		m_calib_started = true;
 	}

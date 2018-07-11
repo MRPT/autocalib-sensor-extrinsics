@@ -24,11 +24,12 @@ public:
 	void runLineMatchingCalib();
 
 private slots:
-	void sensorsIndexChanged(int index);
 	void algosIndexChanged(int index);
 	void loadRawlog();
 	void itemClicked(const QModelIndex &);
 	void initCalibChanged(double value);
+
+	void syncObservations();
 
 private:
 	Ui::CMainWindow *m_ui;
@@ -38,7 +39,7 @@ private:
 	QString m_recent_file;
 
 	std::array<double,6> m_init_calib;
-	CObservationTreeModel *m_model;
+	CObservationTreeModel *m_model, *m_sync_model;
 
 	std::shared_ptr<QWidget> m_config_widget;
 	CPlaneMatching *m_plane_matching; /* to be replaced by a generic calib algo object */

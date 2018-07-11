@@ -32,15 +32,22 @@ class CObservationTreeModel : public QAbstractItemModel
 		int rowCount(const QModelIndex &parent = QModelIndex()) const;
 		int columnCount(const QModelIndex &parent = QModelIndex()) const;
 		CObservationTreeItem *getRootItem() const;
+		void setRootItem(CObservationTreeItem *new_rootitem);
 		QStringList getSensorLabels() const;
 		QStringList getObsLabels() const;
+
+		/** Groups observations together based on their time stamp proximity.
+		 * Stores the results back in the same model.
+		 * \param max_delay Maximum allowable delay between observations
+		 */
+		void syncObservations(const QStringList &selected_sensor_labels, const int &max_delay = 1000);
 
 	private:
 		CObservationTreeItem *m_rootitem;
 		QStringList m_sensor_labels;
 		QStringList m_obs_labels;
 		/** store count of observations of each observation type */
-		std::vector<int> m_count_in_label;
+		std::vector<int> m_count_of_label;
 		std::string m_rawlog_filename;
 		std::vector<CTextObserver*> m_text_observers;
 };

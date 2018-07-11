@@ -70,31 +70,12 @@
      </sizepolicy>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
-     <item>
-      <layout class="QFormLayout" name="formLayout">
-       <item row="0" column="0">
-        <widget class="QLabel" name="sensors_label">
-         <property name="text">
-          <string>Sensor Combination:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QComboBox" name="sensors_cbox">
-         <item>
-          <property name="text">
-           <string/>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>RGB-D - RGB-D</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-      </layout>
-     </item>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>9</number>
+     </property>
      <item>
       <layout class="QGridLayout" name="gridLayout">
        <item row="0" column="0">
@@ -107,7 +88,7 @@
        <item row="0" column="1">
         <widget class="QDoubleSpinBox" name="irx_sbox">
          <property name="enabled">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
          <property name="accessibleName">
           <string>irx</string>
@@ -133,7 +114,7 @@
        <item row="0" column="3">
         <widget class="QDoubleSpinBox" name="iry_sbox">
          <property name="enabled">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
          <property name="accessibleName">
           <string>iry</string>
@@ -159,7 +140,7 @@
        <item row="0" column="5">
         <widget class="QDoubleSpinBox" name="irz_sbox">
          <property name="enabled">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
          <property name="accessibleName">
           <string>irz</string>
@@ -185,7 +166,7 @@
        <item row="1" column="1">
         <widget class="QDoubleSpinBox" name="itx_sbox">
          <property name="enabled">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
          <property name="accessibleName">
           <string>itx</string>
@@ -211,7 +192,7 @@
        <item row="1" column="3">
         <widget class="QDoubleSpinBox" name="ity_sbox">
          <property name="enabled">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
          <property name="accessibleName">
           <string>ity</string>
@@ -237,7 +218,7 @@
        <item row="1" column="5">
         <widget class="QDoubleSpinBox" name="itz_sbox">
          <property name="enabled">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
          <property name="accessibleName">
           <string>itz</string>
@@ -263,7 +244,7 @@
        <item row="2" column="1">
         <widget class="QDoubleSpinBox" name="med_sbox">
          <property name="enabled">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
          <property name="minimum">
           <double>-10.000000000000000</double>
@@ -281,7 +262,7 @@
      <item>
       <widget class="QPushButton" name="load_rlog_button">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="text">
         <string>Load Rawlog</string>
@@ -315,40 +296,67 @@
    </attribute>
    <widget class="QWidget" name="observations_dockwidget_contents">
     <layout class="QVBoxLayout" name="verticalLayout_6">
+     <property name="leftMargin">
+      <number>9</number>
+     </property>
+     <property name="rightMargin">
+      <number>21</number>
+     </property>
      <item>
       <widget class="QSplitter" name="splitter">
+       <property name="lineWidth">
+        <number>1</number>
+       </property>
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
        <property name="handleWidth">
         <number>8</number>
        </property>
-       <widget class="QWidget" name="">
+       <widget class="QWidget" name="layoutWidget">
         <layout class="QVBoxLayout" name="observations_treeview_group">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>9</number>
+         </property>
+         <property name="rightMargin">
+          <number>9</number>
+         </property>
+         <property name="bottomMargin">
+          <number>9</number>
+         </property>
          <item>
           <widget class="QLabel" name="observations_treeview_label">
            <property name="text">
-            <string>Tree</string>
+            <string>List</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QTreeView" name="observations_treeview">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-             <horstretch>0</horstretch>
-             <verstretch>1</verstretch>
-            </sizepolicy>
-           </property>
-           <attribute name="headerVisible">
+          <widget class="QListView" name="observations_treeview">
+           <property name="enabled">
             <bool>false</bool>
-           </attribute>
+           </property>
           </widget>
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="">
+       <widget class="QWidget" name="layoutWidget">
         <layout class="QVBoxLayout" name="observations_description_group">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>9</number>
+         </property>
+         <property name="rightMargin">
+          <number>9</number>
+         </property>
+         <property name="bottomMargin">
+          <number>9</number>
+         </property>
          <item>
           <widget class="QLabel" name="observations_description_label">
            <property name="text">
@@ -357,7 +365,17 @@
           </widget>
          </item>
          <item>
-          <widget class="QTextBrowser" name="observations_description_textbrowser"/>
+          <widget class="QTextBrowser" name="observations_description_textbrowser">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
          </item>
         </layout>
        </widget>
@@ -376,7 +394,7 @@
    <property name="minimumSize">
     <size>
      <width>382</width>
-     <height>154</height>
+     <height>316</height>
     </size>
    </property>
    <property name="accessibleName">
@@ -415,6 +433,137 @@
     </property>
     <layout class="QVBoxLayout" name="verticalLayout_3">
      <item>
+      <widget class="QSplitter" name="observations_splitter">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="handleWidth">
+        <number>8</number>
+       </property>
+       <widget class="QWidget" name="layoutWidget">
+        <layout class="QVBoxLayout" name="observations_config_group" stretch="0,0,0,1">
+         <item>
+          <layout class="QVBoxLayout" name="sensors_selection_group" stretch="0,1">
+           <item>
+            <widget class="QLabel" name="sensors_selection_label">
+             <property name="text">
+              <string>Select Sensors:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QListWidget" name="sensors_selection_list">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+               <horstretch>0</horstretch>
+               <verstretch>1</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>80</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="observations_delay_group">
+           <item>
+            <widget class="QLabel" name="observations_delay_label">
+             <property name="text">
+              <string>Max delay (ms):</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSpinBox" name="observations_delay">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="minimum">
+              <number>0</number>
+             </property>
+             <property name="maximum">
+              <number>5000</number>
+             </property>
+             <property name="singleStep">
+              <number>10</number>
+             </property>
+             <property name="value">
+              <number>30</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QPushButton" name="sync_observations_button">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>Sync</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="observations_config_group_spacer">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="layoutWidget">
+        <layout class="QVBoxLayout" name="grouped_observations_group">
+         <item>
+          <widget class="QLabel" name="grouped_observations_label">
+           <property name="text">
+            <string>Grouped observations:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QTreeView" name="grouped_observations_treeview">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <attribute name="headerVisible">
+            <bool>false</bool>
+           </attribute>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </item>
+     <item>
+      <widget class="Line" name="line">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
       <layout class="QHBoxLayout" name="algo_group">
        <item>
         <widget class="QLabel" name="algo_label">
@@ -427,6 +576,12 @@
         <widget class="QComboBox" name="algo_cbox">
          <property name="enabled">
           <bool>false</bool>
+         </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
          </property>
          <item>
           <property name="text">
@@ -448,40 +603,7 @@
       </layout>
      </item>
      <item>
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>Select Sensors:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QListWidget" name="sensors_selection_list">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>50</height>
-        </size>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="Line" name="line">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="verticalSpacer">
+      <spacer name="configuration_spacer">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
