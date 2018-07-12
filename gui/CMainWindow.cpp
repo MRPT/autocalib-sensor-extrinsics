@@ -206,44 +206,47 @@ void CMainWindow::syncObservationsClicked()
 
 void CMainWindow::listItemClicked(const QModelIndex &index)
 {
-	if(index.isValid())
-	{
-		CObservationTreeItem *item = static_cast<CObservationTreeItem*>(index.internalPointer());
+    if(index.isValid())
+    {
+        CObservationTreeItem *item = static_cast<CObservationTreeItem*>(index.internalPointer());
 
-		std::stringstream update_stream;
-		std::string viewer_text;
-		int viewer_id, sensor_id;
+        std::stringstream update_stream;
+        std::string viewer_text;
+        int viewer_id, sensor_id;
 
-		CObservation3DRangeScan::Ptr obs_item;
-		mrpt::maps::CColouredPointsMap::Ptr map;
+        CObservation3DRangeScan::Ptr obs_item;
+        mrpt::maps::CPointsMap::Ptr map;
 
-		pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
-		mrpt::img::CImage image;
+        pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
 
-		obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(m_model->observationData(index));
-		obs_item->getDescriptionAsText(update_stream);
+        obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(m_model->observationData(index));
+        obs_item->getDescriptionAsText(update_stream);
 
-		map = mrpt::make_aligned_shared<mrpt::maps::CColouredPointsMap>();
-		map->colorScheme.scheme = mrpt::maps::CColouredPointsMap::TColouringMethod::cmFromIntensityImage;
+//		map = mrpt::make_aligned_shared<mrpt::maps::CColouredPointsMap>();
+//        //map->colorScheme.scheme = mrpt::maps::CColouredPointsMap::cmFromIntensityImage;
+//		map->insertObservation(obs_item.get());
+//		map->getPCLPointCloud(*cloud);
+//        //map->getPCLPointCloudXYZRGB(*cloud);
 
-		map->insertObservation(obs_item.get());
-		map->getPCLPointCloudXYZRGB(*cloud);
+        T3DPointsProjectionParams params;
+        params.MAKE_DENSE = false;
+        params.MAKE_ORGANIZED = false;
+        obs_item->project3DPointsFromDepthImageInto(*cloud, params);
+        cloud->is_dense = false;
 
-		image = obs_item->intensityImage;
+        sensor_id = m_model->getSensorLabels().indexOf(QString::fromStdString(obs_item->sensorLabel)) + 1;
+        viewer_id = sensor_id;
 
-		sensor_id = m_model->getSensorLabels().indexOf(QString::fromStdString(obs_item->sensorLabel)) + 1;
-		viewer_id = sensor_id;
+        viewer_text = (m_model->data(index)).toString().toStdString();
 
-		viewer_text = (m_model->data(index)).toString().toStdString();
+		    m_ui->viewer_container->updateCloudViewer(viewer_id, cloud, viewer_text);
+		    m_ui->viewer_container->updateImageViewer(viewer_id, image);
 
-		m_ui->viewer_container->updateCloudViewer(viewer_id, cloud, viewer_text);
-		m_ui->viewer_container->updateImageViewer(viewer_id, image);
+		    if(m_calib_started && (m_calib_from_planes != nullptr))
+			    m_calib_from_planes->publishPlaneCloud(item->parentItem()->row(), item->row(), sensor_id);
 
-		if(m_calib_started && (m_calib_from_planes != nullptr))
-			m_calib_from_planes->publishPlaneCloud(item->parentItem()->row(), item->row(), sensor_id);
-
-		m_ui->observations_description_textbrowser->setText(QString::fromStdString(update_stream.str()));
-	}
+		    m_ui->observations_description_textbrowser->setText(QString::fromStdString(update_stream.str()));
+	  }
 }
 
 void CMainWindow::treeItemClicked(const QModelIndex &index)
@@ -316,9 +319,9 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 					m_calib_from_planes->publishPlaneCloud(item->row(), i, sensor_id);
 			}
 		}
-
-		m_ui->observations_description_textbrowser->setText(QString::fromStdString(update_stream.str()));
-	}
+    
+        m_ui->observations_description_textbrowser->setText(QString::fromStdString(update_stream.str()));
+    }
 }
 
 void CMainWindow::initCalibChanged(double value)
