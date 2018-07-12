@@ -53,7 +53,7 @@ void CPlaneMatchingConfig::startCalib()
 	params.dist_threshold = m_ui->distance_threshold_sbox->value();
 	params.min_inliers_frac = m_ui->minimum_threshold_sbox->value();
 
-	static_cast<CMainWindow*>(parentWidget()->parentWidget()->parentWidget())->runPlaneMatchingCalib(params);
+	static_cast<CMainWindow*>(parentWidget()->parentWidget()->parentWidget())->runCalibFromPlanes(params);
 }
 
 void CPlaneMatchingConfig::proceedCalib()

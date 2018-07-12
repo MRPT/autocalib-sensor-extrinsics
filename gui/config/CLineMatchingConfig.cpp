@@ -17,7 +17,7 @@ CLineMatchingConfig::~CLineMatchingConfig()
 
 void CLineMatchingConfig::startCalib()
 {
-	static_cast<CMainWindow*>(parentWidget()->parentWidget()->parentWidget())->runLineMatchingCalib();
+	static_cast<CMainWindow*>(parentWidget()->parentWidget()->parentWidget())->runCalibFromLines();
 }
 
 void CLineMatchingConfig::proceedCalib()

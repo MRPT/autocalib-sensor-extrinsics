@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
 	QApplication::setOrganizationDomain("mrpt.org");
 	QApplication::setApplicationName("autocalib-sensor-extrinsics");
 
-	CMainWindow main_window("../../config/calibConfig.ini");
+	CMainWindow main_window("../../config_files/app_config.ini");
 	main_window.showMaximized();
 
 	return application.exec();
