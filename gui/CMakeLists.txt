@@ -11,6 +11,7 @@ SET(SOURCES
 	config/CLineMatchingConfig.cpp
 	interfaces/CTextObserver.h
 	interfaces/CPlanesObserver.h
+	interfaces/CRtObserver.h
 	core_gui/CCalibFromPlanesGui.h
 	core_gui/CCalibFromPlanesGui.cpp
 	core_gui/CCalibFromLinesGui.h

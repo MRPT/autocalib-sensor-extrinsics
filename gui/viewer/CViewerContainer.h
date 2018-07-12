@@ -35,6 +35,14 @@ public:
 	 */
 	void updateCloudViewer(const int &viewer_id, const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const std::string &text);
 
+	/**
+	 * Update the result viewer with all the observations in a set, overlapped.
+	 * @param cloud the input cloud.
+	 * @param sensor_label the label of the sensor the cloud belongs to.
+	 * @param text to be displayed in the visualizer.
+	 */
+	void updateSetCloudViewer(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const std::string &sensor_label, const std::string &text);
+
 	/** Update the image viewer with an image. */
 	void updateImageViewer(const int &viewer_id, mrpt::img::CImage &image);
 

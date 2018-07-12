@@ -127,6 +127,7 @@ void CViewerContainer::updateCloudViewer(const int &viewer_id, const pcl::PointC
 			m_output_viewer->removePointCloud("cloud");
 
 		m_output_viewer->addPointCloud(cloud, viewer_color_handler, "cloud");
+
 		m_output_viewer->resetCamera();
 		m_output_viewer->updateText(text, 10, 10, 1, 1, 1, "text");
 		m_output_viewer->addCoordinateSystem(0.3);
@@ -136,28 +137,18 @@ void CViewerContainer::updateCloudViewer(const int &viewer_id, const pcl::PointC
 	}
 }
 
-void CViewerContainer::updateImageViewer(const int &viewer_id, mrpt::img::CImage &image)
+void CViewerContainer::updateSetCloudViewer(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const std::string &sensor_label, const std::string &text)
 {
-	switch(viewer_id)
-	{
-	case 1:
-	{
-		m_ui->input1_tab_widget->removeTab(1);
-		mrpt::gui::CQtGlCanvasBase *gl = new mrpt::gui::CQtGlCanvasBase();
-		gl->mainViewport()->setImageView_fast(image);
-		m_ui->input1_tab_widget->insertTab(1, gl, "RGB");
-		break;
-	}
+	pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGBA> viewer_color_handler(cloud);
 
-	case 2:
-	{
-		m_ui->input2_tab_widget->removeTab(1);
-		mrpt::gui::CQtGlCanvasBase *gl = new mrpt::gui::CQtGlCanvasBase();
-		gl->mainViewport()->setImageView_fast(image);
-		m_ui->input2_tab_widget->insertTab(1, gl, "RGB");
-		break;
-	}
-	}
+	if(m_output_viewer->contains(sensor_label))
+		m_output_viewer->removePointCloud(sensor_label);
+
+	m_output_viewer->addPointCloud(cloud, viewer_color_handler, sensor_label);
+	m_output_viewer->resetCamera();
+	m_output_viewer->updateText(text, 10, 10, 1, 1, 1, "text");
+	m_output_viewer->addCoordinateSystem(0.3);
+	m_ui->result_viz->update();
 }
 
 void CViewerContainer::onReceivingPlaneCloud(const int &sensor_id, const std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> &cloud)
@@ -255,6 +246,32 @@ void CViewerContainer::onReceivingPlaneCloud(const int &sensor_id, const std::ve
 //	}
 	}
 }
+
+void CViewerContainer::updateImageViewer(const int &viewer_id, mrpt::img::CImage &image)
+{
+	switch(viewer_id)
+	{
+	case 1:
+	{
+		m_ui->input1_tab_widget->removeTab(1);
+		mrpt::gui::CQtGlCanvasBase *gl = new mrpt::gui::CQtGlCanvasBase();
+		gl->mainViewport()->setImageView_fast(image);
+		m_ui->input1_tab_widget->insertTab(1, gl, "RGB");
+		break;
+	}
+
+	case 2:
+	{
+		m_ui->input2_tab_widget->removeTab(1);
+		mrpt::gui::CQtGlCanvasBase *gl = new mrpt::gui::CQtGlCanvasBase();
+		gl->mainViewport()->setImageView_fast(image);
+		m_ui->input2_tab_widget->insertTab(1, gl, "RGB");
+		break;
+	}
+	}
+}
+
+
 
 void CViewerContainer::onReceivingText(const std::string &msg)
 {

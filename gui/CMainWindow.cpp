@@ -9,6 +9,7 @@
 #include <mrpt/maps/PCL_adapters.h>
 #include <mrpt/maps/CColouredPointsMap.h>
 #include <pcl/search/impl/search.hpp>
+#include <pcl/common/transforms.h>
 
 #include <QFileDialog>
 #include <QSpinBox>
@@ -25,12 +26,12 @@ CMainWindow::CMainWindow(const std::string &config_file_name, QWidget *parent) :
 {
 	m_ui->setupUi(this);
 
-	m_ui->irx_sbox->setValue(m_config_file.read_double("initial_calibration", "irx", 0.0, true));
-	m_ui->iry_sbox->setValue(m_config_file.read_double("initial_calibration", "iry", 0.0, true));
-	m_ui->irz_sbox->setValue(m_config_file.read_double("initial_calibration", "irz", 0.0, true));
-	m_ui->itx_sbox->setValue(m_config_file.read_double("initial_calibration", "itx", 0.0, true));
-	m_ui->ity_sbox->setValue(m_config_file.read_double("initial_calibration", "ity", 0.0, true));
-	m_ui->itz_sbox->setValue(m_config_file.read_double("initial_calibration", "itz", 0.0, true));
+//	m_ui->irx_sbox->setValue(m_config_file.read_double("initial_calibration", "irx", 0.0, true));
+//	m_ui->iry_sbox->setValue(m_config_file.read_double("initial_calibration", "iry", 0.0, true));
+//	m_ui->irz_sbox->setValue(m_config_file.read_double("initial_calibration", "irz", 0.0, true));
+//	m_ui->itx_sbox->setValue(m_config_file.read_double("initial_calibration", "itx", 0.0, true));
+//	m_ui->ity_sbox->setValue(m_config_file.read_double("initial_calibration", "ity", 0.0, true));
+//	m_ui->itz_sbox->setValue(m_config_file.read_double("initial_calibration", "itz", 0.0, true));
 
 	m_ui->observations_delay_sbox->setValue(m_config_file.read_int("grouping_observations", "max_delay", 30, true));
 
@@ -61,6 +62,16 @@ CMainWindow::CMainWindow(const std::string &config_file_name, QWidget *parent) :
 	m_init_calib[3] = m_ui->itz_sbox->value();
 	m_init_calib[4] = m_ui->ity_sbox->value();
 	m_init_calib[5] = m_ui->itz_sbox->value();
+
+	std::vector<std::string> transformation_keys;
+	m_config_file.getAllKeys("initial_calibration", transformation_keys);
+	Eigen::Matrix4d transformation;
+
+	for(size_t i = 0; i < transformation_keys.size(); i++)
+	{
+		m_config_file.read_matrix("initial_calibration", transformation_keys[i], transformation, Eigen::Matrix4d(), true);
+		m_relative_transformations.push_back(transformation);
+	}
 }
 
 CMainWindow::~CMainWindow()
@@ -237,8 +248,8 @@ void CMainWindow::listItemClicked(const QModelIndex &index)
 		m_ui->viewer_container->updateCloudViewer(viewer_id, cloud, viewer_text);
 		m_ui->viewer_container->updateImageViewer(viewer_id, image);
 
-		//if(m_calib_started && (m_calib_from_planes_gui != nullptr))
-		    //m_calib_from_planes_gui->publishPlaneCloud(item->parentItem()->row(), item->row(), sensor_id);
+		if(m_calib_started && (m_calib_from_planes_gui != nullptr))
+			m_calib_from_planes_gui->publishPlaneCloud(item->parentItem()->row(), item->row(), sensor_id);
 
 		m_ui->observations_description_textbrowser->setText(QString::fromStdString(update_stream.str()));
 	  }
@@ -304,6 +315,9 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 
 				m_ui->viewer_container->updateCloudViewer(viewer_id, cloud, viewer_text);
 				m_ui->viewer_container->updateImageViewer(viewer_id, image);
+
+				pcl::transformPointCloud(*cloud, *cloud, m_relative_transformations[i]);
+				m_ui->viewer_container->updateSetCloudViewer(cloud, obs_item->sensorLabel, viewer_text + " Overlapped");
 
 				if(m_calib_started && (m_calib_from_planes_gui != nullptr))
 					m_calib_from_planes_gui->publishPlaneCloud(item->row(), i, sensor_id);
@@ -380,4 +394,9 @@ void CMainWindow::saveParams()
 	m_config_file.writeNow();
 
 	m_ui->status_bar->showMessage("Parameters saved!");
+}
+
+void CMainWindow::ontReceivingRt(const std::vector<Eigen::Matrix4d> &relative_transformations)
+{
+	m_relative_transformations = relative_transformations;
 }

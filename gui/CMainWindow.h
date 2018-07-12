@@ -4,17 +4,19 @@
 #include <core_gui/TPlaneMatchingParams.h>
 #include <core_gui/CCalibFromPlanesGui.h>
 #include <core_gui/CCalibFromLinesGui.h>
+#include <interfaces/CRtObserver.h>
 
 #include <QMainWindow>
 #include <QSettings>
 
 #include <mrpt/config/CConfigFile.h>
+#include <Eigen/Dense>
 
 namespace Ui {
 class CMainWindow;
 }
 
-class CMainWindow : public QMainWindow
+class CMainWindow : public QMainWindow, public CRtObserver
 {
 	Q_OBJECT
 
@@ -34,6 +36,9 @@ public:
 
 	/** Triggers the calibration from lines method. */
 	void runCalibFromLines();
+
+	/** Receives the estimated relative transformation from the gui calib classes. */
+	void ontReceivingRt(const std::vector<Eigen::Matrix4d> &relative_transformations);
 
 private slots:
 	void algosIndexChanged(int index);
@@ -64,6 +69,9 @@ private:
 
 	/** The initial calibration vector. */
 	std::array<double,6> m_init_calib;
+
+	/** A vector of relative [R,t] matrices starting from the first sensor. */
+	std::vector<Eigen::Matrix4d> m_relative_transformations;
 
 	/** Stores the originally loaded rawlog. */
 	CObservationTreeModel *m_model;
