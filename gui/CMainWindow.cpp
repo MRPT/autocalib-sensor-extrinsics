@@ -214,21 +214,21 @@ void CMainWindow::itemClicked(const QModelIndex &index)
         mrpt::maps::CPointsMap::Ptr map;
 
         pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
-		mrpt::img::CImage image;
 
 		obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(m_model->observationData(index));
 		obs_item->getDescriptionAsText(update_stream);
 
-		map = mrpt::make_aligned_shared<mrpt::maps::CColouredPointsMap>();
-//            map->colorScheme.scheme = mrpt::maps::CColouredPointsMap::cmFromIntensityImage;
+//		map = mrpt::make_aligned_shared<mrpt::maps::CColouredPointsMap>();
+//        //map->colorScheme.scheme = mrpt::maps::CColouredPointsMap::cmFromIntensityImage;
+//		map->insertObservation(obs_item.get());
+//		map->getPCLPointCloud(*cloud);
+//        //map->getPCLPointCloudXYZRGB(*cloud);
 
-		map->insertObservation(obs_item.get());
-		map->getPCLPointCloud(*cloud);
-//            map->getPCLPointCloudXYZRGB(*cloud);
-		std::cout << cloud->size() << " " << cloud->height << "x" << cloud->width << "\n";
-
-			//image = cv::cvarrToMat(obs_item->intensityImage.getAs<IplImage>());
-		image = obs_item->intensityImage;
+        T3DPointsProjectionParams params;
+        params.MAKE_DENSE = false;
+        params.MAKE_ORGANIZED = false;
+        obs_item->project3DPointsFromDepthImageInto(*cloud, params);
+        cloud->is_dense = false;
 
 		sensor_id = m_model->getSensorLabels().indexOf(QString::fromStdString(obs_item->sensorLabel)) + 1;
 		viewer_id = sensor_id;
@@ -236,7 +236,7 @@ void CMainWindow::itemClicked(const QModelIndex &index)
 		viewer_text = (m_model->data(index)).toString().toStdString();
 
 		m_ui->viewer_container->updateViewer(viewer_id, cloud, viewer_text);
-		m_ui->viewer_container->updateImageViewer(viewer_id, image);
+        m_ui->viewer_container->updateImageViewer(viewer_id, obs_item->intensityImage);
 
 		if(m_calib_started)
 			m_plane_matching->publishPlaneCloud(item->parentItem()->row(), item->row(), sensor_id);
