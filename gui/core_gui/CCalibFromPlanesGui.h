@@ -4,6 +4,8 @@
 #include <observation_tree/CObservationTreeModel.h>
 #include <interfaces/CTextObserver.h>
 #include <interfaces/CPlanesObserver.h>
+#include <calib_solvers/CCalibFromPlanes.h>
+#include <utils/CPlanes.h>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -12,14 +14,18 @@
 
 /**
  * Provides a GUI wrapper around the core calibration from planes classes.
+ *
+ * Inherits from CCalibFromPlanes.
  */
-class CCalibFromPlanesGui
+class CCalibFromPlanesGui : public CCalibFromPlanes
 {
 public:
-	CCalibFromPlanesGui(CObservationTreeModel *model, std::array<double,6> init_calib, TPlaneMatchingParams params);
+	CCalibFromPlanesGui(CObservationTreeModel *model, TPlaneMatchingParams params);
 	~CCalibFromPlanesGui();
 	void run();
 	void proceed();
+
+	/** Runs plane segmentation. */
 	void extractPlanes();
 
 	/** Adds observer to list of text observers. */
@@ -39,16 +45,16 @@ public:
 	void publishPlaneCloud(const int &set_num, const int &cloud_num, const int &sensor_id);
 
 private:
-	CObservationTreeModel *m_model;
-	std::array<double,6> m_init_calib;
+
+	/** The parameters for the calibration. */
 	TPlaneMatchingParams m_params;
+
+	/** Pointer to the received (synchronized) rawlog model. */
+	CObservationTreeModel *m_model;
 
 	/** List of observers to be notified about progress status. */
 	std::vector<CTextObserver*> m_text_observers;
 
 	/** List of observers to be notified about extracted planes. */
 	std::vector<CPlanesObserver*> m_planes_observers;
-
-	/** The extracted plane clouds are stored in the same format as the observation tree. */
-	std::vector<std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr>> m_extracted_plane_clouds_sets;
 };

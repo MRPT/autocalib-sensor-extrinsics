@@ -1,6 +1,4 @@
 #include "CCalibFromPlanesGui.h"
-#include <calib_solvers/CCalibFromPlanes.h>
-#include <utils/CPlanes.h>
 
 #include <mrpt/obs/CObservation3DRangeScan.h>
 #include <mrpt/math/types_math.h>
@@ -17,10 +15,10 @@
 
 using namespace mrpt::obs;
 
-CCalibFromPlanesGui::CCalibFromPlanesGui(CObservationTreeModel *model, std::array<double, 6> init_calib, TPlaneMatchingParams params)
+CCalibFromPlanesGui::CCalibFromPlanesGui(CObservationTreeModel *model, TPlaneMatchingParams params) :
+    CCalibFromPlanes(2)
 {
 	m_model = model;
-	m_init_calib = init_calib;
 	m_params = params;
 }
 
@@ -48,9 +46,39 @@ void CCalibFromPlanesGui::publishText(const std::string &msg)
 
 void CCalibFromPlanesGui::publishPlaneCloud(const int &set_num, const int &cloud_num, const int &sensor_id)
 {
+	CObservationTreeItem *root_item;
+	root_item = m_model->getRootItem();
+
+	CObservation3DRangeScan::Ptr obs_item;
+	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr obs_cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
+
+	T3DPointsProjectionParams projection_params;
+	projection_params.MAKE_DENSE = false;
+	projection_params.MAKE_ORGANIZED = false;
+
+	obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(root_item->child(set_num)->child(cloud_num)->getObservation());
+	obs_item->project3DPointsFromDepthImageInto(*obs_cloud, projection_params);
+	obs_cloud->is_dense = false;
+
+
+	std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> plane_cloud;
+
+	for(size_t i = 0; i < vvv_planes[set_num][cloud_num].size(); i++)
+	{
+		std::vector<int> &indices = vvv_planes[set_num][cloud_num][i].v_inliers;
+		pcl::PointCloud<pcl::PointXYZRGBA>::Ptr plane(new pcl::PointCloud<pcl::PointXYZRGBA>);
+
+		for(size_t k = 0; k < indices.size(); k++)
+		{
+			plane->points.push_back(obs_cloud->points[indices[k]]);
+		}
+
+		plane_cloud.push_back(plane);
+	}
+
 	for(CPlanesObserver *observer : m_planes_observers)
 	{
-        observer->onReceivingPlaneCloud(sensor_id, m_extracted_plane_clouds_sets[set_num]);
+		observer->onReceivingPlaneCloud(sensor_id, plane_cloud);
 	}
 }
 
@@ -61,19 +89,17 @@ void CCalibFromPlanesGui::run()
 
 void CCalibFromPlanesGui::extractPlanes()
 {
-	publishText("****Running plane matching calibration algorithm****");
+	publishText("****Running plane segmentation algorithm****");
 
 	CObservationTreeItem *root_item, *tree_item;
 	CObservation3DRangeScan::Ptr obs_item;
 	root_item = m_model->getRootItem();
 
-	T3DPointsProjectionParams params;
-	params.MAKE_DENSE = false;
-	params.MAKE_ORGANIZED = true;
+	T3DPointsProjectionParams projection_params;
+	projection_params.MAKE_DENSE = false;
+	projection_params.MAKE_ORGANIZED = true;
 
 	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
-
-	CCalibFromPlanes calib(2);
 
     TPlaneSegmentationParams seg_params;
     seg_params.normal_estimation_method = m_params.normal_estimation_method;
@@ -85,57 +111,33 @@ void CCalibFromPlanesGui::extractPlanes()
     seg_params.min_inliers_frac = m_params.min_inliers_frac;
     seg_params.max_curvature = 0.1;
 
-    calib.vvv_planes.resize(17); // [pair_id][sensor_id][plane_id]
-	//for(int i = 0; i < root_item->childCount(); i++)
+	size_t n_planes;
+
+	vvv_planes.resize(15);
+
 	// using only few observations for memory reasons
-    for(int i = 0; i < 5; i++)
+	for(size_t i = 0; i < 15; i++)
 	{
 		tree_item = root_item->child(i);
 
-        std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> extracted_plane_clouds;
-		calib.vvv_planes[i] = std::vector< std::vector< CPlaneCHull > >(tree_item->childCount());
-		for(int j = 0; j < tree_item->childCount(); j++)
+		vvv_planes[i] = std::vector< std::vector< CPlaneCHull > >(tree_item->childCount());
+
+		for(size_t j = 0; j < tree_item->childCount(); j++)
 		{
 			publishText("**Extracting planes from #" + std::to_string(j) + " observation in observation set #" + std::to_string(i) + "**");
 
 			obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(tree_item->child(j)->getObservation());
-			obs_item->project3DPointsFromDepthImageInto(*cloud, params);
+			obs_item->project3DPointsFromDepthImageInto(*cloud, projection_params);
 
-            // Let's try to visualize the point cloud in color
-//            for (size_t i = 0; i < cloud->size(); ++i) {
-//                cloud->points[i].rgb = obs_item->intensityImage.getAsFloat(i%640, i/640);
-////                cloud->points[i].r = static_cast<uint8_t>(obs_item->intensityImage.get_unsafe(i%640, i/640, 0));
-////                cloud->points[i].g = static_cast<uint8_t>(obs_item->intensityImage.get_unsafe(i%640, i/640, 1));
-////                cloud->points[i].b = static_cast<uint8_t>(obs_item->intensityImage.get_unsafe(i%640, i/640, 2));
-//            }
+			n_planes = segmentPlanes(cloud, seg_params, vvv_planes[i][j]);
+			publishText(std::to_string(n_planes) + " plane(s) extracted");
 
-            pcl::PointCloud<pcl::PointXYZRGBA>::Ptr extracted_planes(new pcl::PointCloud<pcl::PointXYZRGBA>);
-//            extractPlanes(cloud, extracted_planes);
-//            extracted_plane_clouds.push_back(extracted_planes);
-
-            size_t n_planes = segmentPlanes(cloud, seg_params, calib.vvv_planes[i][j]);
-            //std::cout << n_planes << " extractPlanes\n";
-
-            for(size_t ii = 0; ii < n_planes; ii++)
-            {
-                std::vector<int> & indices = calib.vvv_planes[i][j][ii].v_inliers;
-                for(size_t k = 0; k < indices.size(); k++)
-                {
-                    extracted_planes->points.push_back(cloud->points[indices[k]]);
-                }
-            }
-            extracted_plane_clouds.push_back(extracted_planes);
         }
-
-		m_extracted_plane_clouds_sets.push_back(extracted_plane_clouds);
-
-        // Check for potential plane matches
-        calib.findPotentialMatches(calib.vvv_planes[i], i);
-    }
-
-    //calib.computeCalibration_rot(ExtrinsicCalib::m_init_calib);
+	}
 }
 
 void CCalibFromPlanesGui::proceed()
 {
+	//calib.findPotentialMatches(calib.vvv_planes[i], i);
+	//calib.computeCalibration_rot(ExtrinsicCalib::m_init_calib);
 }

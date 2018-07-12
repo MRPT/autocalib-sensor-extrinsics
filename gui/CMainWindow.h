@@ -73,11 +73,11 @@ private:
 
 	std::shared_ptr<QWidget> m_config_widget;
 
-	/** Object to interact with the core calibration from planes classes. */
-	CCalibFromPlanesGui *m_calib_from_planes;
+	/** Object to interact with the calibration from planes gui class. */
+	CCalibFromPlanesGui *m_calib_from_planes_gui;
 
-	/** Object to interact with the core calibration from lines classes. */
-	CCalibFromLinesGui *m_calib_from_lines;
+	/** Object to interact with the calibration from lines gui class. */
+	CCalibFromLinesGui *m_calib_from_lines_gui;
 
 	/** Flag to indicate whether a calibration algorithm has started. */
 	bool m_calib_started;

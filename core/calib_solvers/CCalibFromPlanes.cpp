@@ -17,7 +17,6 @@ using namespace std;
 //CCalibFromPlanes<num_sensors,Scalar>::CCalibFromPlanes()
 CCalibFromPlanes::CCalibFromPlanes(size_t n_sensors) : CExtrinsicCalib(n_sensors)
 {
-	std::cout << "CCalibFromPlanes... num_sensors " << num_sensors << std::endl;
     for(size_t sensor_id1=0; sensor_id1 < num_sensors; sensor_id1++)
     {
         mmv_plane_corresp[sensor_id1] = std::map<size_t, std::vector< std::array<size_t,4> > >();

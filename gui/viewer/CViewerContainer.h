@@ -24,14 +24,20 @@ class CViewerContainer : public QWidget, public CTextObserver, public CPlanesObs
 public:
 	explicit CViewerContainer(QWidget *parent = 0);
 	~CViewerContainer();
+
+	/** Update the text browswer with received text message. */
 	void updateText(const std::string &);
+
 	/** Update cloud visualizer with a point cloud.
 	 * \param viewer_id the id of the visualizer.
 	 * \param cloud the input cloud.
 	 * \param text to be displayed in the visualizer.
 	 */
 	void updateCloudViewer(const int &viewer_id, const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const std::string &text);
+
+	/** Update the image viewer with an image. */
 	void updateImageViewer(const int &viewer_id, mrpt::img::CImage &image);
+
     void addPlanes(const int &viewer_id, const std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> &cloud);
 	void updateCalibConfig(const int &calib_algo_id);
 	bool viewerContainsCloud(const int &viewer_id, const std::string &id);
