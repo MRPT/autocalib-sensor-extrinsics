@@ -74,6 +74,7 @@ void CCalibFromPlanesGui::extractPlanes()
 	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
 
 	CCalibFromPlanes calib(2);
+
     TPlaneSegmentationParams seg_params;
     seg_params.normal_estimation_method = m_params.normal_estimation_method;
     seg_params.depth_dependent_smoothing = m_params.depth_dependent_smoothing;
@@ -99,7 +100,7 @@ void CCalibFromPlanesGui::extractPlanes()
 
 			obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(tree_item->child(j)->getObservation());
 			obs_item->project3DPointsFromDepthImageInto(*cloud, params);
-            std::cout << cloud->size() << " " << cloud->height << "x" << cloud->width << "\n";
+
             // Let's try to visualize the point cloud in color
 //            for (size_t i = 0; i < cloud->size(); ++i) {
 //                cloud->points[i].rgb = obs_item->intensityImage.getAsFloat(i%640, i/640);
@@ -133,9 +134,7 @@ void CCalibFromPlanesGui::extractPlanes()
     }
 
     //calib.computeCalibration_rot(ExtrinsicCalib::m_init_calib);
-
 }
-
 
 void CCalibFromPlanesGui::proceed()
 {

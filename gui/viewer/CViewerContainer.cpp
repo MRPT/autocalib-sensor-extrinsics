@@ -96,9 +96,9 @@ bool CViewerContainer::viewerContainsCloud(const int &viewer_id, const std::stri
 	}
 }
 
-void CViewerContainer::updateViewer(const int &viewer_id, const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const std::string &text)
+void CViewerContainer::updateCloudViewer(const int &viewer_id, const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const std::string &text)
 {
-	pcl::visualization::PointCloudColorHandlerRGBAField<pcl::PointXYZRGBA> viewer_color_handler(cloud);
+	pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGBA> viewer_color_handler(cloud);
 
 	switch(viewer_id)
 	{

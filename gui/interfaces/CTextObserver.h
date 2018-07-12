@@ -3,7 +3,7 @@
 #include <iostream>
 
 /**
- * @brief Observer (listener) that receives text from the GUI core wrappers.
+ * @brief Observer (listener) that receives text updates from the GUI core wrappers.
  */
 class CTextObserver
 {
