@@ -15,6 +15,8 @@
 #include <QSpinBox>
 #include <QDebug>
 
+#include <thread>
+
 using namespace mrpt::obs;
 
 CMainWindow::CMainWindow(const std::string &config_file_name, QWidget *parent) :
@@ -208,6 +210,7 @@ void CMainWindow::syncObservationsClicked()
 
 		if(m_sync_model->getRootItem()->childCount() > 0)
 		{
+			m_ui->observations_treeview->setDisabled(true);
 			m_ui->grouped_observations_treeview->setDisabled(false);
 			m_ui->grouped_observations_treeview->setModel(m_sync_model);
 			m_ui->algo_cbox->setDisabled(false);
@@ -248,8 +251,8 @@ void CMainWindow::listItemClicked(const QModelIndex &index)
 		m_ui->viewer_container->updateCloudViewer(viewer_id, cloud, viewer_text);
 		m_ui->viewer_container->updateImageViewer(viewer_id, image);
 
-		if(m_calib_started && (m_calib_from_planes_gui != nullptr))
-			m_calib_from_planes_gui->publishPlaneCloud(item->parentItem()->row(), item->row(), sensor_id);
+		//if(m_calib_started && (m_calib_from_planes_gui != nullptr))
+		    //m_calib_from_planes_gui->publishPlaneCloud(item->parentItem()->row(), item->row(), sensor_id);
 
 		m_ui->observations_description_textbrowser->setText(QString::fromStdString(update_stream.str()));
 	  }
@@ -356,6 +359,9 @@ void CMainWindow::runCalibFromPlanes(TPlaneMatchingParams params)
 		m_calib_from_planes_gui->addTextObserver(m_ui->viewer_container);
 		m_calib_from_planes_gui->addPlanesObserver(m_ui->viewer_container);
 		m_calib_from_planes_gui->extractPlanes();
+
+		//std::thread thr(&CCalibFromPlanesGui::extractPlanes, *m_calib_from_planes_gui);
+		//thr.join();
 
 		m_calib_started = true;
 	}

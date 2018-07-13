@@ -13,6 +13,8 @@
 #include <pcl/filters/extract_indices.h>
 #include <pcl/common/time.h>
 
+#include <thread>
+
 using namespace mrpt::obs;
 
 CCalibFromPlanesGui::CCalibFromPlanesGui(CObservationTreeModel *model, TPlaneMatchingParams params) :
@@ -89,6 +91,9 @@ void CCalibFromPlanesGui::run()
 
 void CCalibFromPlanesGui::extractPlanes()
 {
+	//std::thread thr0(&CCalibFromPlanesGui::publishText, this, "****Running plane segmentation algorithm****");
+	//thr0.join();
+
 	publishText("****Running plane segmentation algorithm****");
 
 	CObservationTreeItem *root_item, *tree_item;
@@ -125,6 +130,8 @@ void CCalibFromPlanesGui::extractPlanes()
 		for(size_t j = 0; j < tree_item->childCount(); j++)
 		{
 			publishText("**Extracting planes from #" + std::to_string(j) + " observation in observation set #" + std::to_string(i) + "**");
+			//std::thread thr(&CCalibFromPlanesGui::publishText, this, "**Extracting planes from #" + std::to_string(j) + " observation in observation set #" + std::to_string(i) + "**");
+			//thr.join();
 
 			obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(tree_item->child(j)->getObservation());
 			obs_item->project3DPointsFromDepthImageInto(*cloud, projection_params);
@@ -132,6 +139,8 @@ void CCalibFromPlanesGui::extractPlanes()
 			n_planes = segmentPlanes(cloud, seg_params, vvv_planes[i][j]);
 			publishText(std::to_string(n_planes) + " plane(s) extracted");
 
+			//std::thread thr2(&CCalibFromPlanesGui::publishText, this, std::to_string(n_planes) + " plane(s) extracted");
+			//thr2.join();
         }
 	}
 }

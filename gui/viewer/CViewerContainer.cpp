@@ -94,10 +94,7 @@ void CViewerContainer::updateCloudViewer(const int &viewer_id, const pcl::PointC
 	{
 	case 1:
 	{
-		//if(viewerContainsCloud(viewer_id, "cloud"))
-		if(m_input1_viewer->contains("cloud"))
-			m_input1_viewer->removePointCloud("cloud");
-
+		m_input1_viewer->removeAllPointClouds();
 		m_input1_viewer->addPointCloud(cloud, viewer_color_handler, "cloud");
 		m_input1_viewer->resetCamera();
 		m_input1_viewer->updateText(text, 10, 10, 1, 1, 1, "text");
@@ -108,30 +105,12 @@ void CViewerContainer::updateCloudViewer(const int &viewer_id, const pcl::PointC
 
 	case 2:
 	{
-		//if(viewerContainsCloud(viewer_id, "cloud"))
-		if(m_input2_viewer->contains("cloud"))
-			m_input2_viewer->removePointCloud("cloud");
-
+		m_input2_viewer->removeAllPointClouds();
 		m_input2_viewer->addPointCloud(cloud, viewer_color_handler, "cloud");
 		m_input2_viewer->resetCamera();
 		m_input2_viewer->updateText(text, 10, 10, 1, 1, 1, "text");
 		m_input2_viewer->addCoordinateSystem(0.3);
 		m_ui->input2_viz->update();
-		break;
-	}
-
-	case 3:
-	{
-		//if(viewerContainsCloud(viewer_id, "cloud"))
-		if(m_output_viewer->contains("cloud"))
-			m_output_viewer->removePointCloud("cloud");
-
-		m_output_viewer->addPointCloud(cloud, viewer_color_handler, "cloud");
-
-		m_output_viewer->resetCamera();
-		m_output_viewer->updateText(text, 10, 10, 1, 1, 1, "text");
-		m_output_viewer->addCoordinateSystem(0.3);
-		m_ui->result_viz->update();
 		break;
 	}
 	}
@@ -161,12 +140,7 @@ void CViewerContainer::onReceivingPlaneCloud(const int &sensor_id, const std::ve
 		for(size_t i=0; i < cloud.size(); i++)
 		{
 			sprintf (name, "plane_%u", static_cast<unsigned>(i));
-
 			pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZRGBA> viewer_color_handler(cloud[i], red[i%10], grn[i%10], blu[i%10]);
-
-			if(viewerContainsCloud(sensor_id, name))
-				m_input1_viewer->removePointCloud(name);
-
 			m_input1_viewer->addPointCloud(cloud[i], viewer_color_handler, name);
 
 //            mrpt::pbmap::Plane &plane_i = frame_->planes_.vPlanes[i];
@@ -200,12 +174,7 @@ void CViewerContainer::onReceivingPlaneCloud(const int &sensor_id, const std::ve
 		for(size_t i=0; i < cloud.size(); i++)
 		{
 			sprintf (name, "plane_%u", static_cast<unsigned>(i));
-
 			pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZRGBA> viewer_color_handler(cloud[i], red[i%10], grn[i%10], blu[i%10]);
-
-			if(viewerContainsCloud(sensor_id, name))
-				m_input2_viewer->removePointCloud(name);
-
 			m_input2_viewer->addPointCloud(cloud[i], viewer_color_handler, name);
 
 //            mrpt::pbmap::Plane &plane_i = frame_->planes_.vPlanes[i];
@@ -232,18 +201,6 @@ void CViewerContainer::onReceivingPlaneCloud(const int &sensor_id, const std::ve
 		}
 		break;
 	}
-
-//	case 3:
-//	{
-//		if(viewerContainsCloud(viewer_id, "planes"))
-//			m_output_viewer->removePointCloud("planes");
-
-//        m_output_viewer->addPointCloud(cloud, "planes");
-//		m_output_viewer->resetCamera();
-//		m_output_viewer->addCoordinateSystem(0.3);
-//		m_ui->result_viz->update();
-//		break;
-//	}
 	}
 }
 
