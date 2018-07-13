@@ -14,6 +14,22 @@
 //#include <mrpt/pbmap/Miscellaneous.h>
 #include <map>
 
+struct TPlaneSegmentationParams
+{
+	//params for integral normal estimation
+	int normal_estimation_method;
+	bool depth_dependent_smoothing;
+	double max_depth_change_factor;
+	double normal_smoothing_size;
+
+	//params for organized multiplane segmentation
+	double angle_threshold;
+	double dist_threshold;
+	double min_inliers_frac;
+	double max_curvature;
+};
+
+
 /*! Exploit 3D plane observations from set a of sensors to perform extrinsic calibration.
  *  Plane correspondences are analogous to the control points used to create panoramic images with a regular camera).
  *  It allows to estimate the extrinsic calibration between RGB-D sensors like Asus XPL.
@@ -40,6 +56,8 @@ class CCalibFromPlanes : public CExtrinsicCalib//<num_sensors, Scalar>
 
     /*! Destructor */
 	virtual ~CCalibFromPlanes(){}
+
+	void segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr & cloud, const TPlaneSegmentationParams & params, std::vector<CPlaneCHull> & planes);
 
     /** Search for potentail plane Matches.
         \param plane_obs  */

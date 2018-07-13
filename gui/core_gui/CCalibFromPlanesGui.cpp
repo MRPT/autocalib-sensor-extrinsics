@@ -14,6 +14,7 @@
 #include <pcl/common/time.h>
 
 #include <thread>
+#include <functional>
 
 using namespace mrpt::obs;
 
@@ -91,9 +92,6 @@ void CCalibFromPlanesGui::run()
 
 void CCalibFromPlanesGui::extractPlanes()
 {
-	//std::thread thr0(&CCalibFromPlanesGui::publishText, this, "****Running plane segmentation algorithm****");
-	//thr0.join();
-
 	publishText("****Running plane segmentation algorithm****");
 
 	CObservationTreeItem *root_item, *tree_item;
@@ -118,10 +116,10 @@ void CCalibFromPlanesGui::extractPlanes()
 
 	size_t n_planes;
 
-	vvv_planes.resize(15);
+	vvv_planes.resize(5);
 
 	// using only few observations for memory reasons
-	for(size_t i = 0; i < 15; i++)
+	for(size_t i = 0; i < 5; i++)
 	{
 		tree_item = root_item->child(i);
 
@@ -130,17 +128,16 @@ void CCalibFromPlanesGui::extractPlanes()
 		for(size_t j = 0; j < tree_item->childCount(); j++)
 		{
 			publishText("**Extracting planes from #" + std::to_string(j) + " observation in observation set #" + std::to_string(i) + "**");
-			//std::thread thr(&CCalibFromPlanesGui::publishText, this, "**Extracting planes from #" + std::to_string(j) + " observation in observation set #" + std::to_string(i) + "**");
-			//thr.join();
 
 			obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(tree_item->child(j)->getObservation());
 			obs_item->project3DPointsFromDepthImageInto(*cloud, projection_params);
 
-			n_planes = segmentPlanes(cloud, seg_params, vvv_planes[i][j]);
-			publishText(std::to_string(n_planes) + " plane(s) extracted");
+			//std::thread thr(&CCalibFromPlanes::segmentPlanes, this, std::ref(cloud), std::ref(seg_params), std::ref(vvv_planes[i][j]));
+			//thr.detach();
 
-			//std::thread thr2(&CCalibFromPlanesGui::publishText, this, std::to_string(n_planes) + " plane(s) extracted");
-			//thr2.join();
+			segmentPlanes(cloud, seg_params, vvv_planes[i][j]);
+			n_planes = vvv_planes[i][j].size();
+			publishText(std::to_string(n_planes) + " plane(s) extracted");
         }
 	}
 }

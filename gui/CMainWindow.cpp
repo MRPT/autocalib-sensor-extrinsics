@@ -243,17 +243,12 @@ void CMainWindow::listItemClicked(const QModelIndex &index)
 
 		image = obs_item->intensityImage;
 
-        sensor_id = m_model->getSensorLabels().indexOf(QString::fromStdString(obs_item->sensorLabel)) + 1;
+		sensor_id = m_model->getSensorLabels().indexOf(QString::fromStdString(obs_item->sensorLabel));
         viewer_id = sensor_id;
-
         viewer_text = (m_model->data(index)).toString().toStdString();
 
 		m_ui->viewer_container->updateCloudViewer(viewer_id, cloud, viewer_text);
 		m_ui->viewer_container->updateImageViewer(viewer_id, image);
-
-		//if(m_calib_started && (m_calib_from_planes_gui != nullptr))
-		    //m_calib_from_planes_gui->publishPlaneCloud(item->parentItem()->row(), item->row(), sensor_id);
-
 		m_ui->observations_description_textbrowser->setText(QString::fromStdString(update_stream.str()));
 	  }
 }
@@ -286,9 +281,8 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 
 			image = obs_item->intensityImage;
 
-			sensor_id = m_model->getSensorLabels().indexOf(QString::fromStdString(obs_item->sensorLabel)) + 1;
+			sensor_id = m_model->getSensorLabels().indexOf(QString::fromStdString(obs_item->sensorLabel));
 			viewer_id = sensor_id;
-
 			viewer_text = (m_model->data(index.parent())).toString().toStdString();
 
 			m_ui->viewer_container->updateCloudViewer(viewer_id, cloud, viewer_text);
@@ -310,9 +304,8 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 
 				image = obs_item->intensityImage;
 
-				sensor_id = m_model->getSensorLabels().indexOf(QString::fromStdString(obs_item->sensorLabel)) + 1;
+				sensor_id = m_model->getSensorLabels().indexOf(QString::fromStdString(obs_item->sensorLabel));
 				viewer_id = sensor_id;
-
 				viewer_text = (m_model->data(index)).toString().toStdString();
 				update_stream << "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n";
 
@@ -358,10 +351,10 @@ void CMainWindow::runCalibFromPlanes(TPlaneMatchingParams params)
 		m_calib_from_planes_gui = new CCalibFromPlanesGui(m_sync_model, params);
 		m_calib_from_planes_gui->addTextObserver(m_ui->viewer_container);
 		m_calib_from_planes_gui->addPlanesObserver(m_ui->viewer_container);
-		m_calib_from_planes_gui->extractPlanes();
+		//m_calib_from_planes_gui->extractPlanes();
 
-		//std::thread thr(&CCalibFromPlanesGui::extractPlanes, *m_calib_from_planes_gui);
-		//thr.join();
+		std::thread thr(&CCalibFromPlanesGui::extractPlanes, m_calib_from_planes_gui);
+		thr.detach();
 
 		m_calib_started = true;
 	}

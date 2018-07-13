@@ -12,7 +12,6 @@ SET(SRC
 	calib_solvers/CCalibFromPlanes.h
 
 	utils/lines.cpp
-	utils/CPlanes.cpp
 	utils/correspondences.cpp
 	utils/solver.cpp
 	calib_solvers/CExtrinsicCalib.cpp

@@ -53,12 +53,9 @@ public:
     virtual void onReceivingPlaneCloud(const int &obs_type, const std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> &cloud);
 
 private:
-	std::shared_ptr<pcl::visualization::PCLVisualizer> m_input1_viewer;
-	std::shared_ptr<pcl::visualization::PCLVisualizer> m_input2_viewer;
-	std::shared_ptr<pcl::visualization::PCLVisualizer> m_output_viewer;
 
-	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr m_viewer_cloud;
-	std::shared_ptr<std::string> m_viewer_text;
+	/** An array of three PCLVisualizer objects, each linked to one viewer widget. */
+	std::array<std::shared_ptr<pcl::visualization::PCLVisualizer>, 3> m_viewers;
 
 	Ui::CViewerContainer *m_ui;
 };
