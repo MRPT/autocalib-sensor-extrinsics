@@ -20,9 +20,19 @@
 class CCalibFromPlanesGui : public CCalibFromPlanes
 {
 public:
-	CCalibFromPlanesGui(CObservationTreeModel *model, TPlaneMatchingParams params);
+
+	/**
+	 * Constructor
+	 * \param model the rawlog model.
+	 * \param sync_obs_indices sync_obs_indices indices of the grouped (synchronized) observations in the original model, per sensor.
+	 * \param params parameters for the algorithm.
+	 */
+	CCalibFromPlanesGui(CObservationTreeModel *model, std::vector<std::vector<int>> &sync_obs_indices, TPlaneMatchingParams params);
+
 	~CCalibFromPlanesGui();
+
 	void run();
+
 	void proceed();
 
 	/** Runs plane segmentation. */
@@ -38,11 +48,10 @@ public:
 	void publishText(const std::string &msg);
 
 	/** Notifies observers with the extracted plane cloud.
-	 * \param set_num the id of the set the plane cloud belongs to.
-	 * \param cloud_num the id (index) of the plane cloud inside the set.
 	 * \param sensor_id the id of the sensor the plane cloud belongs to.
+	 * \param id of the observation in the original rawlog.
 	 */
-	void publishPlaneCloud(const int &set_num, const int &cloud_num, const int &sensor_id);
+	void publishPlaneCloud(const int &sensor_id, const int &obs_id);
 
 private:
 
@@ -51,6 +60,9 @@ private:
 
 	/** Pointer to the received (synchronized) rawlog model. */
 	CObservationTreeModel *m_model;
+
+	/** sync_obs_indices indices of the grouped (synchronized) observations in the original model, per sensor. */
+	std::vector<std::vector<int>> m_sync_obs_indices;
 
 	/** List of observers to be notified about progress status. */
 	std::vector<CTextObserver*> m_text_observers;

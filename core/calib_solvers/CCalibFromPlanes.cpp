@@ -19,7 +19,6 @@
 #include <pcl/features/normal_3d.h>
 #include <pcl/features/integral_image_normal.h>
 #include <pcl/filters/extract_indices.h>
-#include <pcl/common/time.h>
 
 //using namespace SegmentPlanes;
 using namespace std;
@@ -38,7 +37,6 @@ CCalibFromPlanes::CCalibFromPlanes(size_t n_sensors) : CExtrinsicCalib(n_sensors
 
 void CCalibFromPlanes::segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const TPlaneSegmentationParams & params, std::vector<CPlaneCHull> & planes)
 {
-	double plane_extract_start = pcl::getTime();
 	unsigned min_inliers = params.min_inliers_frac * cloud->size();
 
 	pcl::IntegralImageNormalEstimation<pcl::PointXYZRGBA, pcl::Normal> normal_estimation;
@@ -73,7 +71,6 @@ void CCalibFromPlanes::segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::P
 	std::vector<pcl::PointIndices> boundary_indices;
 
 	multi_plane_segmentation.segmentAndRefine(regions, model_coefficients, inlier_indices, labels, label_indices, boundary_indices);
-	double plane_extract_end = pcl::getTime();
 
 	// Create a vector with the planes detected in this frame, and calculate their parameters (normal, center, pointclouds, etc.)
 	//std::cout << regions.size() << " planes \n";
@@ -146,18 +143,6 @@ void CCalibFromPlanes::segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::P
 //        planes[i].v3normal = pbmap.vPlanes[i].v3normal;
 //        planes[i].d = pbmap.vPlanes[i].d;
 //        planes[i].vv_hull_indices.push_back(indices_convex_hull);
-//    }
-
-	std::stringstream stream;
-	stream << inlier_indices.size() << " plane(s) detected\n" << "Time elapsed: " << double(plane_extract_end - plane_extract_start) << std::endl;
-
-//    for(size_t i = 0; i < inlier_indices.size(); i++)
-//    {
-//        std::vector<int> indices = inlier_indices[i].indices;
-//        for(size_t j = 0; j < indices.size(); j++)
-//        {
-//            extracted_planes->points.push_back(cloud->points[indices[j]]);
-//        }
 //    }
 
 }

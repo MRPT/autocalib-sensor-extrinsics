@@ -18,10 +18,11 @@
 
 using namespace mrpt::obs;
 
-CCalibFromPlanesGui::CCalibFromPlanesGui(CObservationTreeModel *model, TPlaneMatchingParams params) :
+CCalibFromPlanesGui::CCalibFromPlanesGui(CObservationTreeModel *model, std::vector<std::vector<int>> &sync_obs_indices, TPlaneMatchingParams params) :
     CCalibFromPlanes(2)
 {
 	m_model = model;
+	m_sync_obs_indices = sync_obs_indices;
 	m_params = params;
 }
 
@@ -47,7 +48,7 @@ void CCalibFromPlanesGui::publishText(const std::string &msg)
 	}
 }
 
-void CCalibFromPlanesGui::publishPlaneCloud(const int &set_num, const int &cloud_num, const int &sensor_id)
+void CCalibFromPlanesGui::publishPlaneCloud(const int &sensor_id, const int &obs_id)
 {
 	CObservationTreeItem *root_item;
 	root_item = m_model->getRootItem();
@@ -59,16 +60,16 @@ void CCalibFromPlanesGui::publishPlaneCloud(const int &set_num, const int &cloud
 	projection_params.MAKE_DENSE = false;
 	projection_params.MAKE_ORGANIZED = false;
 
-	obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(root_item->child(set_num)->child(cloud_num)->getObservation());
+	obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(root_item->child(obs_id)->getObservation());
 	obs_item->project3DPointsFromDepthImageInto(*obs_cloud, projection_params);
 	obs_cloud->is_dense = false;
 
 
 	std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> plane_cloud;
 
-	for(size_t i = 0; i < vvv_planes[set_num][cloud_num].size(); i++)
+	for(size_t i = 0; i < vvv_planes[sensor_id][obs_id].size(); i++)
 	{
-		std::vector<int> &indices = vvv_planes[set_num][cloud_num][i].v_inliers;
+		std::vector<int> &indices = vvv_planes[sensor_id][obs_id][i].v_inliers;
 		pcl::PointCloud<pcl::PointXYZRGBA>::Ptr plane(new pcl::PointCloud<pcl::PointXYZRGBA>);
 
 		for(size_t k = 0; k < indices.size(); k++)
@@ -115,29 +116,31 @@ void CCalibFromPlanesGui::extractPlanes()
     seg_params.max_curvature = 0.1;
 
 	size_t n_planes;
+	double plane_segment_start, plane_segment_end;
 
-	vvv_planes.resize(5);
+	vvv_planes.resize(m_sync_obs_indices.size());
 
-	// using only few observations for memory reasons
-	for(size_t i = 0; i < 5; i++)
+	for(size_t i = 0; i < m_sync_obs_indices.size(); i++)
 	{
-		tree_item = root_item->child(i);
+		//vvv_planes[i] = std::vector< std::vector< CPlaneCHull > >(m_sync_obs_indices[i].size());
+		//for(size_t j = 0; j < m_sync_obs_indices[i].size(); j++)
 
-		vvv_planes[i] = std::vector< std::vector< CPlaneCHull > >(tree_item->childCount());
 
-		for(size_t j = 0; j < tree_item->childCount(); j++)
-		{
-			publishText("**Extracting planes from #" + std::to_string(j) + " observation in observation set #" + std::to_string(i) + "**");
+		publishText("**Extracting planes from sensor #" + std::to_string(i) + " observations**");
+		vvv_planes[i] = std::vector< std::vector< CPlaneCHull > >(5);
 
-			obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(tree_item->child(j)->getObservation());
+		//runnning only for a few observations due to memory reasons
+		for(size_t j = 0; j < 5; j++)
+		{	
+			obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(root_item->child(m_sync_obs_indices[i][j])->getObservation());
 			obs_item->project3DPointsFromDepthImageInto(*cloud, projection_params);
 
-			//std::thread thr(&CCalibFromPlanes::segmentPlanes, this, std::ref(cloud), std::ref(seg_params), std::ref(vvv_planes[i][j]));
-			//thr.detach();
-
+			plane_segment_start = pcl::getTime();
 			segmentPlanes(cloud, seg_params, vvv_planes[i][j]);
+			plane_segment_end = pcl::getTime();
 			n_planes = vvv_planes[i][j].size();
-			publishText(std::to_string(n_planes) + " plane(s) extracted");
+			publishText(std::to_string(n_planes) + " plane(s) extracted from observation #" + std::to_string(m_sync_obs_indices[i][j])
+			            + "\nTime elapsed: " +  std::to_string(plane_segment_end - plane_segment_start));
         }
 	}
 }

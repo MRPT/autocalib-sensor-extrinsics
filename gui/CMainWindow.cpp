@@ -179,6 +179,12 @@ void CMainWindow::syncObservationsClicked()
 	QListWidgetItem *item;
 
 	m_ui->grouped_observations_treeview->setDisabled(true);
+	m_ui->observations_treeview->setDisabled(false);
+
+	//if(m_config_widget)
+	    //m_config_widget.reset();
+	    //qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->removeWidget(m_config_widget.get());
+	//if(qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->indexOf(m_config_widget.get()) != -1)
 
 	for(size_t i = 0; i < m_ui->sensors_selection_list->count(); i++)
 	{
@@ -188,7 +194,10 @@ void CMainWindow::syncObservationsClicked()
 	}
 
 	if(!(selected_sensor_labels.size() > 1))
+	{
 		m_sync_model = nullptr;
+		m_ui->viewer_container->updateText("Error. Choose atleast two sensors!");
+	}
 
 	else
 	{
@@ -206,7 +215,8 @@ void CMainWindow::syncObservationsClicked()
 			m_sync_model->getRootItem()->appendChild(m_model->getRootItem()->child(i));
 		}
 
-		m_sync_model->syncObservations(selected_sensor_labels, m_ui->observations_delay_sbox->value());
+		m_sync_obs_indices.resize(selected_sensor_labels.size());
+		m_sync_model->syncObservations(selected_sensor_labels, m_ui->observations_delay_sbox->value(), m_sync_obs_indices);
 
 		if(m_sync_model->getRootItem()->childCount() > 0)
 		{
@@ -214,7 +224,27 @@ void CMainWindow::syncObservationsClicked()
 			m_ui->grouped_observations_treeview->setDisabled(false);
 			m_ui->grouped_observations_treeview->setModel(m_sync_model);
 			m_ui->algo_cbox->setDisabled(false);
+
+			std::string stats_string;
+			stats_string = "GROUPING STATS";
+			stats_string += "\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - ";
+			stats_string += "\nNumber of observations used: " + std::to_string(m_sync_model->getRootItem()->childCount());
+			stats_string += "\n\nSummary of sensors used:";
+			stats_string += "\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - ";
+
+			for(size_t i = 0; i < selected_sensor_labels.count(); i++)
+			{
+				stats_string += "\nSensor #" + std::to_string(i);
+				stats_string += "\nSensor label : Class :: " + selected_sensor_labels[i].toStdString() + " : "
+				        + m_model->getRootItem()->child(m_sync_obs_indices[i][0])->getObservation()->GetRuntimeClass()->className;
+				stats_string += "\nNumber of observations: " + std::to_string(m_sync_obs_indices[i].size()) + "\n";
+			}
+
+			m_ui->viewer_container->updateText(stats_string);
 		}
+
+		else
+			m_ui->viewer_container->updateText("Zero observations grouped.");
 	}
 }
 
@@ -283,13 +313,13 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 
 			sensor_id = m_model->getSensorLabels().indexOf(QString::fromStdString(obs_item->sensorLabel));
 			viewer_id = sensor_id;
-			viewer_text = (m_model->data(index.parent())).toString().toStdString();
+			viewer_text = (m_model->data(index.parent())).toString().toStdString() + " : " + obs_item->sensorLabel;
 
 			m_ui->viewer_container->updateCloudViewer(viewer_id, cloud, viewer_text);
 			m_ui->viewer_container->updateImageViewer(viewer_id, image);
 
 			if(m_calib_started && (m_calib_from_planes_gui != nullptr))
-				m_calib_from_planes_gui->publishPlaneCloud(item->parentItem()->row(), item->row(), sensor_id);
+				m_calib_from_planes_gui->publishPlaneCloud(sensor_id, m_model->getItem(index)->row());
 		}
 
 		// else set-item was clicked
@@ -306,7 +336,7 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 
 				sensor_id = m_model->getSensorLabels().indexOf(QString::fromStdString(obs_item->sensorLabel));
 				viewer_id = sensor_id;
-				viewer_text = (m_model->data(index)).toString().toStdString();
+				viewer_text = (m_model->data(index)).toString().toStdString() + " : " + obs_item->sensorLabel;
 				update_stream << "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n";
 
 				m_ui->viewer_container->updateCloudViewer(viewer_id, cloud, viewer_text);
@@ -316,7 +346,7 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 				m_ui->viewer_container->updateSetCloudViewer(cloud, obs_item->sensorLabel, viewer_text + " Overlapped");
 
 				if(m_calib_started && (m_calib_from_planes_gui != nullptr))
-					m_calib_from_planes_gui->publishPlaneCloud(item->row(), i, sensor_id);
+					m_calib_from_planes_gui->publishPlaneCloud(sensor_id, m_model->getItem(index)->row());
 			}
 		}
     
@@ -344,39 +374,31 @@ void CMainWindow::initCalibChanged(double value)
 
 void CMainWindow::runCalibFromPlanes(TPlaneMatchingParams params)
 {
-	if(m_sync_model != nullptr)
+	if(m_sync_model != nullptr && (m_sync_model->getRootItem()->childCount() > 0))
 	{
 		m_calib_from_lines_gui = nullptr;
-
-		m_calib_from_planes_gui = new CCalibFromPlanesGui(m_sync_model, params);
+		m_calib_from_planes_gui = new CCalibFromPlanesGui(m_model, m_sync_obs_indices, params);
 		m_calib_from_planes_gui->addTextObserver(m_ui->viewer_container);
 		m_calib_from_planes_gui->addPlanesObserver(m_ui->viewer_container);
-		//m_calib_from_planes_gui->extractPlanes();
-
-		std::thread thr(&CCalibFromPlanesGui::extractPlanes, m_calib_from_planes_gui);
-		thr.detach();
-
+		m_calib_from_planes_gui->extractPlanes();
+		//std::thread thr(&CCalibFromPlanesGui::extractPlanes, m_calib_from_planes_gui);
+		//thr.detach();
 		m_calib_started = true;
 	}
 
 	else
-		m_ui->viewer_container->updateText("Error. Choose atleast two sensors!");
+		m_ui->viewer_container->updateText("No grouped observations available!");
 }
 
 void CMainWindow::runCalibFromLines()
 {
-	if(m_sync_model != nullptr)
+	if(m_sync_model != nullptr && (m_sync_model->getRootItem()->childCount() > 0))
 	{
 		m_calib_from_planes_gui = nullptr;
-
-		m_calib_from_lines_gui = new CCalibFromLinesGui(m_sync_model);
+		m_calib_from_lines_gui = new CCalibFromLinesGui(m_model, m_sync_obs_indices);
 		//m_line_matching->extractLines();
-
 		m_calib_started = true;
 	}
-
-	else
-		m_ui->viewer_container->updateText("Error. Choose atleast two sensors!");
 }
 
 void CMainWindow::saveParams()

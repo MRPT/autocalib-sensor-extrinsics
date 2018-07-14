@@ -79,6 +79,9 @@ private:
 	/** Stores the synchronized (modified) rawlog after re-grouping. */
 	CObservationTreeModel *m_sync_model;
 
+	/** sync_obs_indices indices of the grouped (synchronized) observations in the original model, per sensor. */
+	std::vector<std::vector<int>> m_sync_obs_indices;
+
 	std::shared_ptr<QWidget> m_config_widget;
 
 	/** Object to interact with the calibration from planes gui class. */

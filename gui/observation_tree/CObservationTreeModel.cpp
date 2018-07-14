@@ -108,12 +108,11 @@ void CObservationTreeModel::loadModel(const std::string &rawlog_filename)
 			publishText("Rawlog loaded. Click on any observation item on the left to visualize it.");
 
 			std::string stats_string;
-			stats_string = "STATS:";
+			stats_string = "RAWLOG STATS:";
 			stats_string += "\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - ";
 			stats_string += "\nTime elapsed: " + std::to_string(time_to_load) + " seconds";
 			stats_string += "\nNumber of observations loaded: " + std::to_string(obs_count);
 			stats_string += "\nNumber of unique sensors found in rawlog: " + std::to_string(m_sensor_labels.count());
-			//stats_string += "\nNumber of observation sets formed: " + std::to_string(obs_sets_count);
 			stats_string += "\n\nSummary of sensors found in rawlog:";
 			stats_string += "\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - ";
 
@@ -131,23 +130,29 @@ void CObservationTreeModel::loadModel(const std::string &rawlog_filename)
 	progress_dialog.setValue(rlog_size);
 }
 
-void CObservationTreeModel::syncObservations(const QStringList &selected_sensor_labels, const int &max_delay)
+void CObservationTreeModel::syncObservations(const QStringList &selected_sensor_labels, const int &max_delay, std::vector<std::vector<int>> &sync_obs_indices)
 {
 	CObservationTreeItem *new_rootitem = new CObservationTreeItem(QString("root"));
 	CObservation::Ptr curr_obs, next_obs;
-	QString curr_obs_label, curr_sensor_label;
-	QStringList obs_labels_in_set, sensor_labels_in_set;
+	QString curr_sensor_label, obs_label;
+	QStringList sensor_labels_in_set;
 	size_t obs_sets_count = 0;
-	std::vector<CObservation::Ptr> obs_set;
+	std::pair<CObservation::Ptr, int> curr_obs_with_model_id;
+	std::vector<std::pair<CObservation::Ptr, int>> obs_set;
 	mrpt::system::TTimeStamp curr_ts, next_ts, set_ts;
 	double delay;
+
+	std::vector<std::vector<int>> sync_obs_indices_tmp;
+
+	sync_obs_indices_tmp = sync_obs_indices;
 
 	for(size_t i = 0; i < m_rootitem->childCount(); i++)
 	{
 		curr_obs = std::dynamic_pointer_cast<CObservation3DRangeScan>(m_rootitem->child(i)->getObservation());
-		curr_obs_label = QString::fromStdString("[#" + std::to_string(i) + "] " + curr_obs->sensorLabel + " : " + (curr_obs->GetRuntimeClass()->className));
 		curr_sensor_label = QString::fromStdString(curr_obs->sensorLabel);
 		curr_ts = curr_obs->timestamp;
+		curr_obs_with_model_id.first = curr_obs;
+		curr_obs_with_model_id.second = i;
 
 		auto iter = std::find(selected_sensor_labels.begin(), selected_sensor_labels.end(), curr_sensor_label);
 
@@ -155,9 +160,8 @@ void CObservationTreeModel::syncObservations(const QStringList &selected_sensor_
 		{
 			if(obs_set.size() == 0)
 			{
-				obs_labels_in_set.push_back(curr_obs_label);
 				sensor_labels_in_set.push_back(curr_sensor_label);
-				obs_set.push_back(curr_obs);
+				obs_set.push_back(curr_obs_with_model_id);
 				set_ts = curr_ts;
 				continue;
 			}
@@ -168,9 +172,8 @@ void CObservationTreeModel::syncObservations(const QStringList &selected_sensor_
 				delay = mrpt::system::timeDifference(set_ts, curr_ts);
 				if(iter == sensor_labels_in_set.end() && (delay <= max_delay))
 				{
-					obs_labels_in_set.push_back(curr_obs_label);
 					sensor_labels_in_set.push_back(curr_sensor_label);
-					obs_set.push_back(curr_obs);
+					obs_set.push_back(curr_obs_with_model_id);
 				}
 
 				else
@@ -180,15 +183,16 @@ void CObservationTreeModel::syncObservations(const QStringList &selected_sensor_
 						new_rootitem->appendChild(new CObservationTreeItem(QString("Observations set #" + QString::number(obs_sets_count++)), 0, new_rootitem));
 
 						auto iter2 = obs_set.begin();
-						for(iter = obs_labels_in_set.begin(); (iter < obs_labels_in_set.end()) && (iter2 < obs_set.end()); iter++, iter2++)
+						for(iter = sensor_labels_in_set.begin(); (iter < sensor_labels_in_set.end()) && (iter2 < obs_set.end()); iter++, iter2++)
 						{
-							new_rootitem->child(new_rootitem->childCount() - 1)->appendChild(new CObservationTreeItem(*iter, *iter2, new_rootitem->child(new_rootitem->childCount() - 1)));
+							obs_label = QString::fromStdString("[#" + std::to_string((*iter2).second) + "] "
+							                                   + (*iter).toStdString() + " : " + (*iter2).first->GetRuntimeClass()->className);
+							new_rootitem->child(new_rootitem->childCount() - 1)->appendChild(new CObservationTreeItem(obs_label, (*iter2).first, new_rootitem->child(new_rootitem->childCount() - 1)));
+							sync_obs_indices_tmp[selected_sensor_labels.indexOf(*iter)].push_back((*iter2).second);
 						}
-
 					}
 
 					i -= sensor_labels_in_set.size();
-					obs_labels_in_set.clear();
 					sensor_labels_in_set.clear();
 					obs_set.clear();
 				}
@@ -196,20 +200,40 @@ void CObservationTreeModel::syncObservations(const QStringList &selected_sensor_
 		}
 	}
 
+	// inserting left over set
 	if(obs_set.size() > 0 && sensor_labels_in_set.size() == selected_sensor_labels.size())
 	{
 		new_rootitem->appendChild(new CObservationTreeItem(QString("Observations set #" + QString::number(obs_sets_count++)), 0, new_rootitem));
 
 		auto iter2 = obs_set.begin();
-		for(auto iter = obs_labels_in_set.begin(); (iter < obs_labels_in_set.end()) && (iter2 < obs_set.end()); iter++, iter2++)
+		for(auto iter = sensor_labels_in_set.begin(); (iter < sensor_labels_in_set.end()) && (iter2 < obs_set.end()); iter++, iter2++)
 		{
-			new_rootitem->child(new_rootitem->childCount() - 1)->appendChild(new CObservationTreeItem(*iter, *iter2, new_rootitem->child(new_rootitem->childCount() - 1)));
+			obs_label = QString::fromStdString("[#" + std::to_string((*iter2).second) + "] "
+			                                   + (*iter).toStdString() + " : " + (*iter2).first->GetRuntimeClass()->className);
+			new_rootitem->child(new_rootitem->childCount() - 1)->appendChild(new CObservationTreeItem(obs_label, (*iter2).first, new_rootitem->child(new_rootitem->childCount() - 1)));
+			sync_obs_indices_tmp[selected_sensor_labels.indexOf(*iter)].push_back((*iter2).second);
 		}
 
 		sensor_labels_in_set.clear();
-		obs_labels_in_set.clear();
 		obs_set.clear();
-}
+	}
+
+	// removing any duplicate entries
+	for(size_t i = 0; i < sync_obs_indices_tmp.size(); i++)
+	{
+		for(size_t j = 0; j < sync_obs_indices_tmp[i].size(); j++)
+		{
+			if(j > 0)
+			{
+				auto iter = std::find(sync_obs_indices[i].begin(), sync_obs_indices[i].end(), sync_obs_indices_tmp[i][j]);
+				if(iter == sync_obs_indices[i].end())
+					sync_obs_indices[i].push_back(sync_obs_indices_tmp[i][j]);
+			}
+
+			else
+				sync_obs_indices[i].push_back(sync_obs_indices_tmp[i][j]);
+		}
+	}
 
 	m_rootitem = new_rootitem;
 }
@@ -288,7 +312,6 @@ CObservation::Ptr CObservationTreeModel::observationData(const QModelIndex &inde
 		return 0;
 
 	CObservationTreeItem *item = static_cast<CObservationTreeItem*>(index.internalPointer());
-
 	return item->getObservation();
 }
 
@@ -303,6 +326,15 @@ Qt::ItemFlags CObservationTreeModel::flags(const QModelIndex &index) const
 CObservationTreeItem *CObservationTreeModel::getRootItem() const
 {
 	return this->m_rootitem;
+}
+
+CObservationTreeItem *CObservationTreeModel::getItem(const QModelIndex &index) const
+{
+	if(!index.isValid())
+		return 0;
+
+	CObservationTreeItem *item = static_cast<CObservationTreeItem*>(index.internalPointer());
+	return item;
 }
 
 void CObservationTreeModel::setRootItem(CObservationTreeItem *new_rootitem)

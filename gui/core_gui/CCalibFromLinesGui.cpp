@@ -6,7 +6,7 @@
 
 using namespace mrpt::obs;
 
-CCalibFromLinesGui::CCalibFromLinesGui(CObservationTreeModel *model) :
+CCalibFromLinesGui::CCalibFromLinesGui(CObservationTreeModel *model, std::vector<std::vector<int>> &sync_obs_indices) :
     m_model(model)
 	
 {

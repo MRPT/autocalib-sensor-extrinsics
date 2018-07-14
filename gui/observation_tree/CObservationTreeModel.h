@@ -31,25 +31,43 @@ class CObservationTreeModel : public QAbstractItemModel
 		Qt::ItemFlags flags(const QModelIndex &index) const;
 		int rowCount(const QModelIndex &parent = QModelIndex()) const;
 		int columnCount(const QModelIndex &parent = QModelIndex()) const;
+
+		/**
+		 * Returns the root item of the model.
+		 */
 		CObservationTreeItem *getRootItem() const;
+
+		/**
+		 * Returns the item at the given index in the model.
+		 * \param index the model index
+		 */
+		CObservationTreeItem *getItem(const QModelIndex &index) const;
+
 		void setRootItem(CObservationTreeItem *new_rootitem);
+
 		/** Returns a list of the unique sensor labels found in the rawlog. */
 		QStringList getSensorLabels() const;
 
 		/** Groups observations together based on their time stamp proximity.
 		 * Stores the results back in the same model.
-		 * \param max_delay Maximum allowable delay between observations
+		 * \param the labels of the sensors that are to be considered for grouping.
+		 * \param max_delay Maximum allowable delay between observations.
+		 * \param sync_obs_indices indices of the grouped (synchronized) observations in the original model, per sensor.
 		 */
-		void syncObservations(const QStringList &selected_sensor_labels, const int &max_delay = 1000);
+		void syncObservations(const QStringList &selected_sensor_labels, const int &max_delay, std::vector<std::vector<int>> &sync_obs_indices);
 
 	private:
 		/** The root parent item from which all the other observations originate. */
 		CObservationTreeItem *m_rootitem;
+
 		/** The unique sensor labels found in the rawlog. */
 		QStringList m_sensor_labels;
+
 		/** store count of observations of each observation type. */
 		std::vector<int> m_count_of_label;
+
 		/** The name of the file the rawlog was loaded from. */
 		std::string m_rawlog_filename;
+
 		std::vector<CTextObserver*> m_text_observers;
 };
