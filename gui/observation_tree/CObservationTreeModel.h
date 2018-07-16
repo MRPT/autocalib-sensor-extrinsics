@@ -39,11 +39,9 @@ class CObservationTreeModel : public QAbstractItemModel
 
 		/**
 		 * Returns the item at the given index in the model.
-		 * \param index the model index
+		 * \param index the model index.
 		 */
 		CObservationTreeItem *getItem(const QModelIndex &index) const;
-
-		void setRootItem(CObservationTreeItem *new_rootitem);
 
 		/** Returns a list of the unique sensor labels found in the rawlog. */
 		QStringList getSensorLabels() const;

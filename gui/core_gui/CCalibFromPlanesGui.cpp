@@ -48,7 +48,7 @@ void CCalibFromPlanesGui::publishText(const std::string &msg)
 	}
 }
 
-void CCalibFromPlanesGui::publishPlaneCloud(const int &sensor_id, const int &obs_id)
+void CCalibFromPlanesGui::publishPlaneCloud(const int &sensor_id, int obs_id)
 {
 	CObservationTreeItem *root_item;
 	root_item = m_model->getRootItem();
@@ -64,6 +64,9 @@ void CCalibFromPlanesGui::publishPlaneCloud(const int &sensor_id, const int &obs
 	obs_item->project3DPointsFromDepthImageInto(*obs_cloud, projection_params);
 	obs_cloud->is_dense = false;
 
+	// for finding the equivalent index in vvv_planes[sensor_id]
+	auto iter = std::find(m_sync_obs_indices[sensor_id].begin(), m_sync_obs_indices[sensor_id].end(), obs_id);
+	obs_id = std::distance(m_sync_obs_indices[sensor_id].begin(), iter);
 
 	std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> plane_cloud;
 

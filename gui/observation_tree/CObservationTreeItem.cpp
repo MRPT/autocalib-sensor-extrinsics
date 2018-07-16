@@ -4,11 +4,12 @@
 
 using namespace mrpt::obs;
 
-CObservationTreeItem::CObservationTreeItem(const QString &data, const CObservation::Ptr observation, CObservationTreeItem *parent)
+CObservationTreeItem::CObservationTreeItem(const QString &data, const CObservation::Ptr observation, CObservationTreeItem *parent, int prior_index)
 {
 	m_parentitem = parent;
 	m_displaydata = data;
 	m_observation = observation;
+	m_prior_index = prior_index;
 }
 
 CObservationTreeItem::~CObservationTreeItem()
@@ -21,7 +22,7 @@ void CObservationTreeItem::appendChild(CObservationTreeItem *item)
 	m_childitems.append(item);
 }
 
-CObservationTreeItem *CObservationTreeItem::child(int row)
+CObservationTreeItem *CObservationTreeItem::child(int row) const
 {
 	return m_childitems.value(row);
 }
@@ -39,7 +40,7 @@ int CObservationTreeItem::row() const
 	return 0;
 }
 
-CObservationTreeItem *CObservationTreeItem::parentItem()
+CObservationTreeItem *CObservationTreeItem::parentItem() const
 {
 	return this->m_parentitem;
 }
@@ -57,4 +58,9 @@ mrpt::system::TTimeStamp CObservationTreeItem::getTimeStamp() const
 CObservation::Ptr CObservationTreeItem::getObservation() const
 {
 	return this->m_observation;
+}
+
+int CObservationTreeItem::getPriorIndex() const
+{
+	return this->m_prior_index;
 }

@@ -51,7 +51,7 @@ public:
 	 * \param sensor_id the id of the sensor the plane cloud belongs to.
 	 * \param id of the observation in the original rawlog.
 	 */
-	void publishPlaneCloud(const int &sensor_id, const int &obs_id);
+	void publishPlaneCloud(const int &sensor_id, int obs_id);
 
 private:
 
