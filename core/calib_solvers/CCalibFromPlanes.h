@@ -9,7 +9,7 @@
 #pragma once
 
 #include "CExtrinsicCalib.h"
-#include <utils/CPlanes.h>
+#include <CPlanes.h>
 //#include <mrpt/pbmap/PbMap.h>
 //#include <mrpt/pbmap/Miscellaneous.h>
 #include <map>
@@ -40,8 +40,11 @@ class CCalibFromPlanes : public CExtrinsicCalib//<num_sensors, Scalar>
 {
   public:
 
+	/*! The back-projected clouds from the observations, indexes : [sensor_id][obs_id] */
+	std::vector<std::vector< pcl::PointCloud<pcl::PointXYZRGBA>::Ptr > > vv_clouds;
+
     /*! The segmented planes, the vector indexes to access them are [sensor_id][obs_id][plane_id] */
-	std::vector< std::vector< std::vector< CPlaneCHull > > > vvv_planes; // [pair_id][sensor_id][plane_id]
+	std::vector< std::vector< std::vector< CPlaneCHull > > > vvv_planes;
 
     /*! The plane correspondences between the different sensors. The map indexes correspond to the sensor IDs,
      * each matrix as as many rows as potential plane correspondences, with 4 columns for: obs_id1, plane_id1, obs_id2, plane_id2. */

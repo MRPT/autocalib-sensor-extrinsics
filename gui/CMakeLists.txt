@@ -3,8 +3,7 @@ SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 SET(SOURCES
 	../main.cpp
 	CMainWindow.cpp
-	observation_tree/CObservationTreeModel.cpp
-	observation_tree/CObservationTreeItem.cpp
+	observation_tree/CObservationTreeGui.cpp
 	viewer/CViewerContainer.cpp
 	config/CPlaneMatchingConfig.h
 	config/CPlaneMatchingConfig.cpp
@@ -19,7 +18,7 @@ SET(SOURCES
 
 SET(FILES_TO_MOC
 	CMainWindow.h
-	observation_tree/CObservationTreeModel.h
+	observation_tree/CObservationTreeGui.h
 	viewer/CViewerContainer.h
 	config/CPlaneMatchingConfig.h
 	config/CLineMatchingConfig.h)

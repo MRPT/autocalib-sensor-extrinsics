@@ -82,17 +82,23 @@ void CViewerContainer::updateCloudViewer(const int &viewer_id, const pcl::PointC
 	m_ui->result_viz->update();
 }
 
-void CViewerContainer::updateSetCloudViewer(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const std::string &sensor_label, const std::string &text)
+void CViewerContainer::updateSetCloudViewer(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const std::string &sensor_label, const Eigen::Matrix4f &relative_transformation, const std::string &text)
 {
 	pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGBA> viewer_color_handler(cloud);
+	Eigen::Affine3f rT;
+	rT.matrix() = relative_transformation;
 
 	if(viewerContainsCloud(2, sensor_label))
+	{
 		m_viewers[2]->removePointCloud(sensor_label);
+		m_viewers[2]->removeCoordinateSystem(sensor_label);
+	}
 
 	m_viewers[2]->addPointCloud(cloud, viewer_color_handler, sensor_label);
+	m_viewers[2]->updatePointCloudPose(sensor_label, rT);
 	m_viewers[2]->resetCamera();
 	m_viewers[2]->updateText(text, 10, 10, 1, 1, 1, "text");
-	m_viewers[2]->addCoordinateSystem(0.3);
+	m_viewers[2]->addCoordinateSystem(0.3, rT, sensor_label);
 
 	m_ui->result_viz->update();
 }
@@ -137,7 +143,7 @@ void CViewerContainer::updateImageViewer(const int &viewer_id, mrpt::img::CImage
 {
 	switch(viewer_id)
 	{
-	case 1:
+	case 0:
 	{
 		m_ui->input1_tab_widget->removeTab(1);
 		mrpt::gui::CQtGlCanvasBase *gl = new mrpt::gui::CQtGlCanvasBase();
@@ -146,7 +152,7 @@ void CViewerContainer::updateImageViewer(const int &viewer_id, mrpt::img::CImage
 		break;
 	}
 
-	case 2:
+	case 1:
 	{
 		m_ui->input2_tab_widget->removeTab(1);
 		mrpt::gui::CQtGlCanvasBase *gl = new mrpt::gui::CQtGlCanvasBase();

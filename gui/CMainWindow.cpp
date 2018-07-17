@@ -1,6 +1,6 @@
 #include <CMainWindow.h>
 #include <ui_CMainWindow.h>
-#include <observation_tree/CObservationTreeModel.h>
+#include <observation_tree/CObservationTreeGui.h>
 #include <config/CPlaneMatchingConfig.h>
 #include <config/CLineMatchingConfig.h>
 #include <core_gui/CCalibFromPlanesGui.h>
@@ -8,6 +8,7 @@
 #include <mrpt/obs/CObservation3DRangeScan.h>
 #include <mrpt/maps/PCL_adapters.h>
 #include <mrpt/maps/CColouredPointsMap.h>
+#include <mrpt/system/CTicTac.h>
 #include <pcl/search/impl/search.hpp>
 #include <pcl/common/transforms.h>
 
@@ -18,6 +19,7 @@
 #include <thread>
 
 using namespace mrpt::obs;
+using namespace mrpt::system;
 
 CMainWindow::CMainWindow(const std::string &config_file_name, QWidget *parent) :
     QMainWindow(parent),
@@ -67,11 +69,11 @@ CMainWindow::CMainWindow(const std::string &config_file_name, QWidget *parent) :
 
 	std::vector<std::string> transformation_keys;
 	m_config_file.getAllKeys("initial_calibration", transformation_keys);
-	Eigen::Matrix4d transformation;
+	Eigen::Matrix4f transformation;
 
 	for(size_t i = 0; i < transformation_keys.size(); i++)
 	{
-		m_config_file.read_matrix("initial_calibration", transformation_keys[i], transformation, Eigen::Matrix4d(), true);
+		m_config_file.read_matrix("initial_calibration", transformation_keys[i], transformation, Eigen::Matrix4f(), true);
 		m_relative_transformations.push_back(transformation);
 	}
 }
@@ -139,9 +141,15 @@ void CMainWindow::loadRawlog()
 	if(m_model)
 		delete m_model;
 
-	m_model = new CObservationTreeModel(m_ui->observations_treeview);
+	CTicTac stop_watch;
+	double time_to_load;
+
+	m_model = new CObservationTreeGui(m_ui->observations_treeview);
 	m_model->addTextObserver(m_ui->viewer_container);
-	m_model->loadModel(file_name.toStdString());
+
+	stop_watch.Tic();
+	m_model->loadTree(file_name.toStdString());
+	time_to_load = stop_watch.Tac();
 
 	if((m_model->getRootItem()) != nullptr)
 	{
@@ -154,16 +162,33 @@ void CMainWindow::loadRawlog()
 		m_ui->observations_delay_sbox->setDisabled(false);
 		m_ui->sync_observations_button->setDisabled(false);
 
-		QStringList sensor_labels = m_model->getSensorLabels();
+		std::vector<std::string> sensor_labels = m_model->getSensorLabels();
 
 		for(size_t i = 0; i < sensor_labels.size(); i++)
 		{
 			QListWidgetItem *item = new QListWidgetItem;
-			item->setText(sensor_labels[i]);
+			item->setText(QString::fromStdString(sensor_labels[i]));
 			item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
 			item->setCheckState(Qt::Checked);
 			m_ui->sensors_selection_list->insertItem(i, item);
 		}
+
+		std::string stats_string;
+		stats_string = "RAWLOG STATS";
+		stats_string += "\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - ";
+		stats_string += "\nNumber of observations loaded: " + std::to_string(m_model->getObsCount());
+		stats_string += "\nNumber of unique sensors found in rawlog: " + std::to_string(m_model->getSensorLabels().size());
+		stats_string += "\n\nSummary of sensors found in rawlog:";
+		stats_string += "\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - ";
+
+		for(size_t i = 0; i < m_model->getSensorLabels().size(); i++)
+		{
+			stats_string += "\nSensor #" + std::to_string(i);
+			stats_string += "\nSensor label : Class :: " + m_model->getSensorLabels()[i];
+			stats_string += "\nNumber of observations: " + std::to_string(m_model->getCountOfLabel()[i]) + "\n";
+		}
+
+		m_ui->viewer_container->updateText(stats_string);
 	}
 
 	else
@@ -175,7 +200,7 @@ void CMainWindow::loadRawlog()
 
 void CMainWindow::syncObservationsClicked()
 {
-	QStringList selected_sensor_labels;
+	std::vector<std::string> selected_sensor_labels;
 	QListWidgetItem *item;
 
 	m_ui->grouped_observations_treeview->setDisabled(true);
@@ -190,7 +215,7 @@ void CMainWindow::syncObservationsClicked()
 	{
 		item = m_ui->sensors_selection_list->item(i);
 		if(item->checkState() == Qt::Checked)
-			selected_sensor_labels.push_back(item->text());
+			selected_sensor_labels.push_back(item->text().toStdString());
 	}
 
 	if(!(selected_sensor_labels.size() > 1))
@@ -207,15 +232,14 @@ void CMainWindow::syncObservationsClicked()
 		}
 
 		// creating a copy of the model
-		m_sync_model = new CObservationTreeModel(m_ui->grouped_observations_treeview);
+		m_sync_model = new CObservationTreeGui(m_ui->grouped_observations_treeview);
 
 		for(size_t i = 0; i < m_model->getRootItem()->childCount(); i++)
 		{
 			m_sync_model->getRootItem()->appendChild(m_model->getRootItem()->child(i));
 		}
 
-		m_sync_obs_indices.resize(selected_sensor_labels.size());
-		m_sync_model->syncObservations(selected_sensor_labels, m_ui->observations_delay_sbox->value(), m_sync_obs_indices);
+		m_sync_model->syncObservations(selected_sensor_labels, m_ui->observations_delay_sbox->value());
 
 		if(m_sync_model->getRootItem()->childCount() > 0)
 		{
@@ -231,12 +255,12 @@ void CMainWindow::syncObservationsClicked()
 			stats_string += "\n\nSummary of sensors used:";
 			stats_string += "\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - ";
 
-			for(size_t i = 0; i < selected_sensor_labels.count(); i++)
+			for(size_t i = 0; i < selected_sensor_labels.size(); i++)
 			{
 				stats_string += "\nSensor #" + std::to_string(i);
-				stats_string += "\nSensor label : Class :: " + selected_sensor_labels[i].toStdString() + " : "
-				        + m_model->getRootItem()->child(m_sync_obs_indices[i][0])->getObservation()->GetRuntimeClass()->className;
-				stats_string += "\nNumber of observations: " + std::to_string(m_sync_obs_indices[i].size()) + "\n";
+				stats_string += "\nSensor label : Class :: " + selected_sensor_labels[i] + " : "
+				        + m_model->getRootItem()->child(m_sync_model->getSyncIndices()[i][0])->getObservation()->GetRuntimeClass()->className;
+				stats_string += "\nNumber of observations: " + std::to_string(m_sync_model->getSyncIndices()[i].size()) + "\n";
 			}
 
 			m_ui->viewer_container->updateText(stats_string);
@@ -265,14 +289,14 @@ void CMainWindow::listItemClicked(const QModelIndex &index)
 		projection_params.MAKE_DENSE = false;
 		projection_params.MAKE_ORGANIZED = false;
 
-		obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(m_model->observationData(index));
+		obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(m_model->getItem(index)->getObservation());
 		obs_item->getDescriptionAsText(update_stream);
 		obs_item->project3DPointsFromDepthImageInto(*cloud, projection_params);
 		cloud->is_dense = false;
 
 		image = obs_item->intensityImage;
 
-		sensor_id = m_model->getSensorLabels().indexOf(QString::fromStdString(obs_item->sensorLabel));
+		sensor_id = findItemIndexIn(m_model->getSensorLabels(), obs_item->sensorLabel);
 		viewer_id = sensor_id;
 		viewer_text = (m_model->data(index)).toString().toStdString();
 
@@ -293,6 +317,7 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 		int viewer_id, sensor_id;
 
 		CObservation3DRangeScan::Ptr obs_item;
+		size_t obs_id;
 		pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
 		mrpt::img::CImage image;
 
@@ -303,14 +328,14 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 		//if single-item was clicked
 		if((index.parent()).isValid())
 		{
-			obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(m_sync_model->observationData(index));
+			obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(m_sync_model->getItem(index)->getObservation());
 			obs_item->getDescriptionAsText(update_stream);
 			obs_item->project3DPointsFromDepthImageInto(*cloud, projection_params);
 			cloud->is_dense = false;
 
 			image = obs_item->intensityImage;
 
-			sensor_id = m_sync_model->getSensorLabels().indexOf(QString::fromStdString(obs_item->sensorLabel));
+			sensor_id = findItemIndexIn(m_sync_model->getSensorLabels(), obs_item->sensorLabel);
 			viewer_id = sensor_id;
 			viewer_text = (m_sync_model->data(index.parent())).toString().toStdString() + " : " + obs_item->sensorLabel;
 
@@ -318,7 +343,10 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 			m_ui->viewer_container->updateImageViewer(viewer_id, image);
 
 			if(m_calib_started && (m_calib_from_planes_gui != nullptr))
-				m_calib_from_planes_gui->publishPlaneCloud(sensor_id, m_sync_model->getItem(index)->getPriorIndex());
+			{
+				m_calib_from_planes_gui->publishPlaneCloud(sensor_id, item->getPriorIndex());
+				//m_ui->viewer_container->updateText(std::to_string(item->getPriorIndex()));
+			}
 		}
 
 		// else set-item was clicked
@@ -333,7 +361,7 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 
 				image = obs_item->intensityImage;
 
-				sensor_id = m_sync_model->getSensorLabels().indexOf(QString::fromStdString(obs_item->sensorLabel));
+				sensor_id = findItemIndexIn(m_sync_model->getSensorLabels(), obs_item->sensorLabel);
 				viewer_id = sensor_id;
 				viewer_text = (m_sync_model->data(index)).toString().toStdString() + " : " + obs_item->sensorLabel;
 				update_stream << "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n";
@@ -341,11 +369,15 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 				m_ui->viewer_container->updateCloudViewer(viewer_id, cloud, viewer_text);
 				m_ui->viewer_container->updateImageViewer(viewer_id, image);
 
-				pcl::transformPointCloud(*cloud, *cloud, m_relative_transformations[i]);
-				m_ui->viewer_container->updateSetCloudViewer(cloud, obs_item->sensorLabel, (m_sync_model->data(index)).toString().toStdString() + " Overlapped");
+				m_ui->viewer_container->updateSetCloudViewer(cloud, obs_item->sensorLabel,
+				                                             m_relative_transformations[sensor_id],
+				                                             (m_sync_model->data(index)).toString().toStdString() + " Overlapped");
 
 				if(m_calib_started && (m_calib_from_planes_gui != nullptr))
+				{	
 					m_calib_from_planes_gui->publishPlaneCloud(sensor_id, item->child(i)->getPriorIndex());
+					//m_ui->viewer_container->updateText(std::to_string(item->child(i)->getPriorIndex()));
+				}
 			}
 		}
     
@@ -376,7 +408,7 @@ void CMainWindow::runCalibFromPlanes(TPlaneMatchingParams params)
 	if(m_sync_model != nullptr && (m_sync_model->getRootItem()->childCount() > 0))
 	{
 		m_calib_from_lines_gui = nullptr;
-		m_calib_from_planes_gui = new CCalibFromPlanesGui(m_model, m_sync_obs_indices, params);
+		m_calib_from_planes_gui = new CCalibFromPlanesGui(m_sync_model, params);
 		m_calib_from_planes_gui->addTextObserver(m_ui->viewer_container);
 		m_calib_from_planes_gui->addPlanesObserver(m_ui->viewer_container);
 		m_calib_from_planes_gui->extractPlanes();
@@ -394,7 +426,7 @@ void CMainWindow::runCalibFromLines()
 	if(m_sync_model != nullptr && (m_sync_model->getRootItem()->childCount() > 0))
 	{
 		m_calib_from_planes_gui = nullptr;
-		m_calib_from_lines_gui = new CCalibFromLinesGui(m_model, m_sync_obs_indices);
+		m_calib_from_lines_gui = new CCalibFromLinesGui(m_sync_model);
 		//m_line_matching->extractLines();
 		m_calib_started = true;
 	}
@@ -419,7 +451,7 @@ void CMainWindow::saveParams()
 	m_ui->status_bar->showMessage("Parameters saved!");
 }
 
-void CMainWindow::ontReceivingRt(const std::vector<Eigen::Matrix4d> &relative_transformations)
+void CMainWindow::ontReceivingRt(const std::vector<Eigen::Matrix4f> &relative_transformations)
 {
 	m_relative_transformations = relative_transformations;
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <observation_tree/CObservationTreeModel.h>
+#include <observation_tree/CObservationTreeGui.h>
 #include <core_gui/TPlaneMatchingParams.h>
 #include <core_gui/CCalibFromPlanesGui.h>
 #include <core_gui/CCalibFromLinesGui.h>
@@ -29,7 +29,7 @@ public:
 	 */
 	void saveParams();
 
-	CObservationTreeModel* updatedRawlog();
+	CObservationTreeGui* updatedRawlog();
 
 	/** Triggers the calibration from planes method. */
 	void runCalibFromPlanes(TPlaneMatchingParams params);
@@ -38,7 +38,7 @@ public:
 	void runCalibFromLines();
 
 	/** Receives the estimated relative transformation from the gui calib classes. */
-	void ontReceivingRt(const std::vector<Eigen::Matrix4d> &relative_transformations);
+	void ontReceivingRt(const std::vector<Eigen::Matrix4f> &relative_transformations);
 
 private slots:
 	void algosIndexChanged(int index);
@@ -71,16 +71,13 @@ private:
 	std::array<double,6> m_init_calib;
 
 	/** A vector of relative [R,t] matrices starting from the first sensor. */
-	std::vector<Eigen::Matrix4d> m_relative_transformations;
+	std::vector<Eigen::Matrix4f> m_relative_transformations;
 
 	/** Stores the originally loaded rawlog. */
-	CObservationTreeModel *m_model;
+	CObservationTreeGui *m_model;
 
 	/** Stores the synchronized (modified) rawlog after re-grouping. */
-	CObservationTreeModel *m_sync_model;
-
-	/** sync_obs_indices indices of the grouped (synchronized) observations in the original model, per sensor. */
-	std::vector<std::vector<int>> m_sync_obs_indices;
+	CObservationTreeGui *m_sync_model;	
 
 	std::shared_ptr<QWidget> m_config_widget;
 

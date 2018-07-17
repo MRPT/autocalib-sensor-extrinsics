@@ -9,5 +9,5 @@
 class CRtObserver
 {
     public:
-	    virtual void ontReceivingRt(const std::vector<Eigen::Matrix4d> &relative_transformations) = 0;
+	    virtual void ontReceivingRt(const std::vector<Eigen::Matrix4f> &relative_transformations) = 0;
 };

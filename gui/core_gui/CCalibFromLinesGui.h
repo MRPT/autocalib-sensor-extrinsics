@@ -1,6 +1,6 @@
 #pragma once
 
-#include <observation_tree/CObservationTreeModel.h>
+#include <observation_tree/CObservationTreeGui.h>
 
 #include <opencv2/core/core.hpp>
 #include <pcl/point_cloud.h>
@@ -19,7 +19,7 @@ public:
 	 * \param model the rawlog model.
 	 * \param sync_obs_indices sync_obs_indices indices of the grouped (synchronized) observations in the original model, per sensor.
 	 */
-	CCalibFromLinesGui(CObservationTreeModel *model, std::vector<std::vector<int>> &sync_obs_indices);
+	CCalibFromLinesGui(CObservationTreeGui *model);
 
 	~CCalibFromLinesGui();
 
@@ -33,5 +33,5 @@ public:
 private:
 
 	/** Pointer to the rawlog tree model */
-	CObservationTreeModel *m_model;
+	CObservationTreeGui *m_model;
 };

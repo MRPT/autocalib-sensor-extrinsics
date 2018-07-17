@@ -18,11 +18,10 @@
 
 using namespace mrpt::obs;
 
-CCalibFromPlanesGui::CCalibFromPlanesGui(CObservationTreeModel *model, std::vector<std::vector<int>> &sync_obs_indices, TPlaneMatchingParams params) :
+CCalibFromPlanesGui::CCalibFromPlanesGui(CObservationTreeGui *model, TPlaneMatchingParams params) :
     CCalibFromPlanes(2)
 {
-	m_model = model;
-	m_sync_obs_indices = sync_obs_indices;
+	m_sync_model = model;
 	m_params = params;
 }
 
@@ -51,28 +50,23 @@ void CCalibFromPlanesGui::publishText(const std::string &msg)
 void CCalibFromPlanesGui::publishPlaneCloud(const int &sensor_id, int obs_id)
 {
 	CObservationTreeItem *root_item;
-	root_item = m_model->getRootItem();
+	root_item = m_sync_model->getRootItem();
 
 	CObservation3DRangeScan::Ptr obs_item;
-	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr obs_cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
+	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr obs_cloud;
 
-	T3DPointsProjectionParams projection_params;
-	projection_params.MAKE_DENSE = false;
-	projection_params.MAKE_ORGANIZED = false;
+	obs_id = findItemIndexIn(m_sync_model->getSyncIndices()[sensor_id], obs_id);
 
-	obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(root_item->child(obs_id)->getObservation());
-	obs_item->project3DPointsFromDepthImageInto(*obs_cloud, projection_params);
-	obs_cloud->is_dense = false;
+	//for debugging
+	publishText(std::to_string(sensor_id) + " " + std::to_string(obs_id));
 
-	// for finding the equivalent index in vvv_planes[sensor_id]
-	auto iter = std::find(m_sync_obs_indices[sensor_id].begin(), m_sync_obs_indices[sensor_id].end(), obs_id);
-	obs_id = std::distance(m_sync_obs_indices[sensor_id].begin(), iter);
+	obs_cloud = vv_clouds[sensor_id][obs_id];
 
 	std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> plane_cloud;
 
 	for(size_t i = 0; i < vvv_planes[sensor_id][obs_id].size(); i++)
 	{
-		std::vector<int> &indices = vvv_planes[sensor_id][obs_id][i].v_inliers;
+		std::vector<int> indices = vvv_planes[sensor_id][obs_id][i].v_inliers;
 		pcl::PointCloud<pcl::PointXYZRGBA>::Ptr plane(new pcl::PointCloud<pcl::PointXYZRGBA>);
 
 		for(size_t k = 0; k < indices.size(); k++)
@@ -100,7 +94,7 @@ void CCalibFromPlanesGui::extractPlanes()
 
 	CObservationTreeItem *root_item, *tree_item;
 	CObservation3DRangeScan::Ptr obs_item;
-	root_item = m_model->getRootItem();
+	root_item = m_sync_model->getRootItem();
 
 	T3DPointsProjectionParams projection_params;
 	projection_params.MAKE_DENSE = false;
@@ -118,33 +112,51 @@ void CCalibFromPlanesGui::extractPlanes()
     seg_params.min_inliers_frac = m_params.min_inliers_frac;
     seg_params.max_curvature = 0.1;
 
-	size_t n_planes;
+	std::vector<CPlaneCHull> segmented_planes;
+	std::vector<std::vector<CPlaneCHull>> sensor_segmented_planes;
+	size_t n_planes;	
 	double plane_segment_start, plane_segment_end;
 
-	vvv_planes.resize(m_sync_obs_indices.size());
+	std::vector<std::string> selected_sensor_labels;
+	std::string prev_sensor_label;
+	mrpt::system::TTimeStamp prev_ts = 0;
 
-	for(size_t i = 0; i < m_sync_obs_indices.size(); i++)
+	selected_sensor_labels = m_sync_model->getSensorLabels();
+	vv_clouds.resize(selected_sensor_labels.size());
+	vvv_planes.resize(selected_sensor_labels.size());
+
+	for(size_t i = 0; i < selected_sensor_labels.size(); i++)
 	{
-		//vvv_planes[i] = std::vector< std::vector< CPlaneCHull > >(m_sync_obs_indices[i].size());
-		//for(size_t j = 0; j < m_sync_obs_indices[i].size(); j++)
-
-
 		publishText("**Extracting planes from sensor #" + std::to_string(i) + " observations**");
-		vvv_planes[i] = std::vector< std::vector< CPlaneCHull > >(5);
 
-		//runnning only for a few observations due to memory reasons
+		//let's run it for 5 sets
 		for(size_t j = 0; j < 5; j++)
-		{	
-			obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(root_item->child(m_sync_obs_indices[i][j])->getObservation());
-			obs_item->project3DPointsFromDepthImageInto(*cloud, projection_params);
+		{
+			tree_item = root_item->child(j);
 
-			plane_segment_start = pcl::getTime();
-			segmentPlanes(cloud, seg_params, vvv_planes[i][j]);
-			plane_segment_end = pcl::getTime();
-			n_planes = vvv_planes[i][j].size();
-			publishText(std::to_string(n_planes) + " plane(s) extracted from observation #" + std::to_string(m_sync_obs_indices[i][j])
-			            + "\nTime elapsed: " +  std::to_string(plane_segment_end - plane_segment_start));
-        }
+			for(size_t j = 0; j < tree_item->childCount(); j++)
+			{
+				obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(tree_item->child(j)->getObservation());
+				if((obs_item->sensorLabel == selected_sensor_labels[i]) && (obs_item->timestamp != prev_ts))
+				{
+					obs_item->project3DPointsFromDepthImageInto(*cloud, projection_params);
+
+					plane_segment_start = pcl::getTime();
+					segmentPlanes(cloud, seg_params, segmented_planes);
+					plane_segment_end = pcl::getTime();
+					n_planes = segmented_planes.size();
+					publishText(std::to_string(n_planes) + " plane(s) extracted from observation #" + std::to_string(tree_item->child(j)->getPriorIndex())
+					            + "\nTime elapsed: " +  std::to_string(plane_segment_end - plane_segment_start));
+
+					sensor_segmented_planes.push_back(segmented_planes);
+					prev_ts = obs_item->timestamp;
+					vv_clouds[i].push_back(cloud);
+				}
+			}
+		}
+
+		vvv_planes[i].push_back(segmented_planes);
+		sensor_segmented_planes.clear();
 	}
 }
 

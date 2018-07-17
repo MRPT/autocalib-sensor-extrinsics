@@ -4,16 +4,21 @@ INCLUDE_DIRECTORIES(${PCL_INCLUDE_DIRS})
 
 # List the source files of CORE
 SET(SRC
-	utils/lines.h
-	utils/CPlanes.h
-	utils/correspondences.h
-	utils/solver.h
+	CObservationTree.h
+	CObservationTreeItem.h
+	CUtils.h
+	CPlanes.h
+	lines.h
+	correspondences.h
+	solver.h
 	calib_solvers/CExtrinsicCalib.h
 	calib_solvers/CCalibFromPlanes.h
 
-	utils/lines.cpp
-	utils/correspondences.cpp
-	utils/solver.cpp
+	CObservationTree.cpp
+	CObservationTreeItem.cpp
+	lines.cpp
+	correspondences.cpp
+	solver.cpp
 	calib_solvers/CExtrinsicCalib.cpp
 	calib_solvers/CCalibFromPlanes.cpp
 )

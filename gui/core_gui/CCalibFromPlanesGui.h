@@ -1,11 +1,10 @@
 #pragma once
 
 #include "TPlaneMatchingParams.h"
-#include <observation_tree/CObservationTreeModel.h>
+#include <observation_tree/CObservationTreeGui.h>
 #include <interfaces/CTextObserver.h>
 #include <interfaces/CPlanesObserver.h>
 #include <calib_solvers/CCalibFromPlanes.h>
-#include <utils/CPlanes.h>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -24,10 +23,10 @@ public:
 	/**
 	 * Constructor
 	 * \param model the rawlog model.
-	 * \param sync_obs_indices sync_obs_indices indices of the grouped (synchronized) observations in the original model, per sensor.
+	 * \param sync_obs_indices indices of the grouped (synchronized) observations in the original model, per sensor.
 	 * \param params parameters for the algorithm.
 	 */
-	CCalibFromPlanesGui(CObservationTreeModel *model, std::vector<std::vector<int>> &sync_obs_indices, TPlaneMatchingParams params);
+	CCalibFromPlanesGui(CObservationTreeGui *model, TPlaneMatchingParams params);
 
 	~CCalibFromPlanesGui();
 
@@ -49,7 +48,7 @@ public:
 
 	/** Notifies observers with the extracted plane cloud.
 	 * \param sensor_id the id of the sensor the plane cloud belongs to.
-	 * \param id of the observation in the original rawlog.
+	 * \param obs_id id of the observation in the original rawlog.
 	 */
 	void publishPlaneCloud(const int &sensor_id, int obs_id);
 
@@ -58,11 +57,8 @@ private:
 	/** The parameters for the calibration. */
 	TPlaneMatchingParams m_params;
 
-	/** Pointer to the received (synchronized) rawlog model. */
-	CObservationTreeModel *m_model;
-
-	/** sync_obs_indices indices of the grouped (synchronized) observations in the original model, per sensor. */
-	std::vector<std::vector<int>> m_sync_obs_indices;
+	/** Pointer to the received synchronized rawlog model. */
+	CObservationTreeGui *m_sync_model;
 
 	/** List of observers to be notified about progress status. */
 	std::vector<CTextObserver*> m_text_observers;
