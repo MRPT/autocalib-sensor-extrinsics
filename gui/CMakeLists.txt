@@ -5,9 +5,10 @@ SET(SOURCES
 	CMainWindow.cpp
 	observation_tree/CObservationTreeGui.cpp
 	viewer/CViewerContainer.cpp
-	config/CPlaneMatchingConfig.h
-	config/CPlaneMatchingConfig.cpp
-	config/CLineMatchingConfig.cpp
+	config/CCalibFromPlanesConfig.h
+	config/CCalibFromPlanesConfig.cpp
+	config/CCalibFromLinesConfig.h
+	config/CCalibFromLinesConfig.cpp
 	interfaces/CTextObserver.h
 	interfaces/CPlanesObserver.h
 	interfaces/CRtObserver.h
@@ -20,14 +21,14 @@ SET(FILES_TO_MOC
 	CMainWindow.h
 	observation_tree/CObservationTreeGui.h
 	viewer/CViewerContainer.h
-	config/CPlaneMatchingConfig.h
-	config/CLineMatchingConfig.h)
+	config/CCalibFromPlanesConfig.h
+	config/CCalibFromLinesConfig.h)
 
 SET(FILES_TO_UIC
 	CMainWindow.ui
 	viewer/CViewerContainer.ui
-	config/CPlaneMatchingConfig.ui
-	config/CLineMatchingConfig.ui)
+	config/CCalibFromPlanesConfig.ui
+	config/CCalibFromLinesConfig.ui)
 
 #SET(FILES_TO_RCC
 #	resources/)

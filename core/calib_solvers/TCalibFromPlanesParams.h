@@ -1,8 +1,6 @@
 #pragma once
 
-//Structure definition for the plane matching algorithm parameters
-
-struct TPlaneMatchingParams
+struct TPlaneSegmentationParams
 {
 	//params for integral normal estimation
 	int normal_estimation_method;
@@ -14,4 +12,10 @@ struct TPlaneMatchingParams
 	double angle_threshold;
 	double dist_threshold;
 	double min_inliers_frac;
+	double max_curvature;
+};
+
+struct TCalibFromPlanesParams
+{
+	TPlaneSegmentationParams seg;
 };

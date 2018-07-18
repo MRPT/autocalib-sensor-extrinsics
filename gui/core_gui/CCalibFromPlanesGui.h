@@ -1,6 +1,5 @@
 #pragma once
 
-#include "TPlaneMatchingParams.h"
 #include <observation_tree/CObservationTreeGui.h>
 #include <interfaces/CTextObserver.h>
 #include <interfaces/CPlanesObserver.h>
@@ -26,7 +25,7 @@ public:
 	 * \param sync_obs_indices indices of the grouped (synchronized) observations in the original model, per sensor.
 	 * \param params parameters for the algorithm.
 	 */
-	CCalibFromPlanesGui(CObservationTreeGui *model, TPlaneMatchingParams params);
+	CCalibFromPlanesGui(CObservationTreeGui *model, const TCalibFromPlanesParams &params);
 
 	~CCalibFromPlanesGui();
 
@@ -55,7 +54,7 @@ public:
 private:
 
 	/** The parameters for the calibration. */
-	TPlaneMatchingParams m_params;
+	TCalibFromPlanesParams m_params;
 
 	/** Pointer to the received synchronized rawlog model. */
 	CObservationTreeGui *m_sync_model;

@@ -1,11 +1,11 @@
-#include <config/CPlaneMatchingConfig.h>
-#include <ui_CPlaneMatchingConfig.h>
+#include <config/CCalibFromPlanesConfig.h>
+#include <ui_CCalibFromPlanesConfig.h>
 #include <CMainWindow.h>
 
-CPlaneMatchingConfig::CPlaneMatchingConfig(mrpt::config::CConfigFile &config_file, QWidget *parent) :
+CCalibFromPlanesConfig::CCalibFromPlanesConfig(mrpt::config::CConfigFile &config_file, QWidget *parent) :
 	QWidget(parent),
     m_config_file(config_file),
-	m_ui(new Ui::CPlaneMatchingConfig)
+    m_ui(new Ui::CCalibFromPlanesConfig)
 {
 	m_ui->setupUi(this);
 
@@ -28,6 +28,7 @@ CPlaneMatchingConfig::CPlaneMatchingConfig(mrpt::config::CConfigFile &config_fil
 	m_ui->angle_threshold_sbox->setValue(m_config_file.read_double("plane_segmentation", "angle_threshold", 4.00, true));
 	m_ui->distance_threshold_sbox->setValue(m_config_file.read_double("plane_segmentation", "distance_threshold", 0.05, true));
 	m_ui->minimum_threshold_sbox->setValue(m_config_file.read_double("plane_segmentation", "min_inliers_frac", 0.001, true));
+	m_ui->max_curvature_sbox->setValue(m_config_file.read_double("plane_segmentation", "max_curvature", 0.1, true));
 
 	connect(m_ui->start_calib_button, SIGNAL(clicked(bool)), this, SLOT(startCalib()));
 	connect(m_ui->proceed_calib_button, SIGNAL(clicked(bool)), this, SLOT(proceedCalib()));
@@ -38,33 +39,34 @@ CPlaneMatchingConfig::CPlaneMatchingConfig(mrpt::config::CConfigFile &config_fil
 	m_ui->save_calib_button->setDisabled(true);
 }
 
-CPlaneMatchingConfig::~CPlaneMatchingConfig()
+CCalibFromPlanesConfig::~CCalibFromPlanesConfig()
 {
 	delete m_ui;
 }	
 
-void CPlaneMatchingConfig::startCalib()
+void CCalibFromPlanesConfig::startCalib()
 {
-	params.normal_estimation_method = m_ui->ne_method_cbox->currentIndex();
-	params.depth_dependent_smoothing = m_ui->depth_dependent_smoothing_check->isChecked();
-	params.max_depth_change_factor = m_ui->max_depth_change_factor_sbox->value();
-	params.normal_smoothing_size = m_ui->normal_smoothing_size_sbox->value();
-	params.angle_threshold = m_ui->angle_threshold_sbox->value();
-	params.dist_threshold = m_ui->distance_threshold_sbox->value();
-	params.min_inliers_frac = m_ui->minimum_threshold_sbox->value();
+	params.seg.normal_estimation_method = m_ui->ne_method_cbox->currentIndex();
+	params.seg.depth_dependent_smoothing = m_ui->depth_dependent_smoothing_check->isChecked();
+	params.seg.max_depth_change_factor = m_ui->max_depth_change_factor_sbox->value();
+	params.seg.normal_smoothing_size = m_ui->normal_smoothing_size_sbox->value();
+	params.seg.angle_threshold = m_ui->angle_threshold_sbox->value();
+	params.seg.dist_threshold = m_ui->distance_threshold_sbox->value();
+	params.seg.min_inliers_frac = m_ui->minimum_threshold_sbox->value();
+	params.seg.max_curvature = m_ui->max_curvature_sbox->value();
 
 	static_cast<CMainWindow*>(parentWidget()->parentWidget()->parentWidget())->runCalibFromPlanes(params);
 }
 
-void CPlaneMatchingConfig::proceedCalib()
+void CCalibFromPlanesConfig::proceedCalib()
 {
 }
 
-void CPlaneMatchingConfig::saveCalib()
+void CCalibFromPlanesConfig::saveCalib()
 {
 }
 
-void CPlaneMatchingConfig::saveParamsClicked()
+void CCalibFromPlanesConfig::saveParamsClicked()
 {
 	m_config_file.write<std::string>("plane_segmentation", "normal_estimation_method", m_ui->ne_method_cbox->currentText().toStdString());
 
@@ -78,6 +80,7 @@ void CPlaneMatchingConfig::saveParamsClicked()
 	m_config_file.write<double>("plane_segmentation", "angle_threshold", m_ui->angle_threshold_sbox->value());
 	m_config_file.write<double>("plane_segmentation", "min_inliers_frac", m_ui->minimum_threshold_sbox->value());
 	m_config_file.write<double>("plane_segmentation", "distance_threshold", m_ui->distance_threshold_sbox->value());
+	m_config_file.write<double>("plane_segmentation", "max_curavture", m_ui->max_curvature_sbox->value());
 
 	// causes segfault
 	//m_config_file.writeNow();

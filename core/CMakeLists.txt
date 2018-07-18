@@ -13,6 +13,7 @@ SET(SRC
 	solver.h
 	calib_solvers/CExtrinsicCalib.h
 	calib_solvers/CCalibFromPlanes.h
+	calib_solvers/TCalibFromPlanesParams.h
 
 	CObservationTree.cpp
 	CObservationTreeItem.cpp

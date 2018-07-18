@@ -1,7 +1,6 @@
 #pragma once
 
 #include <observation_tree/CObservationTreeGui.h>
-#include <core_gui/TPlaneMatchingParams.h>
 #include <core_gui/CCalibFromPlanesGui.h>
 #include <core_gui/CCalibFromLinesGui.h>
 #include <interfaces/CRtObserver.h>
@@ -32,7 +31,7 @@ public:
 	CObservationTreeGui* updatedRawlog();
 
 	/** Triggers the calibration from planes method. */
-	void runCalibFromPlanes(TPlaneMatchingParams params);
+	void runCalibFromPlanes(const TCalibFromPlanesParams &params);
 
 	/** Triggers the calibration from lines method. */
 	void runCalibFromLines();

@@ -1,8 +1,8 @@
 #include <CMainWindow.h>
 #include <ui_CMainWindow.h>
 #include <observation_tree/CObservationTreeGui.h>
-#include <config/CPlaneMatchingConfig.h>
-#include <config/CLineMatchingConfig.h>
+#include <config/CCalibFromPlanesConfig.h>
+#include <config/CCalibFromLinesConfig.h>
 #include <core_gui/CCalibFromPlanesGui.h>
 
 #include <mrpt/obs/CObservation3DRangeScan.h>
@@ -97,14 +97,14 @@ void CMainWindow::algosIndexChanged(int index)
 
 	case 1:
 	{
-		m_config_widget = std::make_shared<CPlaneMatchingConfig>(m_config_file);
+		m_config_widget = std::make_shared<CCalibFromPlanesConfig>(m_config_file);
 		qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(3, m_config_widget.get());
 		break;
 	}
 
 	case 2:
 	{
-		m_config_widget = std::make_shared<CLineMatchingConfig>();
+		m_config_widget = std::make_shared<CCalibFromLinesConfig>();
 		qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(3, m_config_widget.get());
 		break;
 	}
@@ -403,7 +403,7 @@ void CMainWindow::initCalibChanged(double value)
 		m_init_calib[5] = value;
 }
 
-void CMainWindow::runCalibFromPlanes(TPlaneMatchingParams params)
+void CMainWindow::runCalibFromPlanes(const TCalibFromPlanesParams &params)
 {
 	if(m_sync_model != nullptr && (m_sync_model->getRootItem()->childCount() > 0))
 	{

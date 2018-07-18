@@ -53,10 +53,11 @@ void CObservationTree::loadTree(const std::string &rawlog_filename)
 				if(iter == m_sensor_labels.end())
 				{
 					m_sensor_labels.push_back(sensor_label);
-					m_count_of_label.push_back(0);
+					m_count_of_label.push_back(1);
 				}
 
-				m_count_of_label[findItemIndexIn(m_sensor_labels, *iter)]++;
+				else
+					m_count_of_label[findItemIndexIn(m_sensor_labels, sensor_label)]++;
 			}
 
 			m_rootitem->appendChild(new CObservationTreeItem("[#" + std::to_string(m_obs_count - 1) + "] " + obs_label, obs, m_rootitem));
