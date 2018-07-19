@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>382</width>
-    <height>311</height>
+    <height>344</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -232,27 +232,34 @@
    <item>
     <layout class="QHBoxLayout" name="button_group">
      <item>
-      <widget class="QPushButton" name="start_calib_button">
+      <widget class="QPushButton" name="extract_planes_button">
        <property name="text">
-        <string>Start Calibration</string>
+        <string>Extract Planes</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="proceed_calib_button">
+      <widget class="QPushButton" name="match_planes_button">
        <property name="text">
-        <string>Proceed</string>
+        <string>Match Planes</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="save_calib_button">
+      <widget class="QPushButton" name="calib_button">
        <property name="text">
-        <string>Save Calibration</string>
+        <string>Calibrate</string>
        </property>
       </widget>
      </item>
     </layout>
+   </item>
+   <item>
+    <widget class="QPushButton" name="save_calib_button">
+     <property name="text">
+      <string>Save Calibration</string>
+     </property>
+    </widget>
    </item>
    <item>
     <widget class="QPushButton" name="save_params_button">
@@ -284,9 +291,8 @@
   <tabstop>angle_threshold_sbox</tabstop>
   <tabstop>minimum_threshold_sbox</tabstop>
   <tabstop>distance_threshold_sbox</tabstop>
-  <tabstop>start_calib_button</tabstop>
-  <tabstop>proceed_calib_button</tabstop>
-  <tabstop>save_calib_button</tabstop>
+  <tabstop>extract_planes_button</tabstop>
+  <tabstop>calib_button</tabstop>
  </tabstops>
  <resources/>
  <connections/>

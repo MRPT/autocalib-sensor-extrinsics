@@ -181,6 +181,7 @@ void CObservationTree::syncObservations(const std::vector<std::string> &selected
 	m_rootitem = new_rootitem;
 	m_sensor_labels = selected_sensor_labels;
 	m_synced = true;
+	m_sync_offset = max_delay;
 }
 
 CObservationTreeItem *CObservationTree::getRootItem() const

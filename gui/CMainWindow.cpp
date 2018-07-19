@@ -344,8 +344,7 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 
 			if(m_calib_started && (m_calib_from_planes_gui != nullptr))
 			{
-				m_calib_from_planes_gui->publishPlaneCloud(sensor_id, item->getPriorIndex());
-				//m_ui->viewer_container->updateText(std::to_string(item->getPriorIndex()));
+				m_calib_from_planes_gui->publishPlanes(sensor_id, item->getPriorIndex());
 			}
 		}
 
@@ -375,14 +374,13 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 
 				if(m_calib_started && (m_calib_from_planes_gui != nullptr))
 				{	
-					m_calib_from_planes_gui->publishPlaneCloud(sensor_id, item->child(i)->getPriorIndex());
-					//m_ui->viewer_container->updateText(std::to_string(item->child(i)->getPriorIndex()));
+					m_calib_from_planes_gui->publishPlanes(sensor_id, item->child(i)->getPriorIndex());
 				}
 			}
 		}
     
 		m_ui->observations_description_textbrowser->setText(QString::fromStdString(update_stream.str()));
-    }
+	}
 }
 
 void CMainWindow::initCalibChanged(double value)

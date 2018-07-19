@@ -76,7 +76,7 @@ private:
 	CObservationTreeGui *m_model;
 
 	/** Stores the synchronized (modified) rawlog after re-grouping. */
-	CObservationTreeGui *m_sync_model;	
+	CObservationTreeGui *m_sync_model;
 
 	std::shared_ptr<QWidget> m_config_widget;
 

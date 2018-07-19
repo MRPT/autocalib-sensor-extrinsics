@@ -1,14 +1,13 @@
 #pragma once
 
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
+#include <CPlanes.h>
 
 /**
- * @brief Observer (listener) that receives extracted planes for visualization from the GUI core wrappers.
+ * \brief Observer (listener) that receives extracted planes for visualization from the GUI core wrappers.
  */
 
 class CPlanesObserver
 {
 public:
-    virtual void onReceivingPlaneCloud(const int &sensor_id, const std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> &cloud) = 0;
+	virtual void onReceivingPlanes(const int &viewer_id, const std::vector<CPlaneCHull> &planes) = 0;
 };

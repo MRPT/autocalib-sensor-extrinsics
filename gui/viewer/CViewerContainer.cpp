@@ -1,12 +1,10 @@
 #include <viewer/CViewerContainer.h>
 #include <ui_CViewerContainer.h>
 
-// Define some colours to draw bolobs, patches, etc.
-static const unsigned char red [10] = {255,   0,   0, 255, 255,   0, 255, 204,   0, 255};
-static const unsigned char grn [10] = {  0, 255,   0, 255,   0, 255, 160,  51, 128, 222};
-static const unsigned char blu [10] = {  0,   0, 255,   0, 255, 255, 0  , 204,   0, 173};
-
-//Q_DECLARE_METATYPE(QTextCursor)
+#include <mrpt/pbmap/PbMap.h>
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 CViewerContainer::CViewerContainer(QWidget *parent) :
 	QWidget(parent),
@@ -54,7 +52,6 @@ CViewerContainer::~CViewerContainer()
 
 void CViewerContainer::updateText(const std::string &text)
 {
-//	qRegisterMetaType<QTextCursor>();
 	m_ui->text_output->moveCursor(QTextCursor::End);
 	m_ui->text_output->insertPlainText(QString::fromStdString(text) + QString("\n\n"));
 }
@@ -72,6 +69,7 @@ void CViewerContainer::updateCloudViewer(const int &viewer_id, const pcl::PointC
 	pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGBA> viewer_color_handler(cloud);
 
 	m_viewers[viewer_id]->removeAllPointClouds();
+	m_viewers[viewer_id]->removeAllShapes();
 	m_viewers[viewer_id]->addPointCloud(cloud, viewer_color_handler, "cloud");
 	m_viewers[viewer_id]->resetCamera();
 	m_viewers[viewer_id]->updateText(text, 10, 10, 1, 1, 1, "text");
@@ -103,51 +101,63 @@ void CViewerContainer::updateSetCloudViewer(const pcl::PointCloud<pcl::PointXYZR
 	m_ui->result_viz->update();
 }
 
-void CViewerContainer::onReceivingPlaneCloud(const int &sensor_id, const std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> &cloud)
+void CViewerContainer::onReceivingPlanes(const int &viewer_id, const std::vector<CPlaneCHull> &planes)
 {
-	char name[1024];
-	for(size_t i=0; i < cloud.size(); i++)
+	char plane_id[1024], polygon_id[1024];
+
+	for(size_t i=0; i < planes.size(); i++)
 	{
-		sprintf (name, "plane_%u", static_cast<unsigned>(i));
-		pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZRGBA> viewer_color_handler(cloud[i], red[i%10], grn[i%10], blu[i%10]);
-		m_viewers[sensor_id]->addPointCloud(cloud[i], viewer_color_handler, name);
+		cv::Mat img = cv::cvarrToMat((m_viewer_images[viewer_id]).getAs<IplImage>());
+		size_t width = img.cols;
 
-//      mrpt::pbmap::Plane &plane_i = frame_->planes_.vPlanes[i];
-//      sprintf (name, "normal_%u", static_cast<unsigned>(i));
-//      pcl::PointXYZ pt1, pt2; // Begin and end points of normal's arrow for visualization
-//      pt1 = pcl::PointXYZ(plane_i.v3center[0], plane_i.v3center[1], plane_i.v3center[2]);
-//      pt2 = pcl::PointXYZ(plane_i.v3center[0] + (0.5f * plane_i.v3normal[0]),
-//      					plane_i.v3center[1] + (0.5f * plane_i.v3normal[1]),
-//                          plane_i.v3center[2] + (0.5f * plane_i.v3normal[2]));
-//      viz.addArrow(pt2, pt1, utils::nred[i%10], utils::ngrn[i%10], utils::nblu[i%10], false, name);
+		sprintf (plane_id, "plane_%u", static_cast<unsigned>(i));
+		sprintf(polygon_id, "polygon_%u", static_cast<unsigned>(i));
 
-//      {
-//      	sprintf(name, "n%u %s", static_cast<unsigned>(i), plane_i.label.c_str());
-//          sprintf (name, "n%u %.1f %.2f", static_cast<unsigned>(i), plane_i.curvature*1000, plane_i.areaHull);
-//          viz.addText3D(name, pt2, 0.1, utils::nred[i%10], utils::ngrn[i%10], utils::nblu[i%10], name);
-//      }
+		pcl::PointXYZ pt1, pt2;
+		pt1 = pcl::PointXYZ(planes[i].v3center[0], planes[i].v3center[1], planes[i].v3center[2]);
+		pt2 = pcl::PointXYZ(planes[i].v3center[0] + (0.5f * planes[i].v3normal[0]),
+		        planes[i].v3center[1] + (0.5f * planes[i].v3normal[1]),
+		        planes[i].v3center[2] + (0.5f * planes[i].v3normal[2]));
 
-//      sprintf (name, "approx_plane_%02d", int (i));
-//      viz.addPolygon<PointT> (plane_i.polygonContourPtr, 0.5 * utils::red[i%10], 0.5 * utils::grn[i%10], 0.5 * utils::blu[i%10], name);
+		m_viewers[viewer_id]->addArrow(pt2, pt1, 0.5 * viz_colors::red[i%10] / 255, viz_colors::grn[i%10] / 255, viz_colors::blu[i%10] / 255, false, plane_id);
+		m_viewers[viewer_id]->addPolygon<pcl::PointXYZRGBA>(planes[i].ConvexHullPtr, viz_colors::red[i%10], viz_colors::grn[i%10], viz_colors::blu[i%10], polygon_id);
 
-		m_viewers[sensor_id]->resetCamera();
-		m_viewers[sensor_id]->addCoordinateSystem(0.3);
+		size_t indices_size = planes[i].v_hull_indices.size();
+		for(size_t j = 0; j < indices_size; j++)
+		{
+			cv::line(img, cv::Point(planes[i].v_hull_indices[j]%width, planes[i].v_hull_indices[j]/width),
+			         cv::Point(planes[i].v_hull_indices[(j+1)%indices_size]%width, planes[i].v_hull_indices[(j+1)%indices_size]/width),
+			         cv::Scalar(viz_colors::blu[i%10], viz_colors::grn[i%10], viz_colors::red[i%10]), 3);
+		}
 
-		m_ui->input1_viz->update();
-		m_ui->input2_viz->update();
-		m_ui->result_viz->update();
+		if(i == planes.size())
+		{
+			IplImage *iimg = new IplImage(img);
+			mrpt::img::CImage cimg;
+			cimg.setFromIplImage(iimg);
+			updateImageViewer(viewer_id, cimg);
+		}
 	}
+
+	m_viewers[viewer_id]->resetCamera();
+	m_viewers[viewer_id]->addCoordinateSystem(0.3);
+
+	m_ui->input1_viz->update();
+	m_ui->input2_viz->update();
+	m_ui->result_viz->update();
 }
 
 void CViewerContainer::updateImageViewer(const int &viewer_id, mrpt::img::CImage &image)
 {
+	m_viewer_images[viewer_id] = image;
+
 	switch(viewer_id)
 	{
 	case 0:
 	{
 		m_ui->input1_tab_widget->removeTab(1);
 		mrpt::gui::CQtGlCanvasBase *gl = new mrpt::gui::CQtGlCanvasBase();
-		gl->mainViewport()->setImageView_fast(image);
+		gl->mainViewport()->setImageView(image);
 		m_ui->input1_tab_widget->insertTab(1, gl, "RGB");
 		break;
 	}
@@ -156,7 +166,7 @@ void CViewerContainer::updateImageViewer(const int &viewer_id, mrpt::img::CImage
 	{
 		m_ui->input2_tab_widget->removeTab(1);
 		mrpt::gui::CQtGlCanvasBase *gl = new mrpt::gui::CQtGlCanvasBase();
-		gl->mainViewport()->setImageView_fast(image);
+		gl->mainViewport()->setImageView(image);
 		m_ui->input2_tab_widget->insertTab(1, gl, "RGB");
 		break;
 	}

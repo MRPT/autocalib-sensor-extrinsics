@@ -30,12 +30,14 @@ CCalibFromPlanesConfig::CCalibFromPlanesConfig(mrpt::config::CConfigFile &config
 	m_ui->minimum_threshold_sbox->setValue(m_config_file.read_double("plane_segmentation", "min_inliers_frac", 0.001, true));
 	m_ui->max_curvature_sbox->setValue(m_config_file.read_double("plane_segmentation", "max_curvature", 0.1, true));
 
-	connect(m_ui->start_calib_button, SIGNAL(clicked(bool)), this, SLOT(startCalib()));
-	connect(m_ui->proceed_calib_button, SIGNAL(clicked(bool)), this, SLOT(proceedCalib()));
+	connect(m_ui->extract_planes_button, SIGNAL(clicked(bool)), this, SLOT(extractPlanes()));
+	connect(m_ui->match_planes_button, SIGNAL(clicked(bool)), this, SLOT(matchPlanes()));
+	connect(m_ui->calib_button, SIGNAL(clicked(bool)), this, SLOT(calibrate()));
 	connect(m_ui->save_calib_button, SIGNAL(clicked(bool)), this, SLOT(saveCalib()));
 	connect(m_ui->save_params_button, SIGNAL(clicked(bool)), this, SLOT(saveParamsClicked()));
 
-	m_ui->proceed_calib_button->setDisabled(true);
+	m_ui->match_planes_button->setDisabled(true);
+	m_ui->calib_button->setDisabled(true);
 	m_ui->save_calib_button->setDisabled(true);
 }
 
@@ -44,7 +46,7 @@ CCalibFromPlanesConfig::~CCalibFromPlanesConfig()
 	delete m_ui;
 }	
 
-void CCalibFromPlanesConfig::startCalib()
+void CCalibFromPlanesConfig::extractPlanes()
 {
 	params.seg.normal_estimation_method = m_ui->ne_method_cbox->currentIndex();
 	params.seg.depth_dependent_smoothing = m_ui->depth_dependent_smoothing_check->isChecked();
@@ -56,10 +58,16 @@ void CCalibFromPlanesConfig::startCalib()
 	params.seg.max_curvature = m_ui->max_curvature_sbox->value();
 
 	static_cast<CMainWindow*>(parentWidget()->parentWidget()->parentWidget())->runCalibFromPlanes(params);
+	m_ui->match_planes_button->setDisabled(false);
 }
 
-void CCalibFromPlanesConfig::proceedCalib()
+void CCalibFromPlanesConfig::matchPlanes()
 {
+}
+
+void CCalibFromPlanesConfig::calibrate()
+{
+
 }
 
 void CCalibFromPlanesConfig::saveCalib()

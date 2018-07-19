@@ -1,11 +1,13 @@
 #pragma once
 
-#include <mrpt/gui/CQtGlCanvasBase.h>
 #include <interfaces/CTextObserver.h>
 #include <interfaces/CPlanesObserver.h>
+#include <CPlanes.h>
+#include <CUtils.h>
 
 #include <QWidget>
 
+#include <mrpt/gui/CQtGlCanvasBase.h>
 #include <mrpt/img/CImage.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -44,19 +46,30 @@ public:
 	 */
 	void updateSetCloudViewer(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const std::string &sensor_label, const Eigen::Matrix4f &relative_transformation, const std::string &text);
 
-	/** Update the image viewer with an image. */
+	/** Update the image viewer with an image.
+	 * \param viewer_id the id of the image viewer to be updated.
+	 * \param image the image to be displayed.
+	 */
 	void updateImageViewer(const int &viewer_id, mrpt::img::CImage &image);
 
-    void addPlanes(const int &viewer_id, const std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> &cloud);
 	void updateCalibConfig(const int &calib_algo_id);
 	bool viewerContainsCloud(const int &viewer_id, const std::string &id);
 	virtual void onReceivingText(const std::string &msg);
-    virtual void onReceivingPlaneCloud(const int &obs_type, const std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr> &cloud);
+
+	/** Updates the viewer with the received planes.
+	 * \param viewer_id the id of the visualizer.
+	 * \param planes the vector of planes to be added to the visualizer.
+	 */
+	virtual void onReceivingPlanes(const int &viewer_id, const std::vector<CPlaneCHull> &planes);
 
 private:
 
 	/** An array of three PCLVisualizer objects, each linked to one viewer widget. */
 	std::array<std::shared_ptr<pcl::visualization::PCLVisualizer>, 3> m_viewers;
 
+	/** An array of images that are a copy of the images displayed in the image viewers. */
+	std::array<mrpt::img::CImage, 2> m_viewer_images;
+
 	Ui::CViewerContainer *m_ui;
+
 };

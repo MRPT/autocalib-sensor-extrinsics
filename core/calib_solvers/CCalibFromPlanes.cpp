@@ -73,14 +73,14 @@ void CCalibFromPlanes::segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::P
 	multi_plane_segmentation.segmentAndRefine(regions, model_coefficients, inlier_indices, labels, label_indices, boundary_indices);
 
 	// Create a vector with the planes detected in this frame, and calculate their parameters (normal, center, pointclouds, etc.)
-	//std::cout << regions.size() << " planes \n";
-	mrpt::pbmap::PbMap pbmap; // Save all the segmented planes into a PbMap
-	planes.resize( regions.size() );
+
+	mrpt::pbmap::PbMap pbmap;
+	planes.resize(regions.size());
+
 	for (size_t i = 0; i < regions.size(); i++)
 	{
 		CPlaneCHull planehull;
 
-		//      std::cout << "curv " << regions[i].getCurvature() << std::endl;
 		if(regions[i].getCurvature() > params.max_curvature)
 			continue;
 
@@ -88,25 +88,26 @@ void CCalibFromPlanes::segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::P
 		plane.v3center = regions[i].getCentroid ();
 		plane.v3normal = Eigen::Vector3f(model_coefficients[i].values[0], model_coefficients[i].values[1], model_coefficients[i].values[2]);
 		plane.d = model_coefficients[i].values[3];
+
 		// Force the normal vector to point towards the camera
 		if( model_coefficients[i].values[3] < 0)
 		{
 			plane.v3normal = -plane.v3normal;
 			plane.d = -plane.d;
 		}
+
 		plane.curvature = regions[i].getCurvature();
-		//      cout << "normal " << plane.v3normal.transpose() << " center " << regions[i].getCentroid().transpose() << " " << plane.v3center.transpose() << endl;
-		//    cout << "D " << -(plane.v3normal.dot(plane.v3center)) << " " << plane.d << endl;
 
 		// Extract the planar inliers from the input cloud
 		pcl::ExtractIndices<pcl::PointXYZRGBA> extract;
 		extract.setInputCloud ( cloud );
 		extract.setIndices ( boost::make_shared<const pcl::PointIndices> (inlier_indices[i]) );
 		extract.setNegative (false);
-		extract.filter (*plane.planePointCloudPtr);    // Write the planar point cloud
+		extract.filter (*plane.planePointCloudPtr);
 		plane.inliers = inlier_indices[i].indices;
 
 		planes[i].v3normal = plane.v3normal;
+		planes[i].v3center = plane.v3center;
 		planes[i].d = plane.d;
 		planes[i].v_inliers = inlier_indices[i].indices;
 
@@ -114,15 +115,15 @@ void CCalibFromPlanes::segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::P
 		contourPtr->points = regions[i].getContour();
 		plane.calcConvexHull(contourPtr, planes[i].v_hull_indices);
 		plane.computeMassCenterAndArea();
-		//std::cout << "Extract inliers " << inlier_indices[i].indices.size() << " " << boundary_indices[i].indices.size() << " " << contourPtr->points.size() << "\n";
+
+		planes[i].ConvexHullPtr = contourPtr;
 
 		for (size_t j = 0; j < planes[i].v_hull_indices.size(); j++)
 			planes[i].v_hull_indices[j] = boundary_indices[i].indices[planes[i].v_hull_indices[j]];
 
-		//std::cout << i << " normal " << plane.v3normal.transpose() << "\n";
 
+//        Check whether this region correspond to the same plane as a previous one (this situation may happen when there exists a small discontinuity in the observation)
 
-//        // Check whether this region correspond to the same plane as a previous one (this situation may happen when there exists a small discontinuity in the observation)
 //        bool isSamePlane = false;
 //        for (size_t j = 0; j < pbmap.vPlanes.size(); j++)
 //            if( pbmap.vPlanes[j].isSamePlane(plane, 0.998, 0.1, 0.4) ) // The planes are merged if they are the same

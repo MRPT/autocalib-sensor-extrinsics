@@ -25,7 +25,7 @@ class CCalibFromPlanes : public CExtrinsicCalib//<num_sensors, Scalar>
 {
   public:
 
-	/*! The back-projected clouds from the observations, indexes : [sensor_id][obs_id] */
+	/*! The back-projected clouds from the observations, index levels : [sensor_id][obs_id] */
 	std::vector<std::vector< pcl::PointCloud<pcl::PointXYZRGBA>::Ptr > > vv_clouds;
 
     /*! The segmented planes, the vector indexes to access them are [sensor_id][obs_id][plane_id] */

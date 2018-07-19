@@ -22,8 +22,9 @@ public:
 	~CCalibFromPlanesConfig();
 
 private slots:
-	void startCalib();
-	void proceedCalib();
+	void calibrate();
+	void extractPlanes();
+	void matchPlanes();
 	void saveCalib();
 
 	/** Callback to save the parameters back to the config file. */

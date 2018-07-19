@@ -42,14 +42,14 @@ public:
 	/** Adds observer to list of plane observers. */
 	void addPlanesObserver(CPlanesObserver *observer);
 
-	/** Notifies observers with text message. */
+	/** Notifies observers with a text message. */
 	void publishText(const std::string &msg);
 
-	/** Notifies observers with the extracted plane cloud.
-	 * \param sensor_id the id of the sensor the plane cloud belongs to.
+	/** Notifies observers with the extracted planes.
+	 * \param sensor_id id of the sensor the planes were observed from.
 	 * \param obs_id id of the observation in the original rawlog.
 	 */
-	void publishPlaneCloud(const int &sensor_id, int obs_id);
+	void publishPlanes(const int &sensor_id, const int &obs_id);
 
 private:
 
