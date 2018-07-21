@@ -3,10 +3,14 @@
 #include "CObservationTreeItem.h"
 #include "CUtils.h"
 #include <interfaces/CTextObserver.h>
-#include <vector>
+
+#include <mrpt/obs/CObservation3DRangeScan.h>
+#include <mrpt/config/CConfigFile.h>
+#include <Eigen/Core>
 
 /**
  * Class for loading, storing, and synchronizing the observations from a rawlog file into a tree.
+ * The class also maintains the relative transformations between all the sensors.
  */
 
 class CObservationTree
@@ -19,7 +23,7 @@ class CObservationTree
 		 * \brief loadTree loads the contents of the rawlog into the tree.
 		 * \param rawlog_filename the rawlog file.
 		 */
-		void loadTree(const std::string &rawlog_filename);
+		void loadTree(const std::string &rawlog_filename, const mrpt::config::CConfigFile &config_file);
 
 		/**
 		 * Returns the root item of the tree.
@@ -32,7 +36,7 @@ class CObservationTree
 		 */
 		CObservationTreeItem *getItem(const int &index) const;
 
-		/** Returns the count of total number observations found in the rawlog. */
+		/** Returns the count of total number of observations found in the rawlog. */
 		int getObsCount() const;
 
 		/** Returns a list of the unique sensor labels found in the rawlog. */
@@ -40,6 +44,9 @@ class CObservationTree
 
 		/** Returns the count of observations of each label found in the rawlog. */
 		std::vector<int> getCountOfLabel() const;
+
+		/** Returns the poses of the sensors found in the rawlog. */
+		std::vector<Eigen::Matrix4f> getSensorPoses() const;
 
 		/** Groups observations together based on their time stamp proximity.
 		 * Stores the results back in the same tree.
@@ -50,6 +57,7 @@ class CObservationTree
 
 		/** Returns the indices of the grouped observations with respect to the original tree. */
 		std::vector<std::vector<int>> getSyncIndices() const;
+
 
     protected:
 
@@ -76,4 +84,7 @@ class CObservationTree
 
 		/** the maximum allowable delay between observation items before they can be synced. */
 		int m_sync_offset = -1;
+
+		/** The [R,t] poses of the sensors found in the rawlog. */
+		std::vector<Eigen::Matrix4f> m_sensor_poses;
 };

@@ -3,28 +3,26 @@
 #include <observation_tree/CObservationTreeGui.h>
 #include <core_gui/CCalibFromPlanesGui.h>
 #include <core_gui/CCalibFromLinesGui.h>
-#include <interfaces/CRtObserver.h>
 
 #include <QMainWindow>
 #include <QSettings>
 
 #include <mrpt/config/CConfigFile.h>
-#include <Eigen/Dense>
 
 namespace Ui {
 class CMainWindow;
 }
 
-class CMainWindow : public QMainWindow, public CRtObserver
+class CMainWindow : public QMainWindow
 {
 	Q_OBJECT
 
 public:
-	explicit CMainWindow(const std::string &config_file_name, QWidget *parent = 0);
+	explicit CMainWindow(QWidget *parent = 0);
 	~CMainWindow();
 
 	/** Saves the initial calibration params and grouping params
-	 * from the gui back to the config vile.
+	 * from the gui back to the config file.
 	 */
 	void saveParams();
 
@@ -41,7 +39,18 @@ public:
 
 private slots:
 	void algosIndexChanged(int index);
+
+	/** Presents a file selection dialog for selecting the rawlog file. */
+	void selectRawlogFile();
+
+	/** Presents a file selection dialog for selecting and loading the config file. */
+	void loadConfigFile();
+
+	/** Loads the rawlog into memory, and the config file. */
 	void loadRawlog();
+
+	/** Changes the displayed sensor pose according to the selected sensor index. */
+	void sensorIndexChanged(int index);
 
 	/** Call back function to display any observations item from the listview. */
 	void listItemClicked(const QModelIndex &);
@@ -63,14 +72,14 @@ private:
 
 	QSettings m_settings;
 
-	/** Location of the most recently loaded rawlog file. */
-	QString m_recent_file;
+	/** Path of the most recently loaded rawlog file. */
+	QString m_recent_rlog_path;
+
+	/** Path of the most recently loaded config file. */
+	QString m_recent_config_path;
 
 	/** The initial calibration vector. */
 	std::array<double,6> m_init_calib;
-
-	/** A vector of relative [R,t] matrices starting from the first sensor. */
-	std::vector<Eigen::Matrix4f> m_relative_transformations;
 
 	/** Stores the originally loaded rawlog. */
 	CObservationTreeGui *m_model;

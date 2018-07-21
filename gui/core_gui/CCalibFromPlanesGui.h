@@ -31,10 +31,11 @@ public:
 
 	void run();
 
-	void proceed();
-
 	/** Runs plane segmentation. */
 	void extractPlanes();
+
+	/** Runs plane matching. */
+	void matchPlanes();
 
 	/** Adds observer to list of text observers. */
 	void addTextObserver(CTextObserver *observer);

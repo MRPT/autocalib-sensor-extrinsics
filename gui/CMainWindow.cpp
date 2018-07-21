@@ -4,6 +4,7 @@
 #include <config/CCalibFromPlanesConfig.h>
 #include <config/CCalibFromLinesConfig.h>
 #include <core_gui/CCalibFromPlanesGui.h>
+#include <CUtils.h>
 
 #include <mrpt/obs/CObservation3DRangeScan.h>
 #include <mrpt/maps/PCL_adapters.h>
@@ -21,25 +22,18 @@
 using namespace mrpt::obs;
 using namespace mrpt::system;
 
-CMainWindow::CMainWindow(const std::string &config_file_name, QWidget *parent) :
+CMainWindow::CMainWindow(QWidget *parent) :
     QMainWindow(parent),
-    m_config_file(config_file_name),
 	m_model(nullptr),
     m_sync_model(nullptr),
 	m_ui(new Ui::CMainWindow)
 {
 	m_ui->setupUi(this);
 
-//	m_ui->irx_sbox->setValue(m_config_file.read_double("initial_calibration", "irx", 0.0, true));
-//	m_ui->iry_sbox->setValue(m_config_file.read_double("initial_calibration", "iry", 0.0, true));
-//	m_ui->irz_sbox->setValue(m_config_file.read_double("initial_calibration", "irz", 0.0, true));
-//	m_ui->itx_sbox->setValue(m_config_file.read_double("initial_calibration", "itx", 0.0, true));
-//	m_ui->ity_sbox->setValue(m_config_file.read_double("initial_calibration", "ity", 0.0, true));
-//	m_ui->itz_sbox->setValue(m_config_file.read_double("initial_calibration", "itz", 0.0, true));
-
-	m_ui->observations_delay_sbox->setValue(m_config_file.read_int("grouping_observations", "max_delay", 30, true));
-
+	connect(m_ui->config_file_select_button, SIGNAL(clicked(bool)), this, SLOT(loadConfigFile()));
+	connect(m_ui->rlog_file_select_button, SIGNAL(clicked(bool)), this, SLOT(selectRawlogFile()));
 	connect(m_ui->load_rlog_button, SIGNAL(clicked(bool)), this, SLOT(loadRawlog()));
+	connect(m_ui->sensor_cbox, SIGNAL(currentIndexChanged(int)), this, SLOT(sensorIndexChanged(int)));
 	connect(m_ui->algo_cbox, SIGNAL(currentIndexChanged(int)), this, SLOT(algosIndexChanged(int)));
 	connect(m_ui->observations_treeview, SIGNAL(clicked(QModelIndex)), this, SLOT(listItemClicked(QModelIndex)));
 	connect(m_ui->sync_observations_button, SIGNAL(clicked(bool)), this, SLOT(syncObservationsClicked()));
@@ -58,77 +52,77 @@ CMainWindow::CMainWindow(const std::string &config_file_name, QWidget *parent) :
 	m_calib_from_lines_gui = nullptr;
 	m_ui->viewer_container->updateText("Welcome to autocalib-sensor-extrinsics!");
 	m_ui->viewer_container->updateText("Set your initial (rough) calibration values and load your rawlog file to get started.");
-	m_recent_file = m_settings.value("recent").toString();
-
-	m_init_calib[0] = m_ui->irx_sbox->value();
-	m_init_calib[1] = m_ui->iry_sbox->value();
-	m_init_calib[2] = m_ui->irz_sbox->value();
-	m_init_calib[3] = m_ui->itz_sbox->value();
-	m_init_calib[4] = m_ui->ity_sbox->value();
-	m_init_calib[5] = m_ui->itz_sbox->value();
-
-	std::vector<std::string> transformation_keys;
-	m_config_file.getAllKeys("initial_calibration", transformation_keys);
-	Eigen::Matrix4f transformation;
-
-	for(size_t i = 0; i < transformation_keys.size(); i++)
-	{
-		m_config_file.read_matrix("initial_calibration", transformation_keys[i], transformation, Eigen::Matrix4f(), true);
-		m_relative_transformations.push_back(transformation);
-	}
+	m_recent_rlog_path = m_settings.value("recent_rlog").toString();
+	m_recent_config_path = m_settings.value("recent_config").toString();
 }
 
 CMainWindow::~CMainWindow()
 {
-	m_settings.setValue("recent", m_recent_file);
+	m_settings.setValue("recent_rlog", m_recent_rlog_path);
+	m_settings.setValue("recent_config", m_recent_config_path);
 	delete m_ui;
 }
 
-void CMainWindow::algosIndexChanged(int index)
+void CMainWindow::loadConfigFile()
 {
-	switch(index)
+	m_ui->rlog_file_line_edit->setDisabled(true);
+	m_ui->rlog_file_select_button->setDisabled(true);
+	m_ui->load_rlog_button->setDisabled(true);
+
+	QString path;
+	if(!m_recent_config_path.isEmpty())
 	{
-	case 0:
-	{
-		if(m_config_widget)
-			m_config_widget.reset();
-		break;
+		QFileInfo fi(m_recent_config_path);
+		path = fi.absolutePath();
 	}
 
-	case 1:
+	else
+		path = QFileInfo(QString::fromStdString(PROJECT_SOURCE_PATH + std::string("/config_files/"))).absolutePath();
+
+	path = QFileDialog::getOpenFileName(this, tr("Load Configuration File"), path, tr("Configuration Files (*.ini)"));
+	if(!path.isEmpty())
 	{
-		m_config_widget = std::make_shared<CCalibFromPlanesConfig>(m_config_file);
-		qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(3, m_config_widget.get());
-		break;
+		m_recent_config_path = path;
+		m_ui->config_file_line_edit->setText(path);
+		m_config_file.setFileName(path.toStdString());
+		m_ui->rlog_file_line_edit->setText(QString::fromStdString(m_config_file.read_string("rawlog", "path", "")));
+		m_ui->rlog_file_line_edit->setDisabled(false);
+		m_ui->rlog_file_select_button->setDisabled(false);
+		if(!m_ui->rlog_file_line_edit->text().isEmpty())
+			m_ui->load_rlog_button->setDisabled(false);
+	}
+}
+
+void CMainWindow::selectRawlogFile()
+{
+	m_ui->load_rlog_button->setDisabled(true);
+	QString path;
+	if(!m_recent_rlog_path.isEmpty())
+	{
+		QFileInfo fi(m_recent_rlog_path);
+		path = fi.absolutePath();
 	}
 
-	case 2:
+	path = QFileDialog::getOpenFileName(this, tr("Select Rawlog File"), path, tr("Rawlog Files (*.rawlog *.rawlog.gz)"));
+	if(!path.isEmpty())
 	{
-		m_config_widget = std::make_shared<CCalibFromLinesConfig>();
-		qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(3, m_config_widget.get());
-		break;
-	}
+		m_recent_rlog_path = path;
+		m_ui->rlog_file_line_edit->setText(path);
+		m_ui->load_rlog_button->setDisabled(false);
 	}
 }
 
 void CMainWindow::loadRawlog()
 {
-	QString path;
-
-	if(!m_recent_file.isEmpty())
-	{
-		QFileInfo fi(m_recent_file);
-		path = fi.absolutePath();
-	}
-
-	QString file_name = QFileDialog::getOpenFileName(this, tr("Open File"), path, tr("Rawlog Files (*.rawlog *.rawlog.gz)"));
-
-	if(file_name.isEmpty())
-		return;
-
-	m_ui->status_bar->showMessage("Loading Rawlog...");
-
 	// To ensure all options are disabled when a new rawlog is loaded again.
+	m_ui->sensor_cbox->setDisabled(true);
+	m_ui->irx_sbox->setDisabled(true);
+	m_ui->iry_sbox->setDisabled(true);
+	m_ui->irz_sbox->setDisabled(true);
+	m_ui->itx_sbox->setDisabled(true);
+	m_ui->ity_sbox->setDisabled(true);
+	m_ui->itz_sbox->setDisabled(true);
+	m_ui->med_sbox->setDisabled(true);
 	m_ui->observations_treeview->setDisabled(true);
 	m_ui->observations_description_textbrowser->setDisabled(true);
 	m_ui->observations_delay_sbox->setDisabled(true);
@@ -136,7 +130,25 @@ void CMainWindow::loadRawlog()
 	m_ui->sync_observations_button->setDisabled(true);
 	m_ui->grouped_observations_treeview->setDisabled(true);
 	m_ui->algo_cbox->setDisabled(true);
-	m_recent_file = file_name;
+
+	QString rlog_path;
+	rlog_path = m_ui->rlog_file_line_edit->text();
+
+	if(rlog_path.isEmpty())
+	{
+		m_ui->status_bar->showMessage("Load error!");
+		m_ui->viewer_container->updateText("Please select the rawlog file first.");
+		return;
+	}
+
+	if(!QFile(rlog_path).exists())
+	{
+		m_ui->status_bar->showMessage("Load error!");
+		m_ui->viewer_container->updateText("File not found. Please check your rawlog path and try again.");
+		return;
+	}
+
+	m_ui->status_bar->showMessage("Loading Rawlog...");
 
 	if(m_model)
 		delete m_model;
@@ -148,10 +160,10 @@ void CMainWindow::loadRawlog()
 	m_model->addTextObserver(m_ui->viewer_container);
 
 	stop_watch.Tic();
-	m_model->loadTree(file_name.toStdString());
+	m_model->loadTree(rlog_path.toStdString(), m_config_file);
 	time_to_load = stop_watch.Tac();
 
-	if((m_model->getRootItem()) != nullptr)
+	if((m_model->getRootItem()) != nullptr && m_model->getRootItem()->childCount() > 0)
 	{
 		m_ui->observations_treeview->setDisabled(false);
 		m_ui->observations_treeview->setModel(m_model);
@@ -161,6 +173,16 @@ void CMainWindow::loadRawlog()
 		m_ui->sensors_selection_list->setDisabled(false);
 		m_ui->observations_delay_sbox->setDisabled(false);
 		m_ui->sync_observations_button->setDisabled(false);
+		m_ui->sensor_cbox->setDisabled(false);
+		m_ui->irx_sbox->setDisabled(false);
+		m_ui->iry_sbox->setDisabled(false);
+		m_ui->irz_sbox->setDisabled(false);
+		m_ui->itx_sbox->setDisabled(false);
+		m_ui->ity_sbox->setDisabled(false);
+		m_ui->itz_sbox->setDisabled(false);
+		m_ui->med_sbox->setDisabled(false);
+
+		m_ui->observations_delay_sbox->setValue(m_config_file.read_int("grouping_observations", "max_delay", 30, true));
 
 		std::vector<std::string> sensor_labels = m_model->getSensorLabels();
 
@@ -171,6 +193,7 @@ void CMainWindow::loadRawlog()
 			item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
 			item->setCheckState(Qt::Checked);
 			m_ui->sensors_selection_list->insertItem(i, item);
+			m_ui->sensor_cbox->insertItem(i, QString::fromStdString(sensor_labels[i]));
 		}
 
 		std::string stats_string;
@@ -189,13 +212,37 @@ void CMainWindow::loadRawlog()
 		}
 
 		m_ui->viewer_container->updateText(stats_string);
+		m_ui->sensor_cbox->setDisabled(false);
+		m_ui->irx_sbox->setDisabled(false);
+		m_ui->iry_sbox->setDisabled(false);
+		m_ui->irz_sbox->setDisabled(false);
+		m_ui->itx_sbox->setDisabled(false);
+		m_ui->ity_sbox->setDisabled(false);
+		m_ui->itz_sbox->setDisabled(false);
+		m_ui->med_sbox->setDisabled(false);
 	}
 
 	else
 	{
 		m_ui->status_bar->showMessage("Loading aborted!");
-		m_ui->viewer_container->updateText("Loading was aborted. Try again.");
+		m_ui->viewer_container->updateText("Loading was aborted. Please check your rawlog file and try again.");
 	}
+}
+
+void CMainWindow::sensorIndexChanged(int index)
+{
+	Eigen::Matrix4f rt = m_model->getSensorPoses()[index];
+	Eigen::Matrix<float,3,1> rvec = cutils::getRotationVector(rt);
+	Eigen::Matrix<float,3,1> tvec = cutils::getTranslationVector(rt);
+
+	m_ui->irx_sbox->setValue(rvec(0,0));
+	m_ui->iry_sbox->setValue(rvec(1,0));
+	m_ui->irz_sbox->setValue(rvec(2,0));
+	m_ui->itx_sbox->setValue(tvec(0,0));
+	m_ui->itx_sbox->setValue(tvec(1,0));
+	m_ui->itx_sbox->setValue(tvec(2,0));
+
+	//std::cout << tvec;
 }
 
 void CMainWindow::syncObservationsClicked()
@@ -296,7 +343,7 @@ void CMainWindow::listItemClicked(const QModelIndex &index)
 
 		image = obs_item->intensityImage;
 
-		sensor_id = findItemIndexIn(m_model->getSensorLabels(), obs_item->sensorLabel);
+		sensor_id = cutils::findItemIndexIn(m_model->getSensorLabels(), obs_item->sensorLabel);
 		viewer_id = sensor_id;
 		viewer_text = (m_model->data(index)).toString().toStdString();
 
@@ -335,7 +382,7 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 
 			image = obs_item->intensityImage;
 
-			sensor_id = findItemIndexIn(m_sync_model->getSensorLabels(), obs_item->sensorLabel);
+			sensor_id = cutils::findItemIndexIn(m_sync_model->getSensorLabels(), obs_item->sensorLabel);
 			viewer_id = sensor_id;
 			viewer_text = (m_sync_model->data(index.parent())).toString().toStdString() + " : " + obs_item->sensorLabel;
 
@@ -360,7 +407,7 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 
 				image = obs_item->intensityImage;
 
-				sensor_id = findItemIndexIn(m_sync_model->getSensorLabels(), obs_item->sensorLabel);
+				sensor_id = cutils::findItemIndexIn(m_sync_model->getSensorLabels(), obs_item->sensorLabel);
 				viewer_id = sensor_id;
 				viewer_text = (m_sync_model->data(index)).toString().toStdString() + " : " + obs_item->sensorLabel;
 				update_stream << "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n";
@@ -368,9 +415,9 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 				m_ui->viewer_container->updateCloudViewer(viewer_id, cloud, viewer_text);
 				m_ui->viewer_container->updateImageViewer(viewer_id, image);
 
-				m_ui->viewer_container->updateSetCloudViewer(cloud, obs_item->sensorLabel,
-				                                             m_relative_transformations[sensor_id],
-				                                             (m_sync_model->data(index)).toString().toStdString() + " Overlapped");
+				//m_ui->viewer_container->updateSetCloudViewer(cloud, obs_item->sensorLabel,
+				//                                             m_relative_transformations[sensor_id],
+				//                                             (m_sync_model->data(index)).toString().toStdString() + " Overlapped");
 
 				if(m_calib_started && (m_calib_from_planes_gui != nullptr))
 				{	
@@ -380,6 +427,33 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 		}
     
 		m_ui->observations_description_textbrowser->setText(QString::fromStdString(update_stream.str()));
+	}
+}
+
+void CMainWindow::algosIndexChanged(int index)
+{
+	switch(index)
+	{
+	case 0:
+	{
+		if(m_config_widget)
+			m_config_widget.reset();
+		break;
+	}
+
+	case 1:
+	{
+		m_config_widget = std::make_shared<CCalibFromPlanesConfig>(m_config_file);
+		qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(3, m_config_widget.get());
+		break;
+	}
+
+	case 2:
+	{
+		m_config_widget = std::make_shared<CCalibFromLinesConfig>();
+		qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(3, m_config_widget.get());
+		break;
+	}
 	}
 }
 
@@ -405,6 +479,7 @@ void CMainWindow::runCalibFromPlanes(const TCalibFromPlanesParams &params)
 {
 	if(m_sync_model != nullptr && (m_sync_model->getRootItem()->childCount() > 0))
 	{
+		//params.init_calib = m_relative_transformations;
 		m_calib_from_lines_gui = nullptr;
 		m_calib_from_planes_gui = new CCalibFromPlanesGui(m_sync_model, params);
 		m_calib_from_planes_gui->addTextObserver(m_ui->viewer_container);
@@ -447,9 +522,4 @@ void CMainWindow::saveParams()
 	m_config_file.writeNow();
 
 	m_ui->status_bar->showMessage("Parameters saved!");
-}
-
-void CMainWindow::ontReceivingRt(const std::vector<Eigen::Matrix4f> &relative_transformations)
-{
-	m_relative_transformations = relative_transformations;
 }

@@ -44,13 +44,13 @@
    <property name="minimumSize">
     <size>
      <width>382</width>
-     <height>193</height>
+     <height>250</height>
     </size>
    </property>
    <property name="maximumSize">
     <size>
      <width>382</width>
-     <height>193</height>
+     <height>250</height>
     </size>
    </property>
    <property name="features">
@@ -77,18 +77,146 @@
       <number>9</number>
      </property>
      <item>
-      <layout class="QGridLayout" name="gridLayout">
-       <item row="0" column="0">
-        <widget class="QLabel" name="irx_label">
+      <layout class="QFormLayout" name="formLayout">
+       <item row="1" column="1">
+        <layout class="QHBoxLayout" name="rlog_file_group">
+         <item>
+          <widget class="QLineEdit" name="rlog_file_line_edit">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>1</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="readOnly">
+            <bool>false</bool>
+           </property>
+           <property name="cursorMoveStyle">
+            <enum>Qt::LogicalMoveStyle</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="rlog_file_select_button">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="rlog_file_label">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>1</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
-          <string>iRx:</string>
+          <string>Select Rawlog File: </string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="config_file_label">
+         <property name="text">
+          <string>Load Config File: </string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <layout class="QHBoxLayout" name="config_file_group">
+         <item>
+          <widget class="QLineEdit" name="config_file_line_edit">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>1</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="dragEnabled">
+            <bool>false</bool>
+           </property>
+           <property name="readOnly">
+            <bool>false</bool>
+           </property>
+           <property name="cursorMoveStyle">
+            <enum>Qt::LogicalMoveStyle</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="config_file_select_button">
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QPushButton" name="load_rlog_button">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Load Rawlog</string>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
+       </property>
+       <property name="flat">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="Line" name="line_3">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="sensor_cbox_group">
+       <item>
+        <widget class="QLabel" name="sensor_cbox_label">
+         <property name="text">
+          <string>Sensor:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="sensor_cbox">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QGridLayout" name="sensor_pose_group">
+       <item row="1" column="0">
+        <widget class="QLabel" name="itx_label">
+         <property name="text">
+          <string>iTx:</string>
          </property>
         </widget>
        </item>
        <item row="0" column="1">
         <widget class="QDoubleSpinBox" name="irx_sbox">
          <property name="enabled">
-          <bool>true</bool>
+          <bool>false</bool>
          </property>
          <property name="accessibleName">
           <string>irx</string>
@@ -104,78 +232,16 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="2">
-        <widget class="QLabel" name="iry_label">
-         <property name="text">
-          <string>iRy:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="3">
-        <widget class="QDoubleSpinBox" name="iry_sbox">
+       <item row="2" column="1">
+        <widget class="QDoubleSpinBox" name="med_sbox">
          <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="accessibleName">
-          <string>iry</string>
+          <bool>false</bool>
          </property>
          <property name="minimum">
-          <double>-359.990000000000009</double>
+          <double>-10.000000000000000</double>
          </property>
          <property name="maximum">
-          <double>359.990000000000009</double>
-         </property>
-         <property name="singleStep">
-          <double>0.500000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="4">
-        <widget class="QLabel" name="irz_label">
-         <property name="text">
-          <string>iRz:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="5">
-        <widget class="QDoubleSpinBox" name="irz_sbox">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="accessibleName">
-          <string>irz</string>
-         </property>
-         <property name="minimum">
-          <double>-359.990000000000009</double>
-         </property>
-         <property name="maximum">
-          <double>359.990000000000009</double>
-         </property>
-         <property name="singleStep">
-          <double>0.500000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="itx_label">
-         <property name="text">
-          <string>iTx:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QDoubleSpinBox" name="itx_sbox">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="accessibleName">
-          <string>itx</string>
-         </property>
-         <property name="minimum">
-          <double>-359.990000000000009</double>
-         </property>
-         <property name="maximum">
-          <double>359.990000000000009</double>
+          <double>10.000000000000000</double>
          </property>
          <property name="singleStep">
           <double>0.500000000000000</double>
@@ -189,39 +255,13 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="3">
-        <widget class="QDoubleSpinBox" name="ity_sbox">
+       <item row="0" column="5">
+        <widget class="QDoubleSpinBox" name="irz_sbox">
          <property name="enabled">
-          <bool>true</bool>
+          <bool>false</bool>
          </property>
          <property name="accessibleName">
-          <string>ity</string>
-         </property>
-         <property name="minimum">
-          <double>-359.990000000000009</double>
-         </property>
-         <property name="maximum">
-          <double>359.990000000000009</double>
-         </property>
-         <property name="singleStep">
-          <double>0.500000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="4">
-        <widget class="QLabel" name="itz_label">
-         <property name="text">
-          <string>iTz:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="5">
-        <widget class="QDoubleSpinBox" name="itz_sbox">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="accessibleName">
-          <string>itz</string>
+          <string>irz</string>
          </property>
          <property name="minimum">
           <double>-359.990000000000009</double>
@@ -241,37 +281,116 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="1">
-        <widget class="QDoubleSpinBox" name="med_sbox">
+       <item row="1" column="5">
+        <widget class="QDoubleSpinBox" name="itz_sbox">
          <property name="enabled">
-          <bool>true</bool>
+          <bool>false</bool>
+         </property>
+         <property name="accessibleName">
+          <string>itz</string>
          </property>
          <property name="minimum">
-          <double>-10.000000000000000</double>
+          <double>-359.990000000000009</double>
          </property>
          <property name="maximum">
-          <double>10.000000000000000</double>
+          <double>359.990000000000009</double>
          </property>
          <property name="singleStep">
           <double>0.500000000000000</double>
          </property>
         </widget>
        </item>
+       <item row="1" column="1">
+        <widget class="QDoubleSpinBox" name="itx_sbox">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="accessibleName">
+          <string>itx</string>
+         </property>
+         <property name="minimum">
+          <double>-359.990000000000009</double>
+         </property>
+         <property name="maximum">
+          <double>359.990000000000009</double>
+         </property>
+         <property name="singleStep">
+          <double>0.500000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="3">
+        <widget class="QDoubleSpinBox" name="iry_sbox">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="accessibleName">
+          <string>iry</string>
+         </property>
+         <property name="minimum">
+          <double>-359.990000000000009</double>
+         </property>
+         <property name="maximum">
+          <double>359.990000000000009</double>
+         </property>
+         <property name="singleStep">
+          <double>0.500000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <widget class="QLabel" name="iry_label">
+         <property name="text">
+          <string>iRy:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="4">
+        <widget class="QLabel" name="itz_label">
+         <property name="text">
+          <string>iTz:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="3">
+        <widget class="QDoubleSpinBox" name="ity_sbox">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="accessibleName">
+          <string>ity</string>
+         </property>
+         <property name="minimum">
+          <double>-359.990000000000009</double>
+         </property>
+         <property name="maximum">
+          <double>359.990000000000009</double>
+         </property>
+         <property name="singleStep">
+          <double>0.500000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="4">
+        <widget class="QLabel" name="irz_label">
+         <property name="text">
+          <string>iRz:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="irx_label">
+         <property name="text">
+          <string>iRx:</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </item>
      <item>
-      <widget class="QPushButton" name="load_rlog_button">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="text">
-        <string>Load Rawlog</string>
-       </property>
-       <property name="autoDefault">
-        <bool>false</bool>
-       </property>
-       <property name="flat">
-        <bool>false</bool>
+      <widget class="Line" name="line_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
        </property>
       </widget>
      </item>
@@ -300,7 +419,7 @@
       <number>9</number>
      </property>
      <property name="rightMargin">
-      <number>21</number>
+      <number>9</number>
      </property>
      <item>
       <widget class="QSplitter" name="splitter">

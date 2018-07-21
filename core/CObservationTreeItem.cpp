@@ -1,4 +1,5 @@
 #include "CObservationTreeItem.h"
+#include <algorithm>
 
 using namespace mrpt::obs;
 

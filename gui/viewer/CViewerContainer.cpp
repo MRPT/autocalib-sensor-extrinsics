@@ -119,15 +119,15 @@ void CViewerContainer::onReceivingPlanes(const int &viewer_id, const std::vector
 		        planes[i].v3center[1] + (0.5f * planes[i].v3normal[1]),
 		        planes[i].v3center[2] + (0.5f * planes[i].v3normal[2]));
 
-		m_viewers[viewer_id]->addArrow(pt2, pt1, 0.5 * viz_colors::red[i%10] / 255, viz_colors::grn[i%10] / 255, viz_colors::blu[i%10] / 255, false, plane_id);
-		m_viewers[viewer_id]->addPolygon<pcl::PointXYZRGBA>(planes[i].ConvexHullPtr, viz_colors::red[i%10], viz_colors::grn[i%10], viz_colors::blu[i%10], polygon_id);
+		m_viewers[viewer_id]->addArrow(pt2, pt1, 0.5 * cutils::colors::red[i%10] / 255, cutils::colors::grn[i%10] / 255, cutils::colors::blu[i%10] / 255, false, plane_id);
+		m_viewers[viewer_id]->addPolygon<pcl::PointXYZRGBA>(planes[i].ConvexHullPtr, cutils::colors::red[i%10], cutils::colors::grn[i%10], cutils::colors::blu[i%10], polygon_id);
 
 		size_t indices_size = planes[i].v_hull_indices.size();
 		for(size_t j = 0; j < indices_size; j++)
 		{
 			cv::line(img, cv::Point(planes[i].v_hull_indices[j]%width, planes[i].v_hull_indices[j]/width),
 			         cv::Point(planes[i].v_hull_indices[(j+1)%indices_size]%width, planes[i].v_hull_indices[(j+1)%indices_size]/width),
-			         cv::Scalar(viz_colors::blu[i%10], viz_colors::grn[i%10], viz_colors::red[i%10]), 3);
+			         cv::Scalar(cutils::colors::blu[i%10], cutils::colors::grn[i%10], cutils::colors::red[i%10]), 3);
 		}
 
 		if(i == planes.size())

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Eigen/Dense>
+#include <Eigen/Core>
 
 /**
  * @brief Observer (listener) that receives the estimated relative transformations from the GUI calib wrapper classes.

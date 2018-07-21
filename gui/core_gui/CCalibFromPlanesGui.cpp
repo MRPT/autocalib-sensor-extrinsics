@@ -52,7 +52,7 @@ void CCalibFromPlanesGui::publishPlanes(const int &sensor_id, const int &obs_id)
 	CObservationTreeItem *root_item;
 	root_item = m_sync_model->getRootItem();
 
-	int sync_obs_id = findItemIndexIn(m_sync_model->getSyncIndices()[sensor_id], obs_id);
+	int sync_obs_id = cutils::findItemIndexIn(m_sync_model->getSyncIndices()[sensor_id], obs_id);
 
 	std::vector<CPlaneCHull> planes;
 	planes = vvv_planes[sensor_id][sync_obs_id];
@@ -133,8 +133,6 @@ void CCalibFromPlanesGui::extractPlanes()
 	}
 }
 
-void CCalibFromPlanesGui::proceed()
+void CCalibFromPlanesGui::matchPlanes()
 {
-	//calib.findPotentialMatches(calib.vvv_planes[i], i);
-	//calib.computeCalibration_rot(ExtrinsicCalib::m_init_calib);
 }

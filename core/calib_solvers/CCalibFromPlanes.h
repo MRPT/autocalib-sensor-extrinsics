@@ -15,27 +15,28 @@
 //#include <mrpt/pbmap/Miscellaneous.h>
 #include <map>
 
-/*! Exploit 3D plane observations from set a of sensors to perform extrinsic calibration.
+/** Exploit 3D plane observations from a set of sensors to perform extrinsic calibration.
  *  Plane correspondences are analogous to the control points used to create panoramic images with a regular camera).
  *  It allows to estimate the extrinsic calibration between RGB-D sensors like Asus XPL.
- *
  */
 //template <int num_sensors, typename Scalar = double>
 class CCalibFromPlanes : public CExtrinsicCalib//<num_sensors, Scalar>
 {
   public:
 
-	/*! The back-projected clouds from the observations, index levels : [sensor_id][obs_id] */
-	std::vector<std::vector< pcl::PointCloud<pcl::PointXYZRGBA>::Ptr > > vv_clouds;
+	/** The back-projected clouds from the observations, index levels : [sensor_id][obs_id] */
+	std::vector<std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr>> vv_clouds;
 
-    /*! The segmented planes, the vector indexes to access them are [sensor_id][obs_id][plane_id] */
-	std::vector< std::vector< std::vector< CPlaneCHull > > > vvv_planes;
+	/** The segmented planes, the vector indexes to access them are [sensor_id][obs_id][plane_id] */
+	std::vector<std::vector<std::vector<CPlaneCHull>>> vvv_planes;
 
-    /*! The plane correspondences between the different sensors. The map indexes correspond to the sensor IDs,
-     * each matrix as as many rows as potential plane correspondences, with 4 columns for: obs_id1, plane_id1, obs_id2, plane_id2. */
-    std::map<size_t, std::map<size_t, std::vector< std::array<size_t,4> > > > mmv_plane_corresp;
+	/** The plane correspondences between the different sensors, the levels are [obs_set_id][corresp_id][sensor_id].
+	 * The correspondences are grouped by which observation (synced) set they belong to. Each correspondence holds
+	 * the plane_id for each sensor.
+	 */
+	std::vector<std::vector<std::vector<size_t>>> vvv_plane_corresp;
 
-    /*! Covariance matrices */
+	/*! Covariance matrices */
     std::vector< Eigen::Matrix<Scalar,3,3>, Eigen::aligned_allocator<Eigen::Matrix<Scalar,3,3> > > covariance_rot;
     std::vector< Eigen::Matrix<Scalar,3,3>, Eigen::aligned_allocator<Eigen::Matrix<Scalar,3,3> > > m_covariance_trans;
 
@@ -45,11 +46,13 @@ class CCalibFromPlanes : public CExtrinsicCalib//<num_sensors, Scalar>
     /*! Destructor */
 	virtual ~CCalibFromPlanes(){}
 
-	void segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr & cloud, const TPlaneSegmentationParams & params, std::vector<CPlaneCHull> & planes);
+	void segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const TPlaneSegmentationParams &params, std::vector<CPlaneCHull> &planes);
 
-    /** Search for potentail plane Matches.
-        \param plane_obs  */
-	void findPotentialMatches(const std::vector< std::vector< CPlaneCHull > > & plane_obs, size_t obs_id);
+	/**
+	 * Search for potential plane matches.
+	 * \param vv_planes planes belonging to each observation in the received synchronized set.
+	 */
+	void findPotentialMatches(const std::vector<std::vector<CPlaneCHull>> &vv_planes);
 
     /** Calculate the residual error of the correspondences.
         \param sensor_poses relative poses of the sensors

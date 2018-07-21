@@ -1,5 +1,8 @@
 #pragma once
 
+#include <vector>
+#include <Eigen/Core>
+
 struct TPlaneSegmentationParams
 {
 	//params for integral normal estimation
@@ -17,5 +20,6 @@ struct TPlaneSegmentationParams
 
 struct TCalibFromPlanesParams
 {
+	std::vector<Eigen::Matrix4f> init_calib;
 	TPlaneSegmentationParams seg;
 };

@@ -2,7 +2,6 @@
 
 #include <mrpt/obs/CObservation.h>
 #include <mrpt/system/datetime.h>
-#include <mrpt/obs/CObservation3DRangeScan.h>
 
 /**
  * Defines the type of each item that

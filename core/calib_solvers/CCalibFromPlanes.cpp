@@ -20,20 +20,9 @@
 #include <pcl/features/integral_image_normal.h>
 #include <pcl/filters/extract_indices.h>
 
-//using namespace SegmentPlanes;
 using namespace std;
 
-//template <int num_sensors, typename Scalar>
-//CCalibFromPlanes<num_sensors,Scalar>::CCalibFromPlanes()
-CCalibFromPlanes::CCalibFromPlanes(size_t n_sensors) : CExtrinsicCalib(n_sensors)
-{
-    for(size_t sensor_id1=0; sensor_id1 < num_sensors; sensor_id1++)
-    {
-        mmv_plane_corresp[sensor_id1] = std::map<size_t, std::vector< std::array<size_t,4> > >();
-        for(size_t sensor_id2=sensor_id1+1; sensor_id2 < num_sensors; sensor_id2++)
-            mmv_plane_corresp[sensor_id1][sensor_id2] = std::vector< std::array<size_t,4> >();
-    }
-}
+CCalibFromPlanes::CCalibFromPlanes(size_t n_sensors) : CExtrinsicCalib(n_sensors){}
 
 void CCalibFromPlanes::segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const TPlaneSegmentationParams & params, std::vector<CPlaneCHull> & planes)
 {
@@ -148,48 +137,68 @@ void CCalibFromPlanes::segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::P
 
 }
 
-void CCalibFromPlanes::findPotentialMatches(const std::vector< std::vector< CPlaneCHull > > & plane_obs, size_t obs_id)
+void CCalibFromPlanes::findPotentialMatches(const std::vector<std::vector<CPlaneCHull>> &vv_planes)
 {
-    for (size_t i = 0; i < plane_obs.size()-1; ++i)     // Sensor i
-        for (size_t j = i+1; j < plane_obs.size(); ++j) // Sensor j
-            for (size_t ii = 0; ii < plane_obs[i].size(); ++ii)
-                for (size_t jj = 0; jj < plane_obs[j].size(); ++jj)
-                {
-					Eigen::Vector3f n_ii = CExtrinsicCalib::m_init_calib[i].block(0,0,3,3)*plane_obs[i][ii].v3normal;
-					Eigen::Vector3f n_jj = CExtrinsicCalib::m_init_calib[j].block(0,0,3,3)*plane_obs[j][jj].v3normal;
-                    if( n_ii.dot(n_jj) > 0.9 ) // TODO, define constraint threshold in a config file, and allow user interaction
-                    {
-                        std::array<size_t,4> potential_match{obs_id, obs_id, ii, jj};
-                        mmv_plane_corresp[i][j].push_back(potential_match);
-                    }
-                }
+//	std::vector<std::vector<size_t>> correspondences;
+
+//	//find the sensor with smallest number of planes
+//	size_t min = 0;
+//	size_t min_sensor_id;
+
+//	for(size_t i = 0; i < vv_planes.size(); i++)
+//	{
+//		if(vv_planes[i].size() <= min)
+//		{
+//			min = vv_planes.size();
+//			min_sensor_id = i;
+//		}
+//	}
+
+//	for(size_t i = 0; i < vv_planes[min_sensor_id].size(); i++)
+//	{
+//		Eigen::Vector3f n1 = CExtrinsicCalib::m_init_calib[i].block(0,0,3,3) * vv_planes[min_sensor_id][i].v3normal;
+//	}
+
+//	for (size_t i = 0; i < plane_obs.size()-1; ++i)     // Sensor i
+//        for (size_t j = i+1; j < plane_obs.size(); ++j) // Sensor j
+//            for (size_t ii = 0; ii < plane_obs[i].size(); ++ii)
+//                for (size_t jj = 0; jj < plane_obs[j].size(); ++jj)
+//                {
+//					Eigen::Vector3f n_ii = CExtrinsicCalib::m_init_calib[i].block(0,0,3,3)*plane_obs[i][ii].v3normal;
+//					Eigen::Vector3f n_jj = CExtrinsicCalib::m_init_calib[j].block(0,0,3,3)*plane_obs[j][jj].v3normal;
+//                    if( n_ii.dot(n_jj) > 0.9 ) // TODO, define constraint threshold in a config file, and allow user interaction
+//                    {
+//                        std::array<size_t,4> potential_match{obs_id, obs_id, ii, jj};
+//                        mmv_plane_corresp[i][j].push_back(potential_match);
+//                    }
+//                }
 }
 
 Scalar CCalibFromPlanes::computeCalibResidual_rot(const std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > & sensor_poses)
 {
-    Scalar sum_squared_error = 0.; // Accumulated squared error for all plane correspondences
-    for(std::map<size_t, std::map<size_t, std::vector< std::array<size_t,4> > > >::iterator it_sensor_i = mmv_plane_corresp.begin();
-        it_sensor_i != mmv_plane_corresp.end(); it_sensor_i++)
-    {
-        size_t sensor_i = it_sensor_i->first;
-        for(std::map<size_t, std::vector< std::array<size_t,4> > >::iterator it_sensor_j = it_sensor_i->second.begin();
-            it_sensor_j != it_sensor_i->second.end(); it_sensor_j++)
-        {
-            size_t sensor_j = it_sensor_j->first;
-            std::vector< std::array<size_t,4> > & correspondences = it_sensor_j->second;
-            for(size_t i=0; i < correspondences.size(); i++) // For every potential match
-            {
-                size_t frame_id = correspondences[i][0];
-                Eigen::Vector3f n_obs_i = vvv_planes[frame_id][sensor_i][correspondences[i][2]].v3normal;
-                Eigen::Vector3f n_obs_j = vvv_planes[frame_id][sensor_j][correspondences[i][3]].v3normal;
-                Eigen::Vector3f n_i = sensor_poses[sensor_i].block(0,0,3,3) * n_obs_i;
-                Eigen::Vector3f n_j = sensor_poses[sensor_j].block(0,0,3,3) * n_obs_j;
-                Eigen::Vector3f rot_error = (n_i - n_j);
-                sum_squared_error += rot_error.dot(rot_error);
-            }
-        }
-    }
-    return sum_squared_error;
+//    Scalar sum_squared_error = 0.; // Accumulated squared error for all plane correspondences
+//    for(std::map<size_t, std::map<size_t, std::vector< std::array<size_t,4> > > >::iterator it_sensor_i = mmv_plane_corresp.begin();
+//        it_sensor_i != mmv_plane_corresp.end(); it_sensor_i++)
+//    {
+//        size_t sensor_i = it_sensor_i->first;
+//        for(std::map<size_t, std::vector< std::array<size_t,4> > >::iterator it_sensor_j = it_sensor_i->second.begin();
+//            it_sensor_j != it_sensor_i->second.end(); it_sensor_j++)
+//        {
+//            size_t sensor_j = it_sensor_j->first;
+//            std::vector< std::array<size_t,4> > & correspondences = it_sensor_j->second;
+//            for(size_t i=0; i < correspondences.size(); i++) // For every potential match
+//            {
+//                size_t frame_id = correspondences[i][0];
+//                Eigen::Vector3f n_obs_i = vvv_planes[frame_id][sensor_i][correspondences[i][2]].v3normal;
+//                Eigen::Vector3f n_obs_j = vvv_planes[frame_id][sensor_j][correspondences[i][3]].v3normal;
+//                Eigen::Vector3f n_i = sensor_poses[sensor_i].block(0,0,3,3) * n_obs_i;
+//                Eigen::Vector3f n_j = sensor_poses[sensor_j].block(0,0,3,3) * n_obs_j;
+//                Eigen::Vector3f rot_error = (n_i - n_j);
+//                sum_squared_error += rot_error.dot(rot_error);
+//            }
+//        }
+//    }
+//    return sum_squared_error;
 }
 
 Scalar CCalibFromPlanes::computeCalibration_rot(const std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > & sensor_poses)
@@ -220,47 +229,47 @@ Scalar CCalibFromPlanes::computeCalibration_rot(const std::vector<mrpt::math::CM
         av_angle_error = 0.0;
         numPlaneCorresp = 0;
 
-        for(std::map<size_t, std::map<size_t, std::vector< std::array<size_t,4> > > >::iterator it_sensor_i = mmv_plane_corresp.begin();
-            it_sensor_i != mmv_plane_corresp.end(); it_sensor_i++)
-        {
-            size_t sensor_i = it_sensor_i->first;
-            for(std::map<size_t, std::vector< std::array<size_t,4> > >::iterator it_sensor_j = it_sensor_i->second.begin();
-                it_sensor_j != it_sensor_i->second.end(); it_sensor_j++)
-            {
-                size_t sensor_j = it_sensor_j->first;
-                int pos_sensor_i = 3*(sensor_i - 1);
-                int pos_sensor_j = 3*(sensor_j - 1);
-                std::vector< std::array<size_t,4> > & correspondences = it_sensor_j->second;
-                for(size_t i=0; i < correspondences.size(); i++) // For every potential match
-                {
-                    size_t frame_id = correspondences[i][0];
-                    Eigen::Vector3f n_obs_i = vvv_planes[frame_id][sensor_i][correspondences[i][2]].v3normal;
-                    Eigen::Vector3f n_obs_j = vvv_planes[frame_id][sensor_j][correspondences[i][3]].v3normal;
-                    Eigen::Vector3f n_i = sensor_poses[sensor_i].block(0,0,3,3) * n_obs_i;
-                    Eigen::Vector3f n_j = sensor_poses[sensor_j].block(0,0,3,3) * n_obs_j;
-                    jacobian_rot_i = -skew(n_i);
-                    jacobian_rot_j = skew(n_j);
-                    Eigen::Vector3f rot_error = (n_i - n_j);
-                    accum_error2 += rot_error.dot(rot_error);
-                    av_angle_error += acos(n_i.dot(n_j));
-                    numPlaneCorresp++;
+//        for(std::map<size_t, std::map<size_t, std::vector< std::array<size_t,4> > > >::iterator it_sensor_i = mmv_plane_corresp.begin();
+//            it_sensor_i != mmv_plane_corresp.end(); it_sensor_i++)
+//        {
+//            size_t sensor_i = it_sensor_i->first;
+//            for(std::map<size_t, std::vector< std::array<size_t,4> > >::iterator it_sensor_j = it_sensor_i->second.begin();
+//                it_sensor_j != it_sensor_i->second.end(); it_sensor_j++)
+//            {
+//                size_t sensor_j = it_sensor_j->first;
+//                int pos_sensor_i = 3*(sensor_i - 1);
+//                int pos_sensor_j = 3*(sensor_j - 1);
+//                std::vector< std::array<size_t,4> > & correspondences = it_sensor_j->second;
+//                for(size_t i=0; i < correspondences.size(); i++) // For every potential match
+//                {
+//                    size_t frame_id = correspondences[i][0];
+//                    Eigen::Vector3f n_obs_i = vvv_planes[frame_id][sensor_i][correspondences[i][2]].v3normal;
+//                    Eigen::Vector3f n_obs_j = vvv_planes[frame_id][sensor_j][correspondences[i][3]].v3normal;
+//                    Eigen::Vector3f n_i = sensor_poses[sensor_i].block(0,0,3,3) * n_obs_i;
+//                    Eigen::Vector3f n_j = sensor_poses[sensor_j].block(0,0,3,3) * n_obs_j;
+//                    jacobian_rot_i = -skew(n_i);
+//                    jacobian_rot_j = skew(n_j);
+//                    Eigen::Vector3f rot_error = (n_i - n_j);
+//                    accum_error2 += rot_error.dot(rot_error);
+//                    av_angle_error += acos(n_i.dot(n_j));
+//                    numPlaneCorresp++;
 
-                    if(sensor_i != 0) // The pose of the first camera is fixed
-                    {
-                        hessian.block(pos_sensor_i, pos_sensor_i, 3, 3) += jacobian_rot_i.transpose() * jacobian_rot_i;
-                        gradient.block(pos_sensor_i,0,3,1) += jacobian_rot_i.transpose() * rot_error;
+//                    if(sensor_i != 0) // The pose of the first camera is fixed
+//                    {
+//                        hessian.block(pos_sensor_i, pos_sensor_i, 3, 3) += jacobian_rot_i.transpose() * jacobian_rot_i;
+//                        gradient.block(pos_sensor_i,0,3,1) += jacobian_rot_i.transpose() * rot_error;
 
-                        // Cross term
-                        hessian.block(pos_sensor_i, pos_sensor_j, 3, 3) += jacobian_rot_i.transpose() * jacobian_rot_j;
-                    }
-                    hessian.block(pos_sensor_j, pos_sensor_j, 3, 3) += jacobian_rot_j.transpose() * jacobian_rot_j;
-                    gradient.block(pos_sensor_j,0,3,1) += jacobian_rot_j.transpose() * rot_error;
-                }
+//                        // Cross term
+//                        hessian.block(pos_sensor_i, pos_sensor_j, 3, 3) += jacobian_rot_i.transpose() * jacobian_rot_j;
+//                    }
+//                    hessian.block(pos_sensor_j, pos_sensor_j, 3, 3) += jacobian_rot_j.transpose() * jacobian_rot_j;
+//                    gradient.block(pos_sensor_j,0,3,1) += jacobian_rot_j.transpose() * rot_error;
+//                }
 
-                if(sensor_i != 0) // Fill the lower left triangle with the corresponding cross terms
-                    hessian.block(pos_sensor_j, pos_sensor_i, 3, 3) = hessian.block(pos_sensor_i, pos_sensor_j, 3, 3).transpose();
-            }
-        }
+//                if(sensor_i != 0) // Fill the lower left triangle with the corresponding cross terms
+//                    hessian.block(pos_sensor_j, pos_sensor_i, 3, 3) = hessian.block(pos_sensor_i, pos_sensor_j, 3, 3).transpose();
+//            }
+//        }
 
         //cout << "hessian \n" << hessian << endl;
         //cout << "gradient \n" << gradient.transpose() << endl;

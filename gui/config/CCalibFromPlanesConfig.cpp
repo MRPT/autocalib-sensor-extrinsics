@@ -1,6 +1,6 @@
+#include <CMainWindow.h>
 #include <config/CCalibFromPlanesConfig.h>
 #include <ui_CCalibFromPlanesConfig.h>
-#include <CMainWindow.h>
 
 CCalibFromPlanesConfig::CCalibFromPlanesConfig(mrpt::config::CConfigFile &config_file, QWidget *parent) :
 	QWidget(parent),
