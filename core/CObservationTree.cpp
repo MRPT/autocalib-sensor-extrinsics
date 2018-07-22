@@ -8,9 +8,11 @@ using namespace mrpt::io;
 using namespace mrpt::serialization;
 using namespace mrpt::obs;
 
-CObservationTree::CObservationTree()
+CObservationTree::CObservationTree(const std::string &rawlog_path, const mrpt::config::CConfigFile &config_file)
 {
 	m_rootitem = new CObservationTreeItem("root");
+	m_rawlog_path = rawlog_path;
+	m_config_file = config_file;
 	m_synced = false;
 }
 
@@ -19,11 +21,9 @@ CObservationTree::~CObservationTree()
 	delete m_rootitem;
 }
 
-void CObservationTree::loadTree(const std::string &rawlog_filename, const mrpt::config::CConfigFile &config_file)
-{
-	m_rawlog_filename = rawlog_filename;
-
-	CFileGZInputStream rawlog(m_rawlog_filename);
+void CObservationTree::loadTree()
+{	
+	CFileGZInputStream rawlog(m_rawlog_path);
 	CSerializable::Ptr obj;
 
 	bool read = true;
@@ -72,7 +72,7 @@ void CObservationTree::loadTree(const std::string &rawlog_filename, const mrpt::
 	Eigen::Matrix4f rt;
 	for(size_t i = 0; i < m_sensor_labels.size(); i++)
 	{
-		config_file.read_matrix("initial_calibration", m_sensor_labels[i], rt, Eigen::Matrix4f(), true);
+		m_config_file.read_matrix("initial_calibration", m_sensor_labels[i], rt, Eigen::Matrix4f(), true);
 		m_sensor_poses.push_back(rt);
 	}
 }
@@ -189,6 +189,18 @@ void CObservationTree::syncObservations(const std::vector<std::string> &selected
 	m_sensor_labels = selected_sensor_labels;
 	m_synced = true;
 	m_sync_offset = max_delay;
+
+	Eigen::Matrix4f rt;
+	for(size_t i = 0; i < m_sensor_labels.size(); i++)
+	{
+		m_config_file.read_matrix("initial_calibration", m_sensor_labels[i], rt, Eigen::Matrix4f(), true);
+		m_sensor_poses.push_back(rt);
+	}
+}
+
+std::string CObservationTree::getRawlogPath() const
+{
+	return this->m_rawlog_path;
 }
 
 CObservationTreeItem *CObservationTree::getRootItem() const
@@ -225,6 +237,14 @@ std::vector<int> CObservationTree::getCountOfLabel() const
 std::vector<Eigen::Matrix4f> CObservationTree::getSensorPoses() const
 {
 	return this->m_sensor_poses;
+}
+
+bool CObservationTree::setSensorPoses(const std::vector<Eigen::Matrix4f> &sensor_poses)
+{
+	if(sensor_poses.size() != this->m_sensor_labels.size())
+		return 0;
+	else
+		this->m_sensor_poses = sensor_poses;
 }
 
 std::vector<std::vector<int>> CObservationTree::getSyncIndices() const

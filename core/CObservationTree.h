@@ -16,14 +16,29 @@
 class CObservationTree
 {
     public:
-	    CObservationTree();
+
+	    /**
+		 * \brief Constructor
+		 * \param rawlog_path the path of the rawlog file to load observations from.
+		 * \param config_file the master app configuration file.
+		 */
+	    CObservationTree(const std::string &rawlog_path, const mrpt::config::CConfigFile &config_file);
+
+		/**
+		 * \brief Destructor
+		 */
 		~CObservationTree();
 
 		/**
 		 * \brief loadTree loads the contents of the rawlog into the tree.
 		 * \param rawlog_filename the rawlog file.
 		 */
-		void loadTree(const std::string &rawlog_filename, const mrpt::config::CConfigFile &config_file);
+		void loadTree();
+
+		/**
+		 * \brief Returns the path of the rawlog file this model was loaded from.
+		 */
+		std::string getRawlogPath() const;
 
 		/**
 		 * Returns the root item of the tree.
@@ -48,6 +63,12 @@ class CObservationTree
 		/** Returns the poses of the sensors found in the rawlog. */
 		std::vector<Eigen::Matrix4f> getSensorPoses() const;
 
+		/** Sets the poses of the sensors found in the rawlog.
+		 * \param the new sensor poses (size should match the number of sensors in the model).
+		 * \return true or false depending on whether the poses were set.
+		 */
+		bool setSensorPoses(const std::vector<Eigen::Matrix4f> &sensor_poses);
+
 		/** Groups observations together based on their time stamp proximity.
 		 * Stores the results back in the same tree.
 		 * \param the labels of the sensors that are to be considered for grouping.
@@ -62,7 +83,9 @@ class CObservationTree
     protected:
 
 		/** The name of the file the rawlog was loaded from. */
-		std::string m_rawlog_filename;
+		std::string m_rawlog_path;
+
+		mrpt::config::CConfigFile m_config_file;
 
 		/** The root parent item from which all the other observations originate. */
 		CObservationTreeItem *m_rootitem;

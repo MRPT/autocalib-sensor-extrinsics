@@ -12,8 +12,9 @@ using namespace mrpt::serialization;
 using namespace mrpt::obs;
 using namespace mrpt::system;
 
-CObservationTreeGui::CObservationTreeGui(QObject *parent)
-    : QAbstractItemModel(parent)
+CObservationTreeGui::CObservationTreeGui(const std::string &rawlog_filename, const mrpt::config::CConfigFile &config_file, QObject *parent) :
+    QAbstractItemModel(parent),
+    CObservationTree(rawlog_filename, config_file)
 {
 }
 

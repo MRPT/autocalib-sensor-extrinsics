@@ -133,6 +133,10 @@ void CCalibFromPlanesGui::extractPlanes()
 	}
 }
 
-void CCalibFromPlanesGui::matchPlanes()
+void CCalibFromPlanesGui::matchPlanes(const TPlaneMatchingParams &match_params)
 {
+	m_params.match = match_params;
+	std::vector<Eigen::Matrix4f> sensor_poses = m_sync_model->getSensorPoses();
+
+	publishText("****Running plane matching algorithm****");
 }

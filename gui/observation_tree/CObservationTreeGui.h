@@ -18,7 +18,7 @@ class CObservationTreeGui : public QAbstractItemModel, public CObservationTree
 
 	public:
 
-	    CObservationTreeGui(QObject *parent = 0);
+	    CObservationTreeGui(const std::string &rawlog_filename, const mrpt::config::CConfigFile &config_file, QObject *parent = 0);
 	    ~CObservationTreeGui();
 
 		/** Add an observer (listener) to the list of observers that are to be notified with text updates.

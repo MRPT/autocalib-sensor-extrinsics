@@ -21,7 +21,7 @@ public:
 
 	/**
 	 * Constructor
-	 * \param model the rawlog model.
+	 * \param model the synced rawlog model.
 	 * \param sync_obs_indices indices of the grouped (synchronized) observations in the original model, per sensor.
 	 * \param params parameters for the algorithm.
 	 */
@@ -35,7 +35,7 @@ public:
 	void extractPlanes();
 
 	/** Runs plane matching. */
-	void matchPlanes();
+	void matchPlanes(const TPlaneMatchingParams &match_params);
 
 	/** Adds observer to list of text observers. */
 	void addTextObserver(CTextObserver *observer);

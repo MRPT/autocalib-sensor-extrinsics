@@ -156,11 +156,11 @@ void CMainWindow::loadRawlog()
 	CTicTac stop_watch;
 	double time_to_load;
 
-	m_model = new CObservationTreeGui(m_ui->observations_treeview);
+	m_model = new CObservationTreeGui(rlog_path.toStdString(), m_config_file, m_ui->observations_treeview);
 	m_model->addTextObserver(m_ui->viewer_container);
 
 	stop_watch.Tic();
-	m_model->loadTree(rlog_path.toStdString(), m_config_file);
+	m_model->loadTree();
 	time_to_load = stop_watch.Tac();
 
 	if((m_model->getRootItem()) != nullptr && m_model->getRootItem()->childCount() > 0)
@@ -231,18 +231,16 @@ void CMainWindow::loadRawlog()
 
 void CMainWindow::sensorIndexChanged(int index)
 {
-	Eigen::Matrix4f rt = m_model->getSensorPoses()[index];
-	Eigen::Matrix<float,3,1> rvec = cutils::getRotationVector(rt);
-	Eigen::Matrix<float,3,1> tvec = cutils::getTranslationVector(rt);
+//	Eigen::Matrix4f rt = m_model->getSensorPoses()[index];
+//	Eigen::Matrix<float,3,1> rvec = cutils::getRotationVector(rt);
+//	Eigen::Matrix<float,3,1> tvec = cutils::getTranslationVector(rt);
 
-	m_ui->irx_sbox->setValue(rvec(0,0));
-	m_ui->iry_sbox->setValue(rvec(1,0));
-	m_ui->irz_sbox->setValue(rvec(2,0));
-	m_ui->itx_sbox->setValue(tvec(0,0));
-	m_ui->itx_sbox->setValue(tvec(1,0));
-	m_ui->itx_sbox->setValue(tvec(2,0));
-
-	//std::cout << tvec;
+//	m_ui->irx_sbox->setValue(rvec(0,0));
+//	m_ui->iry_sbox->setValue(rvec(1,0));
+//	m_ui->irz_sbox->setValue(rvec(2,0));
+//	m_ui->itx_sbox->setValue(tvec(0,0));
+//	m_ui->itx_sbox->setValue(tvec(1,0));
+//	m_ui->itx_sbox->setValue(tvec(2,0));
 }
 
 void CMainWindow::syncObservationsClicked()
@@ -279,7 +277,7 @@ void CMainWindow::syncObservationsClicked()
 		}
 
 		// creating a copy of the model
-		m_sync_model = new CObservationTreeGui(m_ui->grouped_observations_treeview);
+		m_sync_model = new CObservationTreeGui(m_model->getRawlogPath(), m_config_file, m_ui->grouped_observations_treeview);
 
 		for(size_t i = 0; i < m_model->getRootItem()->childCount(); i++)
 		{
@@ -477,9 +475,8 @@ void CMainWindow::initCalibChanged(double value)
 
 void CMainWindow::runCalibFromPlanes(const TCalibFromPlanesParams &params)
 {
-	if(m_sync_model != nullptr && (m_sync_model->getRootItem()->childCount() > 0))
+	if(m_sync_model != nullptr && (m_sync_model->getRootItem()->childCount() > 0) && (!m_calib_started))
 	{
-		//params.init_calib = m_relative_transformations;
 		m_calib_from_lines_gui = nullptr;
 		m_calib_from_planes_gui = new CCalibFromPlanesGui(m_sync_model, params);
 		m_calib_from_planes_gui->addTextObserver(m_ui->viewer_container);
@@ -488,6 +485,11 @@ void CMainWindow::runCalibFromPlanes(const TCalibFromPlanesParams &params)
 		//std::thread thr(&CCalibFromPlanesGui::extractPlanes, m_calib_from_planes_gui);
 		//thr.detach();
 		m_calib_started = true;
+	}
+
+	else if(m_calib_started)
+	{
+		m_calib_from_planes_gui->matchPlanes(params.match);
 	}
 
 	else

@@ -18,8 +18,14 @@ struct TPlaneSegmentationParams
 	double max_curvature;
 };
 
+struct TPlaneMatchingParams
+{
+	double normals_dot_prod;
+	double dist_diff;
+};
+
 struct TCalibFromPlanesParams
 {
-	std::vector<Eigen::Matrix4f> init_calib;
 	TPlaneSegmentationParams seg;
+	TPlaneMatchingParams match;
 };

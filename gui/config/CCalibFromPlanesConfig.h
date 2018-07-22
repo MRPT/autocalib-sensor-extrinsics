@@ -37,5 +37,5 @@ private:
 	mrpt::config::CConfigFile m_config_file;
 
 	/** The parameters for calibration from planes. */
-	TCalibFromPlanesParams params;
+	TCalibFromPlanesParams m_params;
 };

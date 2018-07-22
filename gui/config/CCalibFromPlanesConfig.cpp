@@ -29,6 +29,8 @@ CCalibFromPlanesConfig::CCalibFromPlanesConfig(mrpt::config::CConfigFile &config
 	m_ui->distance_threshold_sbox->setValue(m_config_file.read_double("plane_segmentation", "distance_threshold", 0.05, true));
 	m_ui->minimum_threshold_sbox->setValue(m_config_file.read_double("plane_segmentation", "min_inliers_frac", 0.001, true));
 	m_ui->max_curvature_sbox->setValue(m_config_file.read_double("plane_segmentation", "max_curvature", 0.1, true));
+	m_ui->normals_dot_sbox->setValue(m_config_file.read_double("plane_matching", "normals_dot_product", 0.9, true));
+	m_ui->dist_diff_sbox->setValue(m_config_file.read_double("plane_matching", "plane_dist_diff", 0.2, true));
 
 	connect(m_ui->extract_planes_button, SIGNAL(clicked(bool)), this, SLOT(extractPlanes()));
 	connect(m_ui->match_planes_button, SIGNAL(clicked(bool)), this, SLOT(matchPlanes()));
@@ -48,26 +50,30 @@ CCalibFromPlanesConfig::~CCalibFromPlanesConfig()
 
 void CCalibFromPlanesConfig::extractPlanes()
 {
-	params.seg.normal_estimation_method = m_ui->ne_method_cbox->currentIndex();
-	params.seg.depth_dependent_smoothing = m_ui->depth_dependent_smoothing_check->isChecked();
-	params.seg.max_depth_change_factor = m_ui->max_depth_change_factor_sbox->value();
-	params.seg.normal_smoothing_size = m_ui->normal_smoothing_size_sbox->value();
-	params.seg.angle_threshold = m_ui->angle_threshold_sbox->value();
-	params.seg.dist_threshold = m_ui->distance_threshold_sbox->value();
-	params.seg.min_inliers_frac = m_ui->minimum_threshold_sbox->value();
-	params.seg.max_curvature = m_ui->max_curvature_sbox->value();
+	m_params.seg.normal_estimation_method = m_ui->ne_method_cbox->currentIndex();
+	m_params.seg.depth_dependent_smoothing = m_ui->depth_dependent_smoothing_check->isChecked();
+	m_params.seg.max_depth_change_factor = m_ui->max_depth_change_factor_sbox->value();
+	m_params.seg.normal_smoothing_size = m_ui->normal_smoothing_size_sbox->value();
+	m_params.seg.angle_threshold = m_ui->angle_threshold_sbox->value();
+	m_params.seg.dist_threshold = m_ui->distance_threshold_sbox->value();
+	m_params.seg.min_inliers_frac = m_ui->minimum_threshold_sbox->value();
+	m_params.seg.max_curvature = m_ui->max_curvature_sbox->value();
 
-	static_cast<CMainWindow*>(parentWidget()->parentWidget()->parentWidget())->runCalibFromPlanes(params);
+	static_cast<CMainWindow*>(parentWidget()->parentWidget()->parentWidget())->runCalibFromPlanes(m_params);
 	m_ui->match_planes_button->setDisabled(false);
 }
 
 void CCalibFromPlanesConfig::matchPlanes()
 {
+	m_params.match.normals_dot_prod = m_ui->normals_dot_sbox->value();
+	m_params.match.dist_diff = m_ui->dist_diff_sbox->value();
+
+	static_cast<CMainWindow*>(parentWidget()->parentWidget()->parentWidget())->runCalibFromPlanes(m_params);
+	m_ui->match_planes_button->setDisabled(false);
 }
 
 void CCalibFromPlanesConfig::calibrate()
 {
-
 }
 
 void CCalibFromPlanesConfig::saveCalib()
