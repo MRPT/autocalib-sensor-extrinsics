@@ -13,8 +13,6 @@
 //Scalar CExtrinsicCalib<num_sensors,Scalar>::eigenvalue_ratio_threshold = 2e-4;
 double CExtrinsicCalib::eigenvalue_ratio_threshold = 2e-4;
 
-std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > CExtrinsicCalib::m_init_calib = std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> >(2);
-
 //template <int num_sensors, typename Scalar>
 //CExtrinsicCalib<num_sensors,Scalar>::CExtrinsicCalib()
 //CExtrinsicCalib::CExtrinsicCalib(size_t n_sensors)

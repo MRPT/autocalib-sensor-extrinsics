@@ -22,7 +22,10 @@
 
 using namespace std;
 
-CCalibFromPlanes::CCalibFromPlanes(size_t n_sensors) : CExtrinsicCalib(n_sensors){}
+CCalibFromPlanes::CCalibFromPlanes(size_t n_sensors) :
+    CExtrinsicCalib(n_sensors)
+{
+}
 
 void CCalibFromPlanes::segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const TPlaneSegmentationParams & params, std::vector<CPlaneCHull> & planes)
 {
@@ -137,41 +140,65 @@ void CCalibFromPlanes::segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::P
 
 }
 
-void CCalibFromPlanes::findPotentialMatches(const std::vector<std::vector<CPlaneCHull>> &vv_planes)
+void CCalibFromPlanes::findPotentialMatches(const std::vector<std::vector<CPlaneCHull>> &vv_planes, const TPlaneMatchingParams &params, std::vector<std::vector<int>> &corresp_set)
 {
-//	std::vector<std::vector<size_t>> correspondences;
+	size_t min;
+	size_t min_sensor_id;
+	Eigen::Vector3f n1, n2;
+	Scalar d1, d2;
 
-//	//find the sensor with smallest number of planes
-//	size_t min = 0;
-//	size_t min_sensor_id;
+	Eigen::Matrix3f rot;
+	Eigen::Vector3f transl;
 
-//	for(size_t i = 0; i < vv_planes.size(); i++)
-//	{
-//		if(vv_planes[i].size() <= min)
-//		{
-//			min = vv_planes.size();
-//			min_sensor_id = i;
-//		}
-//	}
+	//find the sensor with the smallest number of planes
+	min = vv_planes[0].size();
+	min_sensor_id = 0;
 
-//	for(size_t i = 0; i < vv_planes[min_sensor_id].size(); i++)
-//	{
-//		Eigen::Vector3f n1 = CExtrinsicCalib::m_init_calib[i].block(0,0,3,3) * vv_planes[min_sensor_id][i].v3normal;
-//	}
+	for(size_t i = 1; i < vv_planes.size(); i++)
+	{
+		if(vv_planes[i].size() < min)
+		{
+			min = vv_planes.size();
+			min_sensor_id = i;
+		}
+	}
 
-//	for (size_t i = 0; i < plane_obs.size()-1; ++i)     // Sensor i
-//        for (size_t j = i+1; j < plane_obs.size(); ++j) // Sensor j
-//            for (size_t ii = 0; ii < plane_obs[i].size(); ++ii)
-//                for (size_t jj = 0; jj < plane_obs[j].size(); ++jj)
-//                {
-//					Eigen::Vector3f n_ii = CExtrinsicCalib::m_init_calib[i].block(0,0,3,3)*plane_obs[i][ii].v3normal;
-//					Eigen::Vector3f n_jj = CExtrinsicCalib::m_init_calib[j].block(0,0,3,3)*plane_obs[j][jj].v3normal;
-//                    if( n_ii.dot(n_jj) > 0.9 ) // TODO, define constraint threshold in a config file, and allow user interaction
-//                    {
-//                        std::array<size_t,4> potential_match{obs_id, obs_id, ii, jj};
-//                        mmv_plane_corresp[i][j].push_back(potential_match);
-//                    }
-//                }
+	std::vector<int> temp_corresp;
+
+	for(size_t i = 0; i < vv_planes[min_sensor_id].size(); i++)
+	{
+		rot = sensor_poses[min_sensor_id].block(0,0,3,3);
+		transl = sensor_poses[min_sensor_id].block(0,3,3,1);
+		n1 = rot * vv_planes[min_sensor_id][i].v3normal;
+		d1 = vv_planes[min_sensor_id][i].d - transl.dot(vv_planes[min_sensor_id][i].v3normal);
+
+		temp_corresp.resize(vv_planes.size(), -1);
+		temp_corresp[min_sensor_id] = i;
+
+		for(size_t j = 0; j < vv_planes.size(); j++)
+		{
+			if(j == min_sensor_id)
+				continue;
+
+			for(size_t k = 0; k < vv_planes[j].size(); k++)
+			{
+				rot = sensor_poses[j].block(0,0,3,3);
+				transl = sensor_poses[j].block(0,3,3,1);
+
+				n2 = rot * vv_planes[j][k].v3normal;
+				d2 = vv_planes[j][k].d - transl.dot(vv_planes[j][i].v3normal);
+				if((n1.dot(n2) >= params.normals_dot_prod) && abs(d1 - d2) <= params.dist_diff)
+				{
+					temp_corresp[j] = k;
+					break;
+				}
+			}
+		}
+
+		auto iter = std::find(temp_corresp.begin(), temp_corresp.end(), -1);
+		if(iter == temp_corresp.end())
+			corresp_set.push_back(temp_corresp);
+	}
 }
 
 Scalar CCalibFromPlanes::computeCalibResidual_rot(const std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > & sensor_poses)

@@ -69,7 +69,7 @@ class CObservationTreeItem
 		CObservationTreeItem *m_parentitem;
 
 		/** The index of the item with respect to the previous tree it was a part of, if any.
-		 * For example, the index with respect to the parent item in the tree before it was synchronized.
+		 * For example, the index with respect to the root item in the tree the item belonged to before it was synchronized.
 		 */
 		int m_prior_index;
 };

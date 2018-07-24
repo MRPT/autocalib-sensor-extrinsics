@@ -46,6 +46,8 @@ public:
 
     size_t num_sensors;
 
+	std::vector<Eigen::Matrix4f> sensor_poses;
+
     /** Sensor labels. */
     //std::array<std::string, num_sensors+1> sensor_labels;
     std::vector<std::string> sensor_labels;

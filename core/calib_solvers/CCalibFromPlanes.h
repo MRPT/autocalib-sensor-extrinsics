@@ -19,40 +19,52 @@
  *  Plane correspondences are analogous to the control points used to create panoramic images with a regular camera).
  *  It allows to estimate the extrinsic calibration between RGB-D sensors like Asus XPL.
  */
-//template <int num_sensors, typename Scalar = double>
-class CCalibFromPlanes : public CExtrinsicCalib//<num_sensors, Scalar>
+
+class CCalibFromPlanes : public CExtrinsicCalib
 {
   public:
 
-	/** The back-projected clouds from the observations, index levels : [sensor_id][obs_id] */
+	/** The back-projected clouds from the observations, index levels : [sensor_id][obs_id]
+	 * obs_id is with respect to the synchronized model.
+	 */
 	std::vector<std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr>> vv_clouds;
 
-	/** The segmented planes, the vector indexes to access them are [sensor_id][obs_id][plane_id] */
+	/** The segmented planes, the vector indices to access them are [sensor_id][obs_id][plane_id]
+	 * obs_id is with respect to the synchronized model.
+	 */
 	std::vector<std::vector<std::vector<CPlaneCHull>>> vvv_planes;
 
 	/** The plane correspondences between the different sensors, the levels are [obs_set_id][corresp_id][sensor_id].
 	 * The correspondences are grouped by which observation (synced) set they belong to. Each correspondence holds
 	 * the plane_id for each sensor.
 	 */
-	std::vector<std::vector<std::vector<size_t>>> vvv_plane_corresp;
+	std::vector<std::vector<std::vector<int>>> vvv_plane_corresp;
 
 	/*! Covariance matrices */
     std::vector< Eigen::Matrix<Scalar,3,3>, Eigen::aligned_allocator<Eigen::Matrix<Scalar,3,3> > > covariance_rot;
     std::vector< Eigen::Matrix<Scalar,3,3>, Eigen::aligned_allocator<Eigen::Matrix<Scalar,3,3> > > m_covariance_trans;
 
-    /*! Constructor */
+	/*! Constructor */
 	CCalibFromPlanes(size_t n_sensors = 2);
 
     /*! Destructor */
 	virtual ~CCalibFromPlanes(){}
 
+	/**
+	 * \brief Runs pcl's organized multi-plane segmentation over the given cloud.
+	 * @param cloud the input cloud.
+	 * @param params the parameters for segmentation.
+	 * @param planes the segmented planes.
+	 */
 	void segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const TPlaneSegmentationParams &params, std::vector<CPlaneCHull> &planes);
 
 	/**
 	 * Search for potential plane matches.
 	 * \param vv_planes planes belonging to each observation in the received synchronized set.
+	 * \params params the parameters for plane matching.
+	 * \params corresp_set the set of correspondences found in this synchronized set.
 	 */
-	void findPotentialMatches(const std::vector<std::vector<CPlaneCHull>> &vv_planes);
+	void findPotentialMatches(const std::vector<std::vector<CPlaneCHull>> &vv_planes, const TPlaneMatchingParams &params, std::vector<std::vector<int>> &corresp_set);
 
     /** Calculate the residual error of the correspondences.
         \param sensor_poses relative poses of the sensors

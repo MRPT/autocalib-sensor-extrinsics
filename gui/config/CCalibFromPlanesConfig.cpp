@@ -46,7 +46,7 @@ CCalibFromPlanesConfig::CCalibFromPlanesConfig(mrpt::config::CConfigFile &config
 CCalibFromPlanesConfig::~CCalibFromPlanesConfig()
 {
 	delete m_ui;
-}	
+}
 
 void CCalibFromPlanesConfig::extractPlanes()
 {
@@ -58,8 +58,9 @@ void CCalibFromPlanesConfig::extractPlanes()
 	m_params.seg.dist_threshold = m_ui->distance_threshold_sbox->value();
 	m_params.seg.min_inliers_frac = m_ui->minimum_threshold_sbox->value();
 	m_params.seg.max_curvature = m_ui->max_curvature_sbox->value();
+	m_params.calib_status = CalibrationStatus::YET_TO_START;
 
-	static_cast<CMainWindow*>(parentWidget()->parentWidget()->parentWidget())->runCalibFromPlanes(m_params);
+	static_cast<CMainWindow*>(parentWidget()->parentWidget()->parentWidget())->runCalibFromPlanes(&m_params);
 	m_ui->match_planes_button->setDisabled(false);
 }
 
@@ -68,8 +69,7 @@ void CCalibFromPlanesConfig::matchPlanes()
 	m_params.match.normals_dot_prod = m_ui->normals_dot_sbox->value();
 	m_params.match.dist_diff = m_ui->dist_diff_sbox->value();
 
-	static_cast<CMainWindow*>(parentWidget()->parentWidget()->parentWidget())->runCalibFromPlanes(m_params);
-	m_ui->match_planes_button->setDisabled(false);
+	static_cast<CMainWindow*>(parentWidget()->parentWidget()->parentWidget())->runCalibFromPlanes(&m_params);
 }
 
 void CCalibFromPlanesConfig::calibrate()

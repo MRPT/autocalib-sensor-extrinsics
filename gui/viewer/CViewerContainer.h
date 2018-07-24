@@ -41,10 +41,10 @@ public:
 	 * Update the result viewer with all the observations in a set, overlapped.
 	 * \param cloud the input cloud.
 	 * \param sensor_label the label of the sensor the cloud belongs to.
-	 * \param relative_transformation the relative pose of the sensor wrt the first sensor.
+	 * \param sensor_pose the relative pose of the sensor wrt the first sensor.
 	 * \param text to be displayed in the visualizer.
 	 */
-	void updateSetCloudViewer(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const std::string &sensor_label, const Eigen::Matrix4f &relative_transformation, const std::string &text);
+	void updateSetCloudViewer(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const std::string &sensor_label, const Eigen::Matrix4f &sensor_pose, const std::string &text);
 
 	/** Update the image viewer with an image.
 	 * \param viewer_id the id of the image viewer to be updated.

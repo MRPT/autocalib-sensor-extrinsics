@@ -47,7 +47,6 @@ CMainWindow::CMainWindow(QWidget *parent) :
 	connect(m_ui->itz_sbox, SIGNAL(valueChanged(double)), this, SLOT(initCalibChanged(double)));
 
 	setWindowTitle("Automatic Calibration of Sensor Extrinsics");
-	m_calib_started = false;
 	m_calib_from_planes_gui = nullptr;
 	m_calib_from_lines_gui = nullptr;
 	m_ui->viewer_container->updateText("Welcome to autocalib-sensor-extrinsics!");
@@ -362,64 +361,93 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 		int viewer_id, sensor_id;
 
 		CObservation3DRangeScan::Ptr obs_item;
-		size_t obs_id;
-		pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
+		size_t sync_obs_id;
 		mrpt::img::CImage image;
-
-		T3DPointsProjectionParams projection_params;
-		projection_params.MAKE_DENSE = false;
-		projection_params.MAKE_ORGANIZED = false;
 
 		//if single-item was clicked
 		if((index.parent()).isValid())
 		{
 			obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(m_sync_model->getItem(index)->getObservation());
 			obs_item->getDescriptionAsText(update_stream);
-			obs_item->project3DPointsFromDepthImageInto(*cloud, projection_params);
-			cloud->is_dense = false;
-
 			image = obs_item->intensityImage;
 
 			sensor_id = cutils::findItemIndexIn(m_sync_model->getSensorLabels(), obs_item->sensorLabel);
+			sync_obs_id = cutils::findItemIndexIn(m_sync_model->getSyncIndices()[sensor_id], item->getPriorIndex());
 			viewer_id = sensor_id;
 			viewer_text = (m_sync_model->data(index.parent())).toString().toStdString() + " : " + obs_item->sensorLabel;
-
-			m_ui->viewer_container->updateCloudViewer(viewer_id, cloud, viewer_text);
 			m_ui->viewer_container->updateImageViewer(viewer_id, image);
 
-			if(m_calib_started && (m_calib_from_planes_gui != nullptr))
+			if((m_calib_from_planes_gui!= nullptr) && m_calib_from_planes_gui->calibStatus() == CalibrationStatus::PLANES_EXTRACTED)
 			{
-				m_calib_from_planes_gui->publishPlanes(sensor_id, item->getPriorIndex());
+				m_ui->viewer_container->updateCloudViewer(viewer_id, m_calib_from_planes_gui->vv_clouds[sensor_id][sync_obs_id], viewer_text);
+				m_calib_from_planes_gui->publishPlanes(sensor_id, sync_obs_id);
+			}
+
+			else
+			{
+				T3DPointsProjectionParams projection_params;
+				projection_params.MAKE_DENSE = false;
+				projection_params.MAKE_ORGANIZED = false;
+
+				pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
+				obs_item->project3DPointsFromDepthImageInto(*cloud, projection_params);
+				cloud->is_dense = false;
+				m_ui->viewer_container->updateCloudViewer(viewer_id, cloud, viewer_text);
 			}
 		}
 
-		// else set-item was clicked
+		//else set-item was clicked
 		else
 		{
 			for(int i = 0; i < item->childCount(); i++)
 			{
 				obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(item->child(i)->getObservation());
 				obs_item->getDescriptionAsText(update_stream);
-				obs_item->project3DPointsFromDepthImageInto(*cloud, projection_params);
-				cloud->is_dense = false;
-
-				image = obs_item->intensityImage;
+				image = obs_item->intensityImage;	
 
 				sensor_id = cutils::findItemIndexIn(m_sync_model->getSensorLabels(), obs_item->sensorLabel);
+				sync_obs_id = cutils::findItemIndexIn(m_sync_model->getSyncIndices()[sensor_id], item->child(i)->getPriorIndex());
 				viewer_id = sensor_id;
 				viewer_text = (m_sync_model->data(index)).toString().toStdString() + " : " + obs_item->sensorLabel;
 				update_stream << "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n";
-
-				m_ui->viewer_container->updateCloudViewer(viewer_id, cloud, viewer_text);
 				m_ui->viewer_container->updateImageViewer(viewer_id, image);
 
-				//m_ui->viewer_container->updateSetCloudViewer(cloud, obs_item->sensorLabel,
-				//                                             m_relative_transformations[sensor_id],
-				//                                             (m_sync_model->data(index)).toString().toStdString() + " Overlapped");
+				m_ui->viewer_container->updateText(std::to_string(viewer_id) + " " + std::to_string(sync_obs_id));
 
-				if(m_calib_started && (m_calib_from_planes_gui != nullptr))
+				if((m_calib_from_planes_gui != nullptr) && m_calib_from_planes_gui->calibStatus() == CalibrationStatus::PLANES_EXTRACTED)
 				{	
-					m_calib_from_planes_gui->publishPlanes(sensor_id, item->child(i)->getPriorIndex());
+					m_ui->viewer_container->updateCloudViewer(viewer_id, m_calib_from_planes_gui->vv_clouds[sensor_id][sync_obs_id], viewer_text);
+					m_ui->viewer_container->updateSetCloudViewer(m_calib_from_planes_gui->vv_clouds[sensor_id][sync_obs_id], obs_item->sensorLabel,
+					                                             m_sync_model->getSensorPoses()[sensor_id],
+					                                             (m_sync_model->data(index)).toString().toStdString() + " Overlapped");
+
+					m_calib_from_planes_gui->publishPlanes(sensor_id, sync_obs_id);
+				}
+
+				else if((m_calib_from_planes_gui != nullptr) && m_calib_from_planes_gui->calibStatus() == CalibrationStatus::PLANES_MATCHED)
+				{
+					m_ui->viewer_container->updateCloudViewer(viewer_id, m_calib_from_planes_gui->vv_clouds[sensor_id][sync_obs_id], viewer_text);
+					m_ui->viewer_container->updateSetCloudViewer(m_calib_from_planes_gui->vv_clouds[sensor_id][sync_obs_id], obs_item->sensorLabel,
+					                                             m_sync_model->getSensorPoses()[sensor_id],
+					                                             (m_sync_model->data(index)).toString().toStdString() + " Overlapped");
+
+					m_calib_from_planes_gui->publishMatches(i, sensor_id);
+				}
+
+				else
+				{
+					T3DPointsProjectionParams projection_params;
+					projection_params.MAKE_DENSE = false;
+					projection_params.MAKE_ORGANIZED = false;
+
+					pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
+					obs_item->project3DPointsFromDepthImageInto(*cloud, projection_params);
+					cloud->is_dense = false;
+
+					m_ui->viewer_container->updateCloudViewer(viewer_id, cloud, viewer_text);
+					m_ui->viewer_container->updateSetCloudViewer(cloud, obs_item->sensorLabel,
+					                                             m_sync_model->getSensorPoses()[sensor_id],
+					                                             (m_sync_model->data(index)).toString().toStdString() + " Overlapped");
 				}
 			}
 		}
@@ -473,27 +501,35 @@ void CMainWindow::initCalibChanged(double value)
 		m_init_calib[5] = value;
 }
 
-void CMainWindow::runCalibFromPlanes(const TCalibFromPlanesParams &params)
+void CMainWindow::runCalibFromPlanes(TCalibFromPlanesParams *params)
 {
-	if(m_sync_model != nullptr && (m_sync_model->getRootItem()->childCount() > 0) && (!m_calib_started))
+	switch(params->calib_status)
 	{
-		m_calib_from_lines_gui = nullptr;
-		m_calib_from_planes_gui = new CCalibFromPlanesGui(m_sync_model, params);
-		m_calib_from_planes_gui->addTextObserver(m_ui->viewer_container);
-		m_calib_from_planes_gui->addPlanesObserver(m_ui->viewer_container);
-		m_calib_from_planes_gui->extractPlanes();
-		//std::thread thr(&CCalibFromPlanesGui::extractPlanes, m_calib_from_planes_gui);
-		//thr.detach();
-		m_calib_started = true;
+	case CalibrationStatus::YET_TO_START:
+	{
+		if(m_sync_model != nullptr && (m_sync_model->getRootItem()->childCount() > 0))
+		{
+			m_calib_from_lines_gui = nullptr;
+			m_calib_from_planes_gui = new CCalibFromPlanesGui(m_sync_model, params);
+			m_calib_from_planes_gui->addTextObserver(m_ui->viewer_container);
+			m_calib_from_planes_gui->addPlanesObserver(m_ui->viewer_container);
+			m_calib_from_planes_gui->extractPlanes();
+			//std::thread thr(&CCalibFromPlanesGui::extractPlanes, m_calib_from_planes_gui);
+			//thr.detach();
+		}
+
+		else
+			m_ui->viewer_container->updateText("No grouped observations available!");
+
+		break;
 	}
 
-	else if(m_calib_started)
+	case CalibrationStatus::PLANES_EXTRACTED:
 	{
-		m_calib_from_planes_gui->matchPlanes(params.match);
+		m_calib_from_planes_gui->matchPlanes();
+		break;
 	}
-
-	else
-		m_ui->viewer_container->updateText("No grouped observations available!");
+	}
 }
 
 void CMainWindow::runCalibFromLines()
@@ -503,7 +539,6 @@ void CMainWindow::runCalibFromLines()
 		m_calib_from_planes_gui = nullptr;
 		m_calib_from_lines_gui = new CCalibFromLinesGui(m_sync_model);
 		//m_line_matching->extractLines();
-		m_calib_started = true;
 	}
 
 	else

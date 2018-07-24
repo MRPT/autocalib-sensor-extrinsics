@@ -79,10 +79,9 @@ class CObservationTree
 		/** Returns the indices of the grouped observations with respect to the original tree. */
 		std::vector<std::vector<int>> getSyncIndices() const;
 
-
     protected:
 
-		/** The name of the file the rawlog was loaded from. */
+		/** The path of the file the rawlog was loaded from. */
 		std::string m_rawlog_path;
 
 		mrpt::config::CConfigFile m_config_file;

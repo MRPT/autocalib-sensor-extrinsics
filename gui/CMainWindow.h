@@ -29,7 +29,7 @@ public:
 	CObservationTreeGui* updatedRawlog();
 
 	/** Triggers the calibration from planes method. */
-	void runCalibFromPlanes(const TCalibFromPlanesParams &params);
+	void runCalibFromPlanes(TCalibFromPlanesParams *params);
 
 	/** Triggers the calibration from lines method. */
 	void runCalibFromLines();
@@ -94,7 +94,4 @@ private:
 
 	/** Object to interact with the calibration from lines gui class. */
 	CCalibFromLinesGui *m_calib_from_lines_gui;
-
-	/** Flag to indicate whether a calibration algorithm has started. */
-	bool m_calib_started;
 };

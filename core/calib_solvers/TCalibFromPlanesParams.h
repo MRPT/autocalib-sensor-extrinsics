@@ -24,8 +24,21 @@ struct TPlaneMatchingParams
 	double dist_diff;
 };
 
+/**
+ * Maintains the status of the calibration progress.
+ * This is useful when the calibration is run in steps and
+ * the results of each step are to be visualized.
+ */
+enum CalibrationStatus
+{
+	YET_TO_START,
+	PLANES_EXTRACTED,
+	PLANES_MATCHED
+};
+
 struct TCalibFromPlanesParams
 {
 	TPlaneSegmentationParams seg;
 	TPlaneMatchingParams match;
+	CalibrationStatus calib_status;
 };

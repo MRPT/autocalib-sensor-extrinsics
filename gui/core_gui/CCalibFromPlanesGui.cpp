@@ -18,11 +18,12 @@
 
 using namespace mrpt::obs;
 
-CCalibFromPlanesGui::CCalibFromPlanesGui(CObservationTreeGui *model, const TCalibFromPlanesParams &params) :
+CCalibFromPlanesGui::CCalibFromPlanesGui(CObservationTreeGui *model, TCalibFromPlanesParams *params) :
     CCalibFromPlanes(model->getSensorLabels().size())
 {
 	m_sync_model = model;
 	m_params = params;
+	sensor_poses = model->getSensorPoses();
 }
 
 CCalibFromPlanesGui::~CCalibFromPlanesGui()
@@ -47,20 +48,22 @@ void CCalibFromPlanesGui::publishText(const std::string &msg)
 	}
 }
 
-void CCalibFromPlanesGui::publishPlanes(const int &sensor_id, const int &obs_id)
+void CCalibFromPlanesGui::publishPlanes(const int &sensor_id, const int &sync_obs_id)
 {
-	CObservationTreeItem *root_item;
-	root_item = m_sync_model->getRootItem();
-
-	int sync_obs_id = cutils::findItemIndexIn(m_sync_model->getSyncIndices()[sensor_id], obs_id);
-
-	std::vector<CPlaneCHull> planes;
-	planes = vvv_planes[sensor_id][sync_obs_id];
-
 	for(CPlanesObserver *observer : m_planes_observers)
 	{
-		observer->onReceivingPlanes(sensor_id, planes);
+		observer->onReceivingPlanes(sensor_id, vvv_planes[sensor_id][sync_obs_id]);
 	}
+}
+
+void CCalibFromPlanesGui::publishMatches(const int &obs_set_id, const int &sensor_id)
+{
+
+}
+
+CalibrationStatus CCalibFromPlanesGui::calibStatus()
+{
+	return m_params->calib_status;
 }
 
 void CCalibFromPlanesGui::run()
@@ -112,9 +115,10 @@ void CCalibFromPlanesGui::extractPlanes()
 				if((obs_item->sensorLabel == selected_sensor_labels[i]) && (obs_item->timestamp != prev_ts))
 				{
 					obs_item->project3DPointsFromDepthImageInto(*cloud, projection_params);
+					cloud->is_dense = false;
 
 					plane_segment_start = pcl::getTime();
-					segmentPlanes(cloud, m_params.seg, segmented_planes);
+					segmentPlanes(cloud, m_params->seg, segmented_planes);
 					plane_segment_end = pcl::getTime();
 
 					n_planes = segmented_planes.size();
@@ -131,12 +135,50 @@ void CCalibFromPlanesGui::extractPlanes()
 
 		sync_obs_id = 0;
 	}
+
+	m_params->calib_status = CalibrationStatus::PLANES_EXTRACTED;
 }
 
-void CCalibFromPlanesGui::matchPlanes(const TPlaneMatchingParams &match_params)
+void CCalibFromPlanesGui::matchPlanes()
 {
-	m_params.match = match_params;
 	std::vector<Eigen::Matrix4f> sensor_poses = m_sync_model->getSensorPoses();
+	std::vector<std::string> sensor_labels;
 
 	publishText("****Running plane matching algorithm****");
+
+	CObservationTreeItem *root_item, *tree_item;
+	int obs_id, sync_obs_id, sensor_id, corresp_id;
+	root_item = m_sync_model->getRootItem();
+	sensor_labels = m_sync_model->getSensorLabels();
+
+	std::vector<std::vector<CPlaneCHull>> vv_planes;
+	std::vector<std::vector<int>> corresp_set;
+	//vvv_plane_corresp.resize(root_item->childCount());
+	vvv_plane_corresp.resize(5);
+
+	//for(size_t i = 0; i < root_item->childCount(); i++)
+	for(size_t i = 0; i < 15; i++)
+	{
+		publishText("**Matching planes from sensors of observations set #" + std::to_string(i) + "**");
+		tree_item = root_item->child(i);
+		vv_planes.resize(tree_item->childCount());
+		corresp_set.clear();
+
+		for(size_t j = 0; j < tree_item->childCount(); j++)
+		{
+			obs_id = tree_item->child(j)->getPriorIndex();
+			sensor_id = cutils::findItemIndexIn(sensor_labels, tree_item->child(j)->getObservation()->sensorLabel);
+			sync_obs_id = cutils::findItemIndexIn(m_sync_model->getSyncIndices()[sensor_id], obs_id);
+			vv_planes[sensor_id] = vvv_planes[sensor_id][sync_obs_id];
+		}
+
+		findPotentialMatches(vv_planes, m_params->match, corresp_set);
+		if(corresp_set.size() > 0)
+		{
+			//vvv_plane_corresp[i] = corresp_set;
+			publishText(std::to_string(corresp_set.size()) + " matches were found");
+		}
+	}
+
+	m_params->calib_status = CalibrationStatus::PLANES_MATCHED;
 }

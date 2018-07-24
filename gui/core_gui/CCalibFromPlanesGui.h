@@ -25,7 +25,7 @@ public:
 	 * \param sync_obs_indices indices of the grouped (synchronized) observations in the original model, per sensor.
 	 * \param params parameters for the algorithm.
 	 */
-	CCalibFromPlanesGui(CObservationTreeGui *model, const TCalibFromPlanesParams &params);
+	CCalibFromPlanesGui(CObservationTreeGui *model, TCalibFromPlanesParams *params);
 
 	~CCalibFromPlanesGui();
 
@@ -35,7 +35,7 @@ public:
 	void extractPlanes();
 
 	/** Runs plane matching. */
-	void matchPlanes(const TPlaneMatchingParams &match_params);
+	void matchPlanes();
 
 	/** Adds observer to list of text observers. */
 	void addTextObserver(CTextObserver *observer);
@@ -48,14 +48,23 @@ public:
 
 	/** Notifies observers with the extracted planes.
 	 * \param sensor_id id of the sensor the planes were observed from.
-	 * \param obs_id id of the observation in the original rawlog.
+	 * \param sync_obs_id id of the observation in the synchronized rawlog.
 	 */
-	void publishPlanes(const int &sensor_id, const int &obs_id);
+	void publishPlanes(const int &sensor_id, const int &sync_obs_id);
+
+	/** Notifies observers with the planes of a sensor that were matched in a set, if any.
+	 * \param obs_set_id the id of the synchronized observation set.
+	 * \param sensor_id id of the sensor the planes were observed from.
+	 */
+	void publishMatches(const int &obs_set_id, const int &sensor_id);
+
+	/** Returns the status of the calibration progress. */
+	CalibrationStatus calibStatus();
 
 private:
 
 	/** The parameters for the calibration. */
-	TCalibFromPlanesParams m_params;
+	TCalibFromPlanesParams *m_params;
 
 	/** Pointer to the received synchronized rawlog model. */
 	CObservationTreeGui *m_sync_model;
