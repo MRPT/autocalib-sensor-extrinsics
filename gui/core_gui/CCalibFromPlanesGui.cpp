@@ -40,6 +40,11 @@ void CCalibFromPlanesGui::addPlanesObserver(CPlanesObserver *observer)
 	m_planes_observers.push_back(observer);
 }
 
+void CCalibFromPlanesGui::addCorrespPlanesObserver(CCorrespPlanesObserver *observer)
+{
+	m_corresp_planes_observers.push_back(observer);
+}
+
 void CCalibFromPlanesGui::publishText(const std::string &msg)
 {
 	for(CTextObserver *observer : m_text_observers)
@@ -56,9 +61,38 @@ void CCalibFromPlanesGui::publishPlanes(const int &sensor_id, const int &sync_ob
 	}
 }
 
-void CCalibFromPlanesGui::publishMatches(const int &obs_set_id, const int &sensor_id)
+void CCalibFromPlanesGui::publishCorrespPlanes(const int &obs_set_id)
 {
+	CObservationTreeItem *root_item, *item;
+	std::vector<std::vector<CPlaneCHull>> corresp_planes;
+	size_t sync_obs_id;
 
+	corresp_planes.resize(m_sync_model->getSensorLabels().size());
+
+	root_item = m_sync_model->getRootItem();
+
+	for(size_t i = 0; i < corresp_planes.size(); i++)
+	{
+		corresp_planes[i].resize(vvv_plane_corresp[obs_set_id].size());
+		for(size_t j = 0; j < corresp_planes[i].size(); j++)
+		{
+			for(size_t k = 0; k < root_item->child(obs_set_id)->childCount(); k++)
+			{
+				item = root_item->child(obs_set_id)->child(k);
+				if(cutils::findItemIndexIn(m_sync_model->getSensorLabels(), item->getObservation()->sensorLabel) == i)
+				{
+					sync_obs_id = cutils::findItemIndexIn(m_sync_model->getSyncIndices()[i], item->getPriorIndex());
+					corresp_planes[i][j] = vvv_planes[i][sync_obs_id][vvv_plane_corresp[obs_set_id][j][i]];
+					break;
+				}
+			}
+		}
+	}
+
+	for(CCorrespPlanesObserver *observer : m_corresp_planes_observers)
+	{
+		observer->onReceivingCorrespPlanes(corresp_planes);
+	}
 }
 
 CalibrationStatus CCalibFromPlanesGui::calibStatus()
@@ -87,7 +121,7 @@ void CCalibFromPlanesGui::extractPlanes()
 	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
 
 	std::vector<CPlaneCHull> segmented_planes;
-	size_t n_planes;	
+	size_t n_planes;
 	double plane_segment_start, plane_segment_end;
 
 	std::vector<std::string> selected_sensor_labels;
@@ -105,7 +139,7 @@ void CCalibFromPlanesGui::extractPlanes()
 		vv_clouds[i].resize((m_sync_model->getSyncIndices()[i]).size());
 
 		//let's run it for 5 sets
-		for(size_t j = 0; j < 5; j++)
+		for(size_t j = 0; j < 15; j++)
 		{
 			tree_item = root_item->child(j);
 
@@ -153,8 +187,8 @@ void CCalibFromPlanesGui::matchPlanes()
 
 	std::vector<std::vector<CPlaneCHull>> vv_planes;
 	std::vector<std::vector<int>> corresp_set;
-	//vvv_plane_corresp.resize(root_item->childCount());
-	vvv_plane_corresp.resize(5);
+	vvv_plane_corresp.resize(root_item->childCount());
+	//vvv_plane_corresp.resize(5);
 
 	//for(size_t i = 0; i < root_item->childCount(); i++)
 	for(size_t i = 0; i < 15; i++)
@@ -175,7 +209,7 @@ void CCalibFromPlanesGui::matchPlanes()
 		findPotentialMatches(vv_planes, m_params->match, corresp_set);
 		if(corresp_set.size() > 0)
 		{
-			//vvv_plane_corresp[i] = corresp_set;
+			vvv_plane_corresp[i] = corresp_set;
 			publishText(std::to_string(corresp_set.size()) + " matches were found");
 		}
 	}

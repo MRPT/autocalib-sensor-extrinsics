@@ -2,6 +2,7 @@
 
 #include <interfaces/CTextObserver.h>
 #include <interfaces/CPlanesObserver.h>
+#include <interfaces/CCorrespPlanesObserver.h>
 #include <CPlanes.h>
 #include <CUtils.h>
 
@@ -19,7 +20,7 @@ namespace Ui {
 class CViewerContainer;
 }
 
-class CViewerContainer : public QWidget, public CTextObserver, public CPlanesObserver
+class CViewerContainer : public QWidget, public CTextObserver, public CPlanesObserver, public CCorrespPlanesObserver
 {
 	Q_OBJECT
 
@@ -61,6 +62,12 @@ public:
 	 * \param planes the vector of planes to be added to the visualizer.
 	 */
 	virtual void onReceivingPlanes(const int &viewer_id, const std::vector<CPlaneCHull> &planes);
+
+	/**
+	 * \brief Updates the middle viewer with the matched planes.
+	 * \param corresp_planes the matched planes from each sensor that are to be visualized.
+	 */
+	virtual void onReceivingCorrespPlanes(const std::vector<std::vector<CPlaneCHull>> &corresp_planes);
 
 private:
 

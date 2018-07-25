@@ -208,17 +208,6 @@ CObservationTreeItem *CObservationTree::getRootItem() const
 	return this->m_rootitem;
 }
 
-CObservationTreeItem *CObservationTree::getItem(const int &index) const
-{
-	if(!(index < 0) && index < m_rootitem->childCount())
-	{
-		CObservationTreeItem *item = static_cast<CObservationTreeItem*>(m_rootitem->child(index));
-		return item;
-	}
-
-	return nullptr;
-}
-
 int CObservationTree::getObsCount() const
 {
 	return this->m_obs_count;

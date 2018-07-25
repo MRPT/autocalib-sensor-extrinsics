@@ -45,12 +45,6 @@ class CObservationTree
 		 */
 		CObservationTreeItem *getRootItem() const;
 
-		/**
-		 * Returns the item at the given index in the tree.
-		 * \param index the tree index.
-		 */
-		CObservationTreeItem *getItem(const int &index) const;
-
 		/** Returns the count of total number of observations found in the rawlog. */
 		int getObsCount() const;
 

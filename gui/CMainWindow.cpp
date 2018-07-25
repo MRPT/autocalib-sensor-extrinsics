@@ -403,7 +403,7 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 			{
 				obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(item->child(i)->getObservation());
 				obs_item->getDescriptionAsText(update_stream);
-				image = obs_item->intensityImage;	
+				image = obs_item->intensityImage;
 
 				sensor_id = cutils::findItemIndexIn(m_sync_model->getSensorLabels(), obs_item->sensorLabel);
 				sync_obs_id = cutils::findItemIndexIn(m_sync_model->getSyncIndices()[sensor_id], item->child(i)->getPriorIndex());
@@ -412,6 +412,7 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 				update_stream << "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n";
 				m_ui->viewer_container->updateImageViewer(viewer_id, image);
 
+				//for debugging
 				m_ui->viewer_container->updateText(std::to_string(viewer_id) + " " + std::to_string(sync_obs_id));
 
 				if((m_calib_from_planes_gui != nullptr) && m_calib_from_planes_gui->calibStatus() == CalibrationStatus::PLANES_EXTRACTED)
@@ -430,8 +431,6 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 					m_ui->viewer_container->updateSetCloudViewer(m_calib_from_planes_gui->vv_clouds[sensor_id][sync_obs_id], obs_item->sensorLabel,
 					                                             m_sync_model->getSensorPoses()[sensor_id],
 					                                             (m_sync_model->data(index)).toString().toStdString() + " Overlapped");
-
-					m_calib_from_planes_gui->publishMatches(i, sensor_id);
 				}
 
 				else
@@ -450,6 +449,9 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 					                                             (m_sync_model->data(index)).toString().toStdString() + " Overlapped");
 				}
 			}
+
+			if((m_calib_from_planes_gui != nullptr) && m_calib_from_planes_gui->calibStatus() == CalibrationStatus::PLANES_MATCHED)
+				m_calib_from_planes_gui->publishCorrespPlanes(item->row());
 		}
     
 		m_ui->observations_description_textbrowser->setText(QString::fromStdString(update_stream.str()));
@@ -513,6 +515,7 @@ void CMainWindow::runCalibFromPlanes(TCalibFromPlanesParams *params)
 			m_calib_from_planes_gui = new CCalibFromPlanesGui(m_sync_model, params);
 			m_calib_from_planes_gui->addTextObserver(m_ui->viewer_container);
 			m_calib_from_planes_gui->addPlanesObserver(m_ui->viewer_container);
+			m_calib_from_planes_gui->addCorrespPlanesObserver(m_ui->viewer_container);
 			m_calib_from_planes_gui->extractPlanes();
 			//std::thread thr(&CCalibFromPlanesGui::extractPlanes, m_calib_from_planes_gui);
 			//thr.detach();
