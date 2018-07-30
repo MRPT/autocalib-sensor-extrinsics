@@ -1,7 +1,7 @@
 #pragma once
 
+#include "Utils.h"
 #include "CObservationTreeItem.h"
-#include "CUtils.h"
 #include <interfaces/CTextObserver.h>
 
 #include <mrpt/obs/CObservation3DRangeScan.h>
@@ -48,6 +48,9 @@ class CObservationTree
 		/** Returns the count of total number of observations found in the rawlog. */
 		int getObsCount() const;
 
+		/** Returns the number of unique sensors found in the rawlog. */
+		int getNumberOfSensors() const;
+
 		/** Returns a list of the unique sensor labels found in the rawlog. */
 		std::vector<std::string> getSensorLabels() const;
 
@@ -70,8 +73,11 @@ class CObservationTree
 		 */
 		void syncObservations(const std::vector<std::string> &selected_sensor_labels, const int &max_delay);
 
-		/** Returns the indices of the grouped observations with respect to the original tree. */
+		/** Returns the indices of the grouped observations with respect to the original tree, grouped by sensor. */
 		std::vector<std::vector<int>> getSyncIndices() const;
+
+		/** Retuns the sync index (the index in m_sync_indices[sensor_id] of an item within a set, identified by sensor label. */
+		int findSyncIndexFromSet(const int &set_id, const std::string &sensor_label) const;
 
     protected:
 

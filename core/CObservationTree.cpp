@@ -57,7 +57,7 @@ void CObservationTree::loadTree()
 				}
 
 				else
-					m_count_of_label[cutils::findItemIndexIn(m_sensor_labels, sensor_label)]++;
+					m_count_of_label[utils::findItemIndexIn(m_sensor_labels, sensor_label)]++;
 			}
 
 			m_rootitem->appendChild(new CObservationTreeItem("[#" + std::to_string(m_obs_count - 1) + "] " + obs_label, obs, m_rootitem));
@@ -137,7 +137,7 @@ void CObservationTree::syncObservations(const std::vector<std::string> &selected
 							                                   + (*iter) + " : " + (*iter2).first->GetRuntimeClass()->className;
 							new_rootitem->child(new_rootitem->childCount() - 1)->appendChild(new CObservationTreeItem(obs_label, (*iter2).first,
 							                                                                                          new_rootitem->child(new_rootitem->childCount() - 1), (*iter2).second));
-							sync_indices_tmp[cutils::findItemIndexIn(selected_sensor_labels, *iter)].push_back((*iter2).second);
+							sync_indices_tmp[utils::findItemIndexIn(selected_sensor_labels, *iter)].push_back((*iter2).second);
 						}
 					}
 
@@ -161,7 +161,7 @@ void CObservationTree::syncObservations(const std::vector<std::string> &selected
 			                                   + (*iter) + " : " + (*iter2).first->GetRuntimeClass()->className;
 			new_rootitem->child(new_rootitem->childCount() - 1)->appendChild(new CObservationTreeItem(obs_label, (*iter2).first,
 			                                                                                          new_rootitem->child(new_rootitem->childCount() - 1), (*iter2).second));
-			sync_indices_tmp[cutils::findItemIndexIn(selected_sensor_labels, *iter)].push_back((*iter2).second);
+			sync_indices_tmp[utils::findItemIndexIn(selected_sensor_labels, *iter)].push_back((*iter2).second);
 		}
 
 		sensor_labels_in_set.clear();
@@ -213,6 +213,11 @@ int CObservationTree::getObsCount() const
 	return this->m_obs_count;
 }
 
+int CObservationTree::getNumberOfSensors() const
+{
+	return this->m_sensor_labels.size();
+}
+
 std::vector<std::string> CObservationTree::getSensorLabels() const
 {
 	return this->m_sensor_labels;
@@ -239,4 +244,21 @@ bool CObservationTree::setSensorPoses(const std::vector<Eigen::Matrix4f> &sensor
 std::vector<std::vector<int>> CObservationTree::getSyncIndices() const
 {
 	return this->m_sync_indices;
+}
+
+int CObservationTree::findSyncIndexFromSet(const int &set_id, const std::string &sensor_label) const
+{
+	if(!m_synced)
+		return -1;
+
+	CObservationTreeItem *item = m_rootitem->child(set_id);
+	size_t sensor_index = utils::findItemIndexIn(m_sensor_labels, sensor_label);
+
+	for(size_t i = 0; i < item->childCount(); i++)
+	{
+		if(item->child(i)->getObservation()->sensorLabel == sensor_label)
+		{
+			return utils::findItemIndexIn(m_sync_indices[sensor_index], item->getPriorIndex());
+		}
+	}
 }

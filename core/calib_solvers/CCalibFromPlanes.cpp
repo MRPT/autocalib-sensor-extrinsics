@@ -22,9 +22,15 @@
 
 using namespace std;
 
-CCalibFromPlanes::CCalibFromPlanes(size_t n_sensors) :
-    CExtrinsicCalib(n_sensors)
+CCalibFromPlanes::CCalibFromPlanes(CObservationTree *model) :
+    CExtrinsicCalib(model)
 {
+	for(int sensor_id1=0; sensor_id1 < sync_model->getNumberOfSensors(); sensor_id1++)
+	{
+		mmv_plane_corresp[sensor_id1] = std::map<int, std::vector<std::array<int,3>>>();
+		for(int sensor_id2 = sensor_id1 + 1; sensor_id2 < sync_model->getNumberOfSensors(); sensor_id2++)
+			mmv_plane_corresp[sensor_id1][sensor_id2] = std::vector<std::array<int,3>>();
+	}
 }
 
 void CCalibFromPlanes::segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const TPlaneSegmentationParams & params, std::vector<CPlaneCHull> & planes)
@@ -140,215 +146,186 @@ void CCalibFromPlanes::segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::P
 
 }
 
-void CCalibFromPlanes::findPotentialMatches(const std::vector<std::vector<CPlaneCHull>> &vv_planes, const TPlaneMatchingParams &params, std::vector<std::vector<int>> &corresp_set)
+void CCalibFromPlanes::findPotentialMatches(const std::vector<std::vector<CPlaneCHull>> &planes, const int &set_id, const TPlaneMatchingParams &params)
 {
-	size_t min;
-	size_t min_sensor_id;
-	Eigen::Vector3f n1, n2;
-	Scalar d1, d2;
+	for(int i = 0; i < planes.size()-1; ++i)
+		for(int j = i+1; j < planes.size(); ++j)
+			for(int ii = 0; ii < planes[i].size(); ++ii)
+				for(int jj = 0; jj < planes[j].size(); ++jj)
+				{
+					Eigen::Vector3f n_ii = sync_model->getSensorPoses()[i].block(0,0,3,3) * planes[i][ii].v3normal;
+					Scalar d1 = planes[i][ii].d - Eigen::Vector3f(sync_model->getSensorPoses()[i].block(0,3,3,1)).dot(planes[i][ii].v3normal);
+					Eigen::Vector3f n_jj = sync_model->getSensorPoses()[j].block(0,0,3,3) * planes[j][jj].v3normal;
+					Scalar d2 = planes[j][jj].d - Eigen::Vector3f(sync_model->getSensorPoses()[j].block(0,3,3,1)).dot(planes[j][jj].v3normal);
+					if((n_ii.dot(n_jj) > params.min_normals_dot_prod) && (d1 - d2 < params.max_dist_diff))
+					{
+						std::array<int,3> potential_match{set_id, ii, jj};
+						mmv_plane_corresp[i][j].push_back(potential_match);
+					}
+				}
+}
 
-	Eigen::Matrix3f rot;
-	Eigen::Vector3f transl;
+Scalar CCalibFromPlanes::computeRotCalibResidual(const std::vector<Eigen::Matrix4f> & sensor_poses)
+{
+	Scalar sum_squared_error = 0.; // Accumulated squared error for all plane correspondences
 
-	//find the sensor with the smallest number of planes
-	min = vv_planes[0].size();
-	min_sensor_id = 0;
-
-	for(size_t i = 1; i < vv_planes.size(); i++)
+	for(std::map<int,std::map<int,std::vector<std::array<int,3>>>>::iterator it_sensor_i = mmv_plane_corresp.begin();
+	    it_sensor_i != mmv_plane_corresp.end(); it_sensor_i++)
 	{
-		if(vv_planes[i].size() < min)
+		size_t sensor_i = it_sensor_i->first;
+		for(std::map<int,std::vector<std::array<int,3>>>::iterator it_sensor_j = it_sensor_i->second.begin();
+		    it_sensor_j != it_sensor_i->second.end(); it_sensor_j++)
 		{
-			min = vv_planes.size();
-			min_sensor_id = i;
+			size_t sensor_j = it_sensor_j->first;
+			std::vector<std::array<int,3>> &correspondences = it_sensor_j->second;
+			for(int i = 0; i < correspondences.size(); i++)
+			{
+				int set_id = correspondences[i][0];
+				int sync_obs1_id = sync_model->findSyncIndexFromSet(set_id, sync_model->getSensorLabels()[sensor_i]);
+				int sync_obs2_id = sync_model->findSyncIndexFromSet(set_id, sync_model->getSensorLabels()[sensor_j]);
+
+				Eigen::Vector3f n_obs_i = vvv_planes[sensor_i][sync_obs1_id][correspondences[i][1]].v3normal;
+				Eigen::Vector3f n_obs_j = vvv_planes[sensor_j][sync_obs2_id][correspondences[i][2]].v3normal;
+
+				Eigen::Vector3f n_i = sensor_poses[sensor_i].block(0,0,3,3) * n_obs_i;
+				Eigen::Vector3f n_j = sensor_poses[sensor_j].block(0,0,3,3) * n_obs_j;
+
+				Eigen::Vector3f rot_error = (n_i - n_j);
+				sum_squared_error += rot_error.dot(rot_error);
+			}
 		}
 	}
 
-	std::vector<int> temp_corresp;
+	return sum_squared_error;
+}
 
-	for(size_t i = 0; i < vv_planes[min_sensor_id].size(); i++)
+Scalar CCalibFromPlanes::computeRotCalibration(const TSolverParams &params, const std::vector<Eigen::Matrix4f> & sensor_poses, std::string &stats)
+{
+	const int num_sensors = sensor_poses.size();
+	const int dof = 3 * (num_sensors - 1);
+	Eigen::VectorXf update_vector(dof);
+	Eigen::Matrix3f jacobian_rot_i, jacobian_rot_j; // Jacobians of the rotation
+	float accum_error;
+	float av_angle_error;
+	int num_corresp;
+
+	std::vector<Eigen::Matrix4f> estimated_poses = sensor_poses;
+	std::vector<Eigen::Matrix4f> estimated_poses_temp;
+
+	float increment = 1000, diff_error = 1000;
+	int it = 0;
+	while(it < params.max_iters && increment > params.min_update && diff_error > params.converge_error)
 	{
-		rot = sensor_poses[min_sensor_id].block(0,0,3,3);
-		transl = sensor_poses[min_sensor_id].block(0,3,3,1);
-		n1 = rot * vv_planes[min_sensor_id][i].v3normal;
-		d1 = vv_planes[min_sensor_id][i].d - transl.dot(vv_planes[min_sensor_id][i].v3normal);
+		// Calculate the hessian and the gradient
+		hessian = Eigen::Matrix<Scalar,Eigen::Dynamic,Eigen::Dynamic>::Zero(dof, dof); // Hessian of the rotation of the decoupled system
+		gradient = Eigen::Matrix<Scalar,Eigen::Dynamic,1>::Zero(dof); // Gradient of the rotation of the decoupled system
+		accum_error = 0.0;
+		av_angle_error = 0.0;
+		num_corresp = 0;
 
-		temp_corresp.resize(vv_planes.size(), -1);
-		temp_corresp[min_sensor_id] = i;
-
-		for(size_t j = 0; j < vv_planes.size(); j++)
+		for(std::map<int,std::map<int,std::vector<std::array<int,3>>>>::iterator it_sensor_i = mmv_plane_corresp.begin();
+		    it_sensor_i != mmv_plane_corresp.end(); it_sensor_i++)
 		{
-			if(j == min_sensor_id)
-				continue;
-
-			for(size_t k = 0; k < vv_planes[j].size(); k++)
+			size_t sensor_i = it_sensor_i->first;
+			for(std::map<int,std::vector<std::array<int,3>>>::iterator it_sensor_j = it_sensor_i->second.begin();
+			    it_sensor_j != it_sensor_i->second.end(); it_sensor_j++)
 			{
-				rot = sensor_poses[j].block(0,0,3,3);
-				transl = sensor_poses[j].block(0,3,3,1);
+				size_t sensor_j = it_sensor_j->first;
+				int pos_sensor_i = 3 * (sensor_i - 1);
+				int pos_sensor_j = 3 * (sensor_j - 1);
 
-				n2 = rot * vv_planes[j][k].v3normal;
-				d2 = vv_planes[j][k].d - transl.dot(vv_planes[j][i].v3normal);
-				if((n1.dot(n2) >= params.normals_dot_prod) && abs(d1 - d2) <= params.dist_diff)
+				std::vector<std::array<int,3>> &correspondences = it_sensor_j->second;
+				for(int i = 0; i < correspondences.size(); i++)
 				{
-					temp_corresp[j] = k;
-					break;
+					size_t set_id = correspondences[i][0];
+
+					int sync_obs1_id = sync_model->findSyncIndexFromSet(set_id, sync_model->getSensorLabels()[sensor_i]);
+					int sync_obs2_id = sync_model->findSyncIndexFromSet(set_id, sync_model->getSensorLabels()[sensor_j]);
+
+					Eigen::Vector3f n_obs_i = vvv_planes[sensor_i][sync_obs1_id][correspondences[i][1]].v3normal;
+					Eigen::Vector3f n_obs_j = vvv_planes[sensor_j][sync_obs2_id][correspondences[i][2]].v3normal;
+
+					Eigen::Vector3f n_i = sensor_poses[sensor_i].block(0,0,3,3) * n_obs_i;
+					Eigen::Vector3f n_j = sensor_poses[sensor_j].block(0,0,3,3) * n_obs_j;
+
+					jacobian_rot_i = -skew(n_i);
+					jacobian_rot_j = skew(n_j);
+
+					Eigen::Vector3f rot_error = (n_i - n_j);
+					accum_error += rot_error.dot(rot_error);
+					av_angle_error += acos(n_i.dot(n_j));
+					num_corresp++;
+
+
+					if(sensor_i != 0) // The pose of the first camera is fixed
+					{
+						hessian.block(pos_sensor_i, pos_sensor_i, 3, 3) += jacobian_rot_i.transpose() * jacobian_rot_i;
+						gradient.block(pos_sensor_i,0,3,1) += jacobian_rot_i.transpose() * rot_error;
+
+						// Cross term
+						hessian.block(pos_sensor_i, pos_sensor_j, 3, 3) += jacobian_rot_i.transpose() * jacobian_rot_j;
+					}
+
+					hessian.block(pos_sensor_j, pos_sensor_j, 3, 3) += jacobian_rot_j.transpose() * jacobian_rot_j;
+					gradient.block(pos_sensor_j,0,3,1) += jacobian_rot_j.transpose() * rot_error;
 				}
+
+				if(sensor_i != 0) // Fill the lower left triangle with the corresponding cross terms
+					hessian.block(pos_sensor_j, pos_sensor_i, 3, 3) = hessian.block(pos_sensor_i, pos_sensor_j, 3, 3).transpose();
 			}
 		}
 
-		auto iter = std::find(temp_corresp.begin(), temp_corresp.end(), -1);
-		if(iter == temp_corresp.end())
-			corresp_set.push_back(temp_corresp);
+		//cout << "hessian \n" << hessian << endl;
+		//cout << "gradient \n" << gradient.transpose() << endl;
+		//cout << "Error accumulated " << accum_error2 << endl;
+		
+		Eigen::FullPivLU<Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic>> lu(hessian);
+		if(!lu.isInvertible())
+		{
+			stats = "System is badly conditioned. Please try again with a new set of observations.";
+			break;
+		}
+
+		// Update rotation
+		update_vector = -hessian.inverse() * gradient;
+		//cout << "update_vector " << update_vector.transpose() << endl;
+
+		for(int sensor_id = 1; sensor_id < num_sensors; sensor_id++)
+		{
+			mrpt::poses::CPose3D pose;
+			mrpt::math::CArrayNumeric<double,3> rot_manifold;
+			rot_manifold[0] = update_vector(3*sensor_id-3,0);
+			rot_manifold[1] = update_vector(3*sensor_id-2,0);
+			rot_manifold[2] = update_vector(3*sensor_id-1,0);
+			mrpt::math::CMatrixDouble33 update_rot = pose.exp_rotation(rot_manifold);
+			//cout << "update_rot\n" << update_rot << endl;
+			Eigen::Matrix3f update_rot_eig;
+			update_rot_eig << update_rot(0,0), update_rot(0,1), update_rot(0,2),
+			        update_rot(1,0), update_rot(1,1), update_rot(1,2),
+			        update_rot(2,0), update_rot(2,1), update_rot(2,2);
+			estimated_poses_temp[sensor_id] = estimated_poses[sensor_id];
+			estimated_poses_temp[sensor_id].block(0,0,3,3) = update_rot_eig * estimated_poses[sensor_id].block(0,0,3,3);
+			//cout << "old rotation" << sensor_id << "\n" << Rt_estimated[sensor_id].block(0,0,3,3) << endl;
+			//cout << "new rotation\n" << Rt_estimatedTemp[sensor_id].block(0,0,3,3) << endl;
+		}
+
+		accum_error = computeRotCalibResidual(estimated_poses);
+		//cout << "Error accumulated " << accum_error2 << endl;
+		float new_accum_error2 = computeRotCalibResidual(estimated_poses_temp);
+
+		//cout << "New rotation error " << new_accum_error2 << endl;
+		//cout << "Closing loop? \n" << Rt_estimated[0].inverse() * Rt_estimated[7] * Rt_78;
+
+		//Assign new rotations
+		if(new_accum_error2 < accum_error)
+			for(int sensor_id = 1; sensor_id < num_sensors; sensor_id++)
+				estimated_poses[sensor_id] = estimated_poses_temp[sensor_id];
+
+		increment = update_vector.dot(update_vector);
+		diff_error = accum_error - new_accum_error2;
+		++it;
+		//cout << "Iteration " << it << " increment " << increment << " diff_error " << diff_error << endl;
 	}
-}
 
-Scalar CCalibFromPlanes::computeCalibResidual_rot(const std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > & sensor_poses)
-{
-//    Scalar sum_squared_error = 0.; // Accumulated squared error for all plane correspondences
-//    for(std::map<size_t, std::map<size_t, std::vector< std::array<size_t,4> > > >::iterator it_sensor_i = mmv_plane_corresp.begin();
-//        it_sensor_i != mmv_plane_corresp.end(); it_sensor_i++)
-//    {
-//        size_t sensor_i = it_sensor_i->first;
-//        for(std::map<size_t, std::vector< std::array<size_t,4> > >::iterator it_sensor_j = it_sensor_i->second.begin();
-//            it_sensor_j != it_sensor_i->second.end(); it_sensor_j++)
-//        {
-//            size_t sensor_j = it_sensor_j->first;
-//            std::vector< std::array<size_t,4> > & correspondences = it_sensor_j->second;
-//            for(size_t i=0; i < correspondences.size(); i++) // For every potential match
-//            {
-//                size_t frame_id = correspondences[i][0];
-//                Eigen::Vector3f n_obs_i = vvv_planes[frame_id][sensor_i][correspondences[i][2]].v3normal;
-//                Eigen::Vector3f n_obs_j = vvv_planes[frame_id][sensor_j][correspondences[i][3]].v3normal;
-//                Eigen::Vector3f n_i = sensor_poses[sensor_i].block(0,0,3,3) * n_obs_i;
-//                Eigen::Vector3f n_j = sensor_poses[sensor_j].block(0,0,3,3) * n_obs_j;
-//                Eigen::Vector3f rot_error = (n_i - n_j);
-//                sum_squared_error += rot_error.dot(rot_error);
-//            }
-//        }
-//    }
-//    return sum_squared_error;
-}
-
-Scalar CCalibFromPlanes::computeCalibration_rot(const std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > & sensor_poses)
-{
-	cout << "CCalibFromPlanes::computeCalibration_rot...\n";
-    const int n_DoF = 3 * (num_sensors - 1);
-    Eigen::VectorXf update_vector(n_DoF);
-    Eigen::Matrix3f jacobian_rot_i, jacobian_rot_j; // Jacobians of the rotation
-    float accum_error2;
-    float av_angle_error;
-    unsigned numPlaneCorresp;
-
-    std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > Rt_estimated = sensor_poses;
-    std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > Rt_estimatedTemp;
-
-    // Parameters of the Least-Squares optimization
-    int _max_iterations = 10;
-    float _epsilon_transf = 0.00001;
-    float _convergence_error = 0.000001;
-    float increment = 1000, diff_error = 1000;
-    int it = 0;
-    while(it < _max_iterations && increment > _epsilon_transf && diff_error > _convergence_error)
-    {
-        // Calculate the hessian and the gradient
-        hessian = Eigen::Matrix<Scalar,Eigen::Dynamic,Eigen::Dynamic>::Zero(n_DoF,n_DoF); // Hessian of the rotation of the decoupled system
-        gradient = Eigen::Matrix<Scalar,Eigen::Dynamic,1>::Zero(n_DoF); // Gradient of the rotation of the decoupled system
-        accum_error2 = 0.0;
-        av_angle_error = 0.0;
-        numPlaneCorresp = 0;
-
-//        for(std::map<size_t, std::map<size_t, std::vector< std::array<size_t,4> > > >::iterator it_sensor_i = mmv_plane_corresp.begin();
-//            it_sensor_i != mmv_plane_corresp.end(); it_sensor_i++)
-//        {
-//            size_t sensor_i = it_sensor_i->first;
-//            for(std::map<size_t, std::vector< std::array<size_t,4> > >::iterator it_sensor_j = it_sensor_i->second.begin();
-//                it_sensor_j != it_sensor_i->second.end(); it_sensor_j++)
-//            {
-//                size_t sensor_j = it_sensor_j->first;
-//                int pos_sensor_i = 3*(sensor_i - 1);
-//                int pos_sensor_j = 3*(sensor_j - 1);
-//                std::vector< std::array<size_t,4> > & correspondences = it_sensor_j->second;
-//                for(size_t i=0; i < correspondences.size(); i++) // For every potential match
-//                {
-//                    size_t frame_id = correspondences[i][0];
-//                    Eigen::Vector3f n_obs_i = vvv_planes[frame_id][sensor_i][correspondences[i][2]].v3normal;
-//                    Eigen::Vector3f n_obs_j = vvv_planes[frame_id][sensor_j][correspondences[i][3]].v3normal;
-//                    Eigen::Vector3f n_i = sensor_poses[sensor_i].block(0,0,3,3) * n_obs_i;
-//                    Eigen::Vector3f n_j = sensor_poses[sensor_j].block(0,0,3,3) * n_obs_j;
-//                    jacobian_rot_i = -skew(n_i);
-//                    jacobian_rot_j = skew(n_j);
-//                    Eigen::Vector3f rot_error = (n_i - n_j);
-//                    accum_error2 += rot_error.dot(rot_error);
-//                    av_angle_error += acos(n_i.dot(n_j));
-//                    numPlaneCorresp++;
-
-//                    if(sensor_i != 0) // The pose of the first camera is fixed
-//                    {
-//                        hessian.block(pos_sensor_i, pos_sensor_i, 3, 3) += jacobian_rot_i.transpose() * jacobian_rot_i;
-//                        gradient.block(pos_sensor_i,0,3,1) += jacobian_rot_i.transpose() * rot_error;
-
-//                        // Cross term
-//                        hessian.block(pos_sensor_i, pos_sensor_j, 3, 3) += jacobian_rot_i.transpose() * jacobian_rot_j;
-//                    }
-//                    hessian.block(pos_sensor_j, pos_sensor_j, 3, 3) += jacobian_rot_j.transpose() * jacobian_rot_j;
-//                    gradient.block(pos_sensor_j,0,3,1) += jacobian_rot_j.transpose() * rot_error;
-//                }
-
-//                if(sensor_i != 0) // Fill the lower left triangle with the corresponding cross terms
-//                    hessian.block(pos_sensor_j, pos_sensor_i, 3, 3) = hessian.block(pos_sensor_i, pos_sensor_j, 3, 3).transpose();
-//            }
-//        }
-
-        //cout << "hessian \n" << hessian << endl;
-        //cout << "gradient \n" << gradient.transpose() << endl;
-        cout << "Error accumulated " << accum_error2 << endl;
-
-//        if( calcConditioning() > threshold_conditioning_ )
-//        {
-//            cout << "\tRotation system is bad conditioned " << conditioning_ << " threshold " << threshold_conditioning_ << "\n";
-//            break;
-//        }
-
-        // Update rotation
-        update_vector = -hessian.inverse() * gradient;
-        cout << "update_vector " << update_vector.transpose() << endl;
-        for(int sensor_id = 1; sensor_id < num_sensors; sensor_id++)
-        {
-            mrpt::poses::CPose3D pose;
-            mrpt::math::CArrayNumeric< double, 3 > rot_manifold;
-            rot_manifold[0] = update_vector(3*sensor_id-3,0);
-            rot_manifold[1] = update_vector(3*sensor_id-2,0);
-            rot_manifold[2] = update_vector(3*sensor_id-1,0);
-            mrpt::math::CMatrixDouble33 update_rot = pose.exp_rotation(rot_manifold);
-            //cout << "update_rot\n" << update_rot << endl;
-            Eigen::Matrix3f update_rot_eig;
-            update_rot_eig << update_rot(0,0), update_rot(0,1), update_rot(0,2),
-                                update_rot(1,0), update_rot(1,1), update_rot(1,2),
-                                update_rot(2,0), update_rot(2,1), update_rot(2,2);
-            Rt_estimatedTemp[sensor_id] = Rt_estimated[sensor_id];
-            Rt_estimatedTemp[sensor_id].block(0,0,3,3) = update_rot_eig * Rt_estimated[sensor_id].block(0,0,3,3);
-            //      cout << "old rotation" << sensor_id << "\n" << Rt_estimated[sensor_id].block(0,0,3,3) << endl;
-            //      cout << "new rotation\n" << Rt_estimatedTemp[sensor_id].block(0,0,3,3) << endl;
-        }
-
-        accum_error2 = computeCalibResidual_rot(Rt_estimated);
-        cout << "Error accumulated " << accum_error2 << endl;
-        float new_accum_error2 = computeCalibResidual_rot(Rt_estimatedTemp);
-        //        float new_accum_error2 = calcCorrespRotError(Rt_estimatedTemp);
-
-        //        cout << "New rotation error " << new_accum_error2 << endl;
-        //    cout << "Closing loop? \n" << Rt_estimated[0].inverse() * Rt_estimated[7] * Rt_78;
-
-        // Assign new rotations
-        if(new_accum_error2 < accum_error2)
-            for(int sensor_id = 1; sensor_id < num_sensors; sensor_id++)
-                Rt_estimated[sensor_id] = Rt_estimatedTemp[sensor_id];
-        //            Rt_estimated[sensor_id].block(0,0,3,3) = Rt_estimatedTemp[sensor_id].block(0,0,3,3);
-
-        increment = update_vector .dot (update_vector);
-        diff_error = accum_error2 - new_accum_error2;
-        ++it;
-        cout << "Iteration " << it << " increment " << increment << " diff_error " << diff_error << endl;
-    }
-
-    std::cout << "ErrorCalibRotation " << accum_error2/numPlaneCorresp << " " << av_angle_error/numPlaneCorresp << std::endl;
+	//std::cout << "ErrorCalibRotation " << accum_error2/numPlaneCorresp << " " << av_angle_error/numPlaneCorresp << std::endl;
 }

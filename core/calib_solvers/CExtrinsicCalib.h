@@ -8,6 +8,8 @@
    +------------------------------------------------------------------------+ */
 #pragma once
 
+#include "TExtrinsicCalibParams.h"
+#include <CObservationTree.h>
 #include <mrpt/math/CMatrixFixedNumeric.h>
 
 typedef float Scalar;
@@ -32,25 +34,20 @@ template<typename Scalar> inline Eigen::Matrix<Scalar,3,3> skew(const Eigen::Mat
  * \tparam Scalar The precision of matrix elements, thresholds, etc. (typ: float or
  * double). Defaults to double.
  */
-//template <int num_sensors, typename Scalar = double>
+
 class CExtrinsicCalib
 {
 public:
     /** Default constructor. */
-	CExtrinsicCalib(size_t n_sensors) :
-        num_sensors(n_sensors),
-        m_conditioning(n_sensors, 0.){}
+	CExtrinsicCalib(CObservationTree *model)
+	{
+		sync_model = model;
+	}
 
     /** Destructor: */
 	virtual ~CExtrinsicCalib(){}
 
-    size_t num_sensors;
-
-	std::vector<Eigen::Matrix4f> sensor_poses;
-
-    /** Sensor labels. */
-    //std::array<std::string, num_sensors+1> sensor_labels;
-    std::vector<std::string> sensor_labels;
+	CObservationTree *sync_model;
 
     /** Load the initial calibration (into the static members).
         \param init_calib_file containing the initial calibration */
@@ -68,7 +65,7 @@ public:
     /** Calculate the angular residual error of the correspondences.
         \param sensor_poses relative poses of the sensors
         \return the residual */
-    virtual Scalar computeCalibResidual_rot(const std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > & sensor_poses) = 0;
+	virtual Scalar computeRotCalibResidual(const std::vector<Eigen::Matrix4f> &sensor_poses) = 0;
 
 //    /** Calculate the translational residual error of the correspondences.
 //        \param sensor_poses relative poses of the sensors
@@ -81,9 +78,10 @@ public:
 //    virtual Scalar computeCalibration(const std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > & sensor_poses) = 0;
 
     /** Compute Calibration (only rotation).
-        \param sensor_poses initial calibration
-        \return the residual */
-    virtual Scalar computeCalibration_rot(const std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > & sensor_poses) = 0;
+	 * \params params the parameters related to the least-squares solver
+	 * \param sensor_poses the initial calibration
+	 * \return the residual */
+	virtual Scalar computeRotCalibration(const TSolverParams &params, const std::vector<Eigen::Matrix4f> & sensor_poses, std::string &stats) = 0;
 
 //    /** Compute Calibration (only translation).
 //        \param sensor_poses initial calibration

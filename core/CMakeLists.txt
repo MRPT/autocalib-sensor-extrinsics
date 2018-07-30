@@ -6,7 +6,7 @@ INCLUDE_DIRECTORIES(${PCL_INCLUDE_DIRS})
 SET(SRC
 	CObservationTree.h
 	CObservationTreeItem.h
-	CUtils.h
+	Utils.h
 	CPlanes.h
 	lines.h
 	correspondences.h
@@ -14,6 +14,7 @@ SET(SRC
 	calib_solvers/CExtrinsicCalib.h
 	calib_solvers/CCalibFromPlanes.h
 	calib_solvers/TCalibFromPlanesParams.h
+	calib_solvers/TExtrinsicCalibParams.h
 
 	CObservationTree.cpp
 	CObservationTreeItem.cpp

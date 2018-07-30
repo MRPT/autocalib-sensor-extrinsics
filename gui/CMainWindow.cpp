@@ -4,7 +4,7 @@
 #include <config/CCalibFromPlanesConfig.h>
 #include <config/CCalibFromLinesConfig.h>
 #include <core_gui/CCalibFromPlanesGui.h>
-#include <CUtils.h>
+#include <Utils.h>
 
 #include <mrpt/obs/CObservation3DRangeScan.h>
 #include <mrpt/maps/PCL_adapters.h>
@@ -228,11 +228,55 @@ void CMainWindow::loadRawlog()
 	}
 }
 
+void CMainWindow::listItemClicked(const QModelIndex &index)
+{
+	if(index.isValid())
+	{
+		CObservationTreeItem *item = static_cast<CObservationTreeItem*>(index.internalPointer());
+
+		std::stringstream update_stream;
+		std::string viewer_text;
+		int viewer_id, sensor_id;
+
+		CObservation3DRangeScan::Ptr obs_item;
+		mrpt::img::CImage image;
+
+		if(item->cloud() != nullptr)
+			m_ui->viewer_container->updateCloudViewer(viewer_id, item->cloud(), viewer_text);
+
+		else
+		{
+			pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
+
+			T3DPointsProjectionParams projection_params;
+			projection_params.MAKE_DENSE = false;
+			projection_params.MAKE_ORGANIZED = false;
+
+			obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(m_model->getItem(index)->getObservation());
+			obs_item->getDescriptionAsText(update_stream);
+			obs_item->project3DPointsFromDepthImageInto(*cloud, projection_params);
+			cloud->is_dense = false;
+
+			image = obs_item->intensityImage;
+
+			sensor_id = utils::findItemIndexIn(m_model->getSensorLabels(), obs_item->sensorLabel);
+			viewer_id = sensor_id;
+			viewer_text = (m_model->data(index)).toString().toStdString();
+
+			m_ui->viewer_container->updateCloudViewer(viewer_id, cloud, viewer_text);
+			m_ui->viewer_container->updateImageViewer(viewer_id, image);
+			m_ui->observations_description_textbrowser->setText(QString::fromStdString(update_stream.str()));
+
+			item->cloud() = cloud;
+		}
+	}
+}
+
 void CMainWindow::sensorIndexChanged(int index)
 {
 //	Eigen::Matrix4f rt = m_model->getSensorPoses()[index];
-//	Eigen::Matrix<float,3,1> rvec = cutils::getRotationVector(rt);
-//	Eigen::Matrix<float,3,1> tvec = cutils::getTranslationVector(rt);
+//	Eigen::Matrix<float,3,1> rvec = utils::getRotationVector(rt);
+//	Eigen::Matrix<float,3,1> tvec = utils::getTranslationVector(rt);
 
 //	m_ui->irx_sbox->setValue(rvec(0,0));
 //	m_ui->iry_sbox->setValue(rvec(1,0));
@@ -315,41 +359,6 @@ void CMainWindow::syncObservationsClicked()
 	}
 }
 
-void CMainWindow::listItemClicked(const QModelIndex &index)
-{
-	if(index.isValid())
-	{
-		CObservationTreeItem *item = static_cast<CObservationTreeItem*>(index.internalPointer());
-
-		std::stringstream update_stream;
-		std::string viewer_text;
-		int viewer_id, sensor_id;
-
-		CObservation3DRangeScan::Ptr obs_item;
-		pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
-		mrpt::img::CImage image;
-
-		T3DPointsProjectionParams projection_params;
-		projection_params.MAKE_DENSE = false;
-		projection_params.MAKE_ORGANIZED = false;
-
-		obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(m_model->getItem(index)->getObservation());
-		obs_item->getDescriptionAsText(update_stream);
-		obs_item->project3DPointsFromDepthImageInto(*cloud, projection_params);
-		cloud->is_dense = false;
-
-		image = obs_item->intensityImage;
-
-		sensor_id = cutils::findItemIndexIn(m_model->getSensorLabels(), obs_item->sensorLabel);
-		viewer_id = sensor_id;
-		viewer_text = (m_model->data(index)).toString().toStdString();
-
-		m_ui->viewer_container->updateCloudViewer(viewer_id, cloud, viewer_text);
-		m_ui->viewer_container->updateImageViewer(viewer_id, image);
-		m_ui->observations_description_textbrowser->setText(QString::fromStdString(update_stream.str()));
-	}
-}
-
 void CMainWindow::treeItemClicked(const QModelIndex &index)
 {
 	if(index.isValid())
@@ -371,17 +380,14 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 			obs_item->getDescriptionAsText(update_stream);
 			image = obs_item->intensityImage;
 
-			sensor_id = cutils::findItemIndexIn(m_sync_model->getSensorLabels(), obs_item->sensorLabel);
-			sync_obs_id = cutils::findItemIndexIn(m_sync_model->getSyncIndices()[sensor_id], item->getPriorIndex());
+			sensor_id = utils::findItemIndexIn(m_sync_model->getSensorLabels(), obs_item->sensorLabel);
+			sync_obs_id = utils::findItemIndexIn(m_sync_model->getSyncIndices()[sensor_id], item->getPriorIndex());
 			viewer_id = sensor_id;
 			viewer_text = (m_sync_model->data(index.parent())).toString().toStdString() + " : " + obs_item->sensorLabel;
 			m_ui->viewer_container->updateImageViewer(viewer_id, image);
 
-			if((m_calib_from_planes_gui!= nullptr) && m_calib_from_planes_gui->calibStatus() == CalibrationStatus::PLANES_EXTRACTED)
-			{
-				m_ui->viewer_container->updateCloudViewer(viewer_id, m_calib_from_planes_gui->vv_clouds[sensor_id][sync_obs_id], viewer_text);
-				m_calib_from_planes_gui->publishPlanes(sensor_id, sync_obs_id);
-			}
+			if(item->cloud() != nullptr)
+				m_ui->viewer_container->updateCloudViewer(viewer_id, item->cloud(), viewer_text);
 
 			else
 			{
@@ -393,7 +399,12 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 				obs_item->project3DPointsFromDepthImageInto(*cloud, projection_params);
 				cloud->is_dense = false;
 				m_ui->viewer_container->updateCloudViewer(viewer_id, cloud, viewer_text);
+
+				item->cloud() = cloud;
 			}
+
+			if((m_calib_from_planes_gui!= nullptr) && m_calib_from_planes_gui->calibStatus() == CalibrationStatus::PLANES_EXTRACTED)
+				m_calib_from_planes_gui->publishPlanes(sensor_id, sync_obs_id);
 		}
 
 		//else set-item was clicked
@@ -405,8 +416,8 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 				obs_item->getDescriptionAsText(update_stream);
 				image = obs_item->intensityImage;
 
-				sensor_id = cutils::findItemIndexIn(m_sync_model->getSensorLabels(), obs_item->sensorLabel);
-				sync_obs_id = cutils::findItemIndexIn(m_sync_model->getSyncIndices()[sensor_id], item->child(i)->getPriorIndex());
+				sensor_id = utils::findItemIndexIn(m_sync_model->getSensorLabels(), obs_item->sensorLabel);
+				sync_obs_id = utils::findItemIndexIn(m_sync_model->getSyncIndices()[sensor_id], item->child(i)->getPriorIndex());
 				viewer_id = sensor_id;
 				viewer_text = (m_sync_model->data(index)).toString().toStdString() + " : " + obs_item->sensorLabel;
 				update_stream << "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n";
@@ -415,22 +426,12 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 				//for debugging
 				m_ui->viewer_container->updateText(std::to_string(viewer_id) + " " + std::to_string(sync_obs_id));
 
-				if((m_calib_from_planes_gui != nullptr) && m_calib_from_planes_gui->calibStatus() == CalibrationStatus::PLANES_EXTRACTED)
-				{	
-					m_ui->viewer_container->updateCloudViewer(viewer_id, m_calib_from_planes_gui->vv_clouds[sensor_id][sync_obs_id], viewer_text);
-					m_ui->viewer_container->updateSetCloudViewer(m_calib_from_planes_gui->vv_clouds[sensor_id][sync_obs_id], obs_item->sensorLabel,
-					                                             m_sync_model->getSensorPoses()[sensor_id],
-					                                             (m_sync_model->data(index)).toString().toStdString() + " Overlapped");
-
-					m_calib_from_planes_gui->publishPlanes(sensor_id, sync_obs_id);
-				}
-
-				else if((m_calib_from_planes_gui != nullptr) && m_calib_from_planes_gui->calibStatus() == CalibrationStatus::PLANES_MATCHED)
+				if(item->cloud() != nullptr)
 				{
-					m_ui->viewer_container->updateCloudViewer(viewer_id, m_calib_from_planes_gui->vv_clouds[sensor_id][sync_obs_id], viewer_text);
-					m_ui->viewer_container->updateSetCloudViewer(m_calib_from_planes_gui->vv_clouds[sensor_id][sync_obs_id], obs_item->sensorLabel,
+					m_ui->viewer_container->updateCloudViewer(viewer_id, item->cloud(), viewer_text);
+					m_ui->viewer_container->updateSetCloudViewer(item->cloud(), obs_item->sensorLabel,
 					                                             m_sync_model->getSensorPoses()[sensor_id],
-					                                             (m_sync_model->data(index)).toString().toStdString() + " Overlapped");
+					                                             m_sync_model->data(index).toString().toStdString() + " Overlapped");
 				}
 
 				else
@@ -447,6 +448,12 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 					m_ui->viewer_container->updateSetCloudViewer(cloud, obs_item->sensorLabel,
 					                                             m_sync_model->getSensorPoses()[sensor_id],
 					                                             (m_sync_model->data(index)).toString().toStdString() + " Overlapped");
+					item->cloud() = cloud;
+				}
+
+				if((m_calib_from_planes_gui != nullptr) && m_calib_from_planes_gui->calibStatus() == CalibrationStatus::PLANES_EXTRACTED)
+				{
+					m_calib_from_planes_gui->publishPlanes(sensor_id, sync_obs_id);
 				}
 			}
 
@@ -530,6 +537,12 @@ void CMainWindow::runCalibFromPlanes(TCalibFromPlanesParams *params)
 	case CalibrationStatus::PLANES_EXTRACTED:
 	{
 		m_calib_from_planes_gui->matchPlanes();
+		break;
+	}
+
+	case CalibrationStatus::PLANES_MATCHED:
+	{
+		m_calib_from_planes_gui->calibrate();
 		break;
 	}
 	}

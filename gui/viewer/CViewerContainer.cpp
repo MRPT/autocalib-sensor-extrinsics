@@ -119,15 +119,15 @@ void CViewerContainer::onReceivingPlanes(const int &viewer_id, const std::vector
 		        planes[i].v3center[1] + (0.5f * planes[i].v3normal[1]),
 		        planes[i].v3center[2] + (0.5f * planes[i].v3normal[2]));
 
-		m_viewers[viewer_id]->addArrow(pt2, pt1, 0.5 * cutils::colors::red[i%10] / 255, cutils::colors::grn[i%10] / 255, cutils::colors::blu[i%10] / 255, false, normal_id);
-		m_viewers[viewer_id]->addPolygon<pcl::PointXYZRGBA>(planes[i].ConvexHullPtr, cutils::colors::red[i%10], cutils::colors::grn[i%10], cutils::colors::blu[i%10], polygon_id);
+		m_viewers[viewer_id]->addArrow(pt2, pt1, 0.5 * utils::colors::red[i%10] / 255, utils::colors::grn[i%10] / 255, utils::colors::blu[i%10] / 255, false, normal_id);
+		m_viewers[viewer_id]->addPolygon<pcl::PointXYZRGBA>(planes[i].ConvexHullPtr, utils::colors::red[i%10], utils::colors::grn[i%10], utils::colors::blu[i%10], polygon_id);
 
 		size_t indices_size = planes[i].v_hull_indices.size();
 		for(size_t j = 0; j < indices_size; j++)
 		{
 			cv::line(img, cv::Point(planes[i].v_hull_indices[j]%width, planes[i].v_hull_indices[j]/width),
 			         cv::Point(planes[i].v_hull_indices[(j+1)%indices_size]%width, planes[i].v_hull_indices[(j+1)%indices_size]/width),
-			        cv::Scalar(cutils::colors::blu[i%10], cutils::colors::grn[i%10], cutils::colors::red[i%10]), 3);
+			        cv::Scalar(utils::colors::blu[i%10], utils::colors::grn[i%10], utils::colors::red[i%10]), 3);
 		}
 
 		if(i == planes.size())
@@ -148,32 +148,32 @@ void CViewerContainer::onReceivingPlanes(const int &viewer_id, const std::vector
 
 }
 
-void CViewerContainer::onReceivingCorrespPlanes(const std::vector<std::vector<CPlaneCHull>> &corresp_planes)
+void CViewerContainer::onReceivingCorrespPlanes(std::map<int,std::map<int,std::vector<std::array<CPlaneCHull,2>>>> &corresp_planes)
 {
 	m_viewers[2]->removeAllShapes();
 	char normal_id[1024], polygon_id[1024];
 
-	for(size_t i = 0; i < corresp_planes.size(); i++)
+	for(int i = 0; i < corresp_planes[m_sensor_id1][m_sensor_id2].size(); i++)
 	{
-		for(size_t j = 0; j < corresp_planes[i].size(); j++)
+		std::array<CPlaneCHull,2> planes_pair = corresp_planes[m_sensor_id1][m_sensor_id2][i];
+		for(int j = 0; j < 2; j++)
 		{
 			sprintf(normal_id, "%u_plane_normal_%u", static_cast<unsigned>(i), static_cast<unsigned>(j));
 			sprintf(polygon_id, "%u_plane_polygon_%u", static_cast<unsigned>(i), static_cast<unsigned>(j));
 
 			pcl::PointXYZ pt1, pt2;
-			pt1 = pcl::PointXYZ(corresp_planes[i][j].v3center[0], corresp_planes[i][j].v3center[1], corresp_planes[i][j].v3center[2]);
-			pt2 = pcl::PointXYZ(corresp_planes[i][j].v3center[0] + (0.5f * corresp_planes[i][j].v3normal[0]),
-			        corresp_planes[i][j].v3center[1] + (0.5f * corresp_planes[i][j].v3normal[1]),
-			        corresp_planes[i][j].v3center[2] + (0.5f * corresp_planes[i][j].v3normal[2]));
+			pt1 = pcl::PointXYZ(planes_pair[j].v3center[0], planes_pair[j].v3center[1], planes_pair[j].v3center[2]);
+			pt2 = pcl::PointXYZ(planes_pair[j].v3center[0] + (0.5f * planes_pair[j].v3normal[0]),
+			        planes_pair[j].v3center[1] + (0.5f * planes_pair[j].v3normal[1]),
+			        planes_pair[j].v3center[2] + (0.5f * planes_pair[j].v3normal[2]));
 
-			m_viewers[2]->addArrow(pt2, pt1, 0.5 * cutils::colors::red[j%10] / 255, cutils::colors::grn[j%10] / 255, cutils::colors::blu[j%10] / 255, false, normal_id);
-			m_viewers[2]->addPolygon<pcl::PointXYZRGBA>(corresp_planes[i][j].ConvexHullPtr, cutils::colors::red[j%10], cutils::colors::grn[j%10], cutils::colors::blu[j%10], polygon_id);
+			m_viewers[2]->addArrow(pt2, pt1, 0.5 * utils::colors::red[j%10] / 255, utils::colors::grn[j%10] / 255, utils::colors::blu[j%10] / 255, false, normal_id);
+			m_viewers[2]->addPolygon<pcl::PointXYZRGBA>(planes_pair[j].ConvexHullPtr, utils::colors::red[j%10], utils::colors::grn[j%10], utils::colors::blu[j%10], polygon_id);
 		}
 	}
 
 	m_viewers[2]->resetCamera();
 	m_viewers[2]->addCoordinateSystem(0.3);
-
 	m_ui->result_viz->update();
 }
 

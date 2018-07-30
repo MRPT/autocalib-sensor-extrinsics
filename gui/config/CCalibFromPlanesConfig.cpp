@@ -29,8 +29,11 @@ CCalibFromPlanesConfig::CCalibFromPlanesConfig(mrpt::config::CConfigFile &config
 	m_ui->distance_threshold_sbox->setValue(m_config_file.read_double("plane_segmentation", "distance_threshold", 0.05, true));
 	m_ui->minimum_threshold_sbox->setValue(m_config_file.read_double("plane_segmentation", "min_inliers_frac", 0.001, true));
 	m_ui->max_curvature_sbox->setValue(m_config_file.read_double("plane_segmentation", "max_curvature", 0.1, true));
-	m_ui->normals_dot_sbox->setValue(m_config_file.read_double("plane_matching", "normals_dot_product", 0.9, true));
-	m_ui->dist_diff_sbox->setValue(m_config_file.read_double("plane_matching", "plane_dist_diff", 0.2, true));
+	m_ui->min_normals_dot_sbox->setValue(m_config_file.read_double("plane_matching", "min_normals_dot_product", 0.9, true));
+	m_ui->max_dist_diff_sbox->setValue(m_config_file.read_double("plane_matching", "max_plane_dist_diff", 0.2, true));
+	m_ui->max_iters_sbox->setValue(m_config_file.read_int("solver", "max_iters", 10, true));
+	m_ui->min_update_sbox->setValue(m_config_file.read_double("solver", "min_update", 0.00001, true));
+	m_ui->converge_error_sbox->setValue(m_config_file.read_double("solver", "convergence_error", 0.00001, true));
 
 	connect(m_ui->extract_planes_button, SIGNAL(clicked(bool)), this, SLOT(extractPlanes()));
 	connect(m_ui->match_planes_button, SIGNAL(clicked(bool)), this, SLOT(matchPlanes()));
@@ -66,14 +69,20 @@ void CCalibFromPlanesConfig::extractPlanes()
 
 void CCalibFromPlanesConfig::matchPlanes()
 {
-	m_params.match.normals_dot_prod = m_ui->normals_dot_sbox->value();
-	m_params.match.dist_diff = m_ui->dist_diff_sbox->value();
+	m_params.match.min_normals_dot_prod = m_ui->min_normals_dot_sbox->value();
+	m_params.match.max_dist_diff = m_ui->max_dist_diff_sbox->value();
 
 	static_cast<CMainWindow*>(parentWidget()->parentWidget()->parentWidget())->runCalibFromPlanes(&m_params);
+	m_ui->calib_button->setDisabled(false);
 }
 
 void CCalibFromPlanesConfig::calibrate()
 {
+	m_params.solver.max_iters = m_ui->max_iters_sbox->value();
+	m_params.solver.min_update = m_ui->min_update_sbox->value();
+	m_params.solver.converge_error = m_ui->converge_error_sbox->value();
+
+	static_cast<CMainWindow*>(parentWidget()->parentWidget()->parentWidget())->runCalibFromPlanes(&m_params);
 }
 
 void CCalibFromPlanesConfig::saveCalib()
@@ -82,19 +91,19 @@ void CCalibFromPlanesConfig::saveCalib()
 
 void CCalibFromPlanesConfig::saveParamsClicked()
 {
-	m_config_file.write<std::string>("plane_segmentation", "normal_estimation_method", m_ui->ne_method_cbox->currentText().toStdString());
+//	m_config_file.write<std::string>("plane_segmentation", "normal_estimation_method", m_ui->ne_method_cbox->currentText().toStdString());
 
-	if(m_ui->depth_dependent_smoothing_check->isChecked())
-		m_config_file.write<bool>("plane_segmentation", "depth_dependent_smoothing", true);
-	else
-		m_config_file.write<bool>("plane_segmentation", "depth_dependent_smoothing", false);
+//	if(m_ui->depth_dependent_smoothing_check->isChecked())
+//		m_config_file.write<bool>("plane_segmentation", "depth_dependent_smoothing", true);
+//	else
+//		m_config_file.write<bool>("plane_segmentation", "depth_dependent_smoothing", false);
 
-	m_config_file.write<double>("plane_segmentation", "max_depth_change_factor", m_ui->max_depth_change_factor_sbox->value());
-	m_config_file.write<double>("plane_segmentation", "normal_smoothing_size", m_ui->normal_smoothing_size_sbox->value());
-	m_config_file.write<double>("plane_segmentation", "angle_threshold", m_ui->angle_threshold_sbox->value());
-	m_config_file.write<double>("plane_segmentation", "min_inliers_frac", m_ui->minimum_threshold_sbox->value());
-	m_config_file.write<double>("plane_segmentation", "distance_threshold", m_ui->distance_threshold_sbox->value());
-	m_config_file.write<double>("plane_segmentation", "max_curavture", m_ui->max_curvature_sbox->value());
+//	m_config_file.write<double>("plane_segmentation", "max_depth_change_factor", m_ui->max_depth_change_factor_sbox->value());
+//	m_config_file.write<double>("plane_segmentation", "normal_smoothing_size", m_ui->normal_smoothing_size_sbox->value());
+//	m_config_file.write<double>("plane_segmentation", "angle_threshold", m_ui->angle_threshold_sbox->value());
+//	m_config_file.write<double>("plane_segmentation", "min_inliers_frac", m_ui->minimum_threshold_sbox->value());
+//	m_config_file.write<double>("plane_segmentation", "distance_threshold", m_ui->distance_threshold_sbox->value());
+//	m_config_file.write<double>("plane_segmentation", "max_curavture", m_ui->max_curvature_sbox->value());
 
 	// causes segfault
 	//m_config_file.writeNow();

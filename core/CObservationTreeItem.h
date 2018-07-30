@@ -2,6 +2,8 @@
 
 #include <mrpt/obs/CObservation.h>
 #include <mrpt/system/datetime.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
 
 /**
  * Defines the type of each item that
@@ -50,10 +52,16 @@ class CObservationTreeItem
 		/** Returns the index of the item with respect to its prior tree. */
 		int getPriorIndex() const;
 
+		/** Pointer to the cloud loaded and saved from the observation, for quicker access. */
+		pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud() const;
+
 	private:
 
 		/** List of child items the item contains. */
 		std::vector<CObservationTreeItem*> m_childitems;
+
+		/** Pointer to the parent of the tree item. */
+		CObservationTreeItem *m_parentitem;
 
 		/** The item identifier string.
 		 * Can be of two types depending on whether the item represents an observation or a set item.
@@ -62,14 +70,14 @@ class CObservationTreeItem
 		 */
 		std::string m_id;
 
-		/** Pointer to the observation contained in the item. */
-		mrpt::obs::CObservation::Ptr m_observation;
-
-		/** Pointer to the parent of the tree item. */
-		CObservationTreeItem *m_parentitem;
-
 		/** The index of the item with respect to the previous tree it was a part of, if any.
 		 * For example, the index with respect to the root item in the tree the item belonged to before it was synchronized.
 		 */
 		int m_prior_index;
+
+		/** Pointer to the observation contained in the item. */
+		mrpt::obs::CObservation::Ptr m_observation;
+
+		/** Pointer to the cloud loaded and saved from the observation, for quicker access. */
+		pcl::PointCloud<pcl::PointXYZRGBA>::Ptr m_cloud = nullptr;
 };

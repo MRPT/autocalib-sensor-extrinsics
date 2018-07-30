@@ -1,7 +1,8 @@
 #pragma once
 
+#include "TExtrinsicCalibParams.h"
 #include <vector>
-#include <Eigen/Core>
+#include <Eigen/Dense>
 
 struct TPlaneSegmentationParams
 {
@@ -20,8 +21,8 @@ struct TPlaneSegmentationParams
 
 struct TPlaneMatchingParams
 {
-	double normals_dot_prod;
-	double dist_diff;
+	double min_normals_dot_prod;
+	double max_dist_diff;
 };
 
 /**
@@ -40,5 +41,6 @@ struct TCalibFromPlanesParams
 {
 	TPlaneSegmentationParams seg;
 	TPlaneMatchingParams match;
+	TSolverParams solver;
 	CalibrationStatus calib_status;
 };

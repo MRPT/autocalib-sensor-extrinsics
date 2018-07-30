@@ -4,7 +4,7 @@
 #include <interfaces/CPlanesObserver.h>
 #include <interfaces/CCorrespPlanesObserver.h>
 #include <CPlanes.h>
-#include <CUtils.h>
+#include <Utils.h>
 
 #include <QWidget>
 
@@ -65,9 +65,9 @@ public:
 
 	/**
 	 * \brief Updates the middle viewer with the matched planes.
-	 * \param corresp_planes the matched planes from each sensor that are to be visualized.
+	 * \param corresp_planes the set of correspondinging planes between each sensor pair in a set that are to be visualized.
 	 */
-	virtual void onReceivingCorrespPlanes(const std::vector<std::vector<CPlaneCHull>> &corresp_planes);
+	virtual void onReceivingCorrespPlanes(std::map<int,std::map<int,std::vector<std::array<CPlaneCHull,2>>>> &corresp_planes);
 
 private:
 
@@ -76,6 +76,17 @@ private:
 
 	/** An array of images that are a copy of the images displayed in the image viewers. */
 	std::array<mrpt::img::CImage, 2> m_viewer_images;
+
+	/** A copy of the current set of corresponding planes to be displayed in the main viewer. */
+	std::map<int,std::map<int,std::vector<std::array<int,4>>>> m_current_corresp_planes;
+
+	/** The id of the sensor whose observations are to be visualized in viewer 1.
+	 * Only the observations of two sensors can be visualized in the viewers at a time.
+	 */
+	int m_sensor_id1 = 0;
+
+	/** The id of the sensor whose observations are to be visualized in viewer 2. */
+	int m_sensor_id2 = 1;
 
 	Ui::CViewerContainer *m_ui;
 

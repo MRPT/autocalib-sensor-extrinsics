@@ -38,6 +38,9 @@ public:
 	/** Runs plane matching. */
 	void matchPlanes();
 
+	/** Runs the calibration solver. */
+	void calibrate();
+
 	/** Adds observer to list of text observers. */
 	void addTextObserver(CTextObserver *observer);
 
@@ -56,8 +59,10 @@ public:
 	 */
 	void publishPlanes(const int &sensor_id, const int &sync_obs_id);
 
-	/** Notifies observers with the planes that were matched in a sync set, if any.
+	/** Notifies observers with the planes that were matched between a pair of sensors in a sync set, if any.
 	 * \param obs_set_id the id of the synchronized observation set.
+	 * \param the id of the first sensor in the pair.
+	 * \param the id of the second sensor in the pair.
 	 */
 	void publishCorrespPlanes(const int &obs_set_id);
 
@@ -68,9 +73,6 @@ private:
 
 	/** The parameters for the calibration. */
 	TCalibFromPlanesParams *m_params;
-
-	/** Pointer to the received synchronized rawlog model. */
-	CObservationTreeGui *m_sync_model;
 
 	/** List of observers to be notified about progress status. */
 	std::vector<CTextObserver*> m_text_observers;

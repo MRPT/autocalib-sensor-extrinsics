@@ -24,28 +24,23 @@ class CCalibFromPlanes : public CExtrinsicCalib
 {
   public:
 
-	/** The back-projected clouds from the observations, index levels : [sensor_id][obs_id]
-	 * obs_id is with respect to the synchronized model.
-	 */
-	std::vector<std::vector<pcl::PointCloud<pcl::PointXYZRGBA>::Ptr>> vv_clouds;
-
 	/** The segmented planes, the vector indices to access them are [sensor_id][obs_id][plane_id]
 	 * obs_id is with respect to the synchronized model.
 	 */
 	std::vector<std::vector<std::vector<CPlaneCHull>>> vvv_planes;
 
-	/** The plane correspondences between the different sensors, the levels are [obs_set_id][corresp_id][sensor_id].
-	 * The correspondences are grouped by which observation (synced) set they belong to. Each correspondence holds
-	 * the plane_id for each sensor.
+	/** The plane correspondences between the different sensors.
+	 * The map indices correspond to the sensor ids, with the list of correspondeces
+	 * stored as a matrix with each row of the form - set_id, plane_id1, plane_id2.
 	 */
-	std::vector<std::vector<std::vector<int>>> vvv_plane_corresp;
+	std::map<int,std::map<int,std::vector<std::array<int,3>>>> mmv_plane_corresp;
 
 	/*! Covariance matrices */
     std::vector< Eigen::Matrix<Scalar,3,3>, Eigen::aligned_allocator<Eigen::Matrix<Scalar,3,3> > > covariance_rot;
     std::vector< Eigen::Matrix<Scalar,3,3>, Eigen::aligned_allocator<Eigen::Matrix<Scalar,3,3> > > m_covariance_trans;
 
 	/*! Constructor */
-	CCalibFromPlanes(size_t n_sensors = 2);
+	CCalibFromPlanes(CObservationTree *model);
 
     /*! Destructor */
 	virtual ~CCalibFromPlanes(){}
@@ -60,11 +55,11 @@ class CCalibFromPlanes : public CExtrinsicCalib
 
 	/**
 	 * Search for potential plane matches.
-	 * \param vv_planes planes belonging to each observation in the received synchronized set.
-	 * \params params the parameters for plane matching.
-	 * \params corresp_set the set of correspondences found in this synchronized set.
+	 * \param planes planes extracted from sensor observations that belong to the same synchronized set. planes[sensor_id][plane_id] gives a plane.
+	 * \param set_id the id of the synchronized set the planes belong to.
+	 * \param params the parameters for plane matching.
 	 */
-	void findPotentialMatches(const std::vector<std::vector<CPlaneCHull>> &vv_planes, const TPlaneMatchingParams &params, std::vector<std::vector<int>> &corresp_set);
+	void findPotentialMatches(const std::vector<std::vector<CPlaneCHull>> &planes, const int &set_id, const TPlaneMatchingParams &params);
 
     /** Calculate the residual error of the correspondences.
         \param sensor_poses relative poses of the sensors
@@ -75,7 +70,7 @@ class CCalibFromPlanes : public CExtrinsicCalib
     /** Calculate the angular residual error of the correspondences.
         \param sensor_poses relative poses of the sensors
         \return the residual */
-    virtual Scalar computeCalibResidual_rot(const std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > & sensor_poses);
+	virtual Scalar computeRotCalibResidual(const std::vector<Eigen::Matrix4f> &sensor_poses);
 
 //    /** Calculate the translational residual error of the correspondences.
 //        \param sensor_poses relative poses of the sensors
@@ -90,7 +85,7 @@ class CCalibFromPlanes : public CExtrinsicCalib
     /** Compute Calibration (only rotation).
         \param sensor_poses initial calibration
         \return the residual */
-    virtual Scalar computeCalibration_rot(const std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > & sensor_poses);
+	virtual Scalar computeRotCalibration(const TSolverParams &params, const std::vector<Eigen::Matrix4f> &sensor_poses, std::string &stats);
 
 //    /** Compute Calibration (only translation).
 //        \param sensor_poses initial calibration

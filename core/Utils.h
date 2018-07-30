@@ -9,7 +9,7 @@
 /** Function template to find the position of an element in a vector. */
 
 // Define some colours to draw bolobs, patches, etc.
-namespace cutils
+namespace utils
 {
     namespace colors
 	{
