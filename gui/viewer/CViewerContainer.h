@@ -67,7 +67,7 @@ public:
 	 * \brief Updates the middle viewer with the matched planes.
 	 * \param corresp_planes the set of correspondinging planes between each sensor pair in a set that are to be visualized.
 	 */
-	virtual void onReceivingCorrespPlanes(std::map<int,std::map<int,std::vector<std::array<CPlaneCHull,2>>>> &corresp_planes);
+	virtual void onReceivingCorrespPlanes(std::map<int,std::map<int,std::vector<std::array<CPlaneCHull,2>>>> &corresp_planes, const std::vector<Eigen::Matrix4f> &sensor_poses);
 
 private:
 
@@ -80,13 +80,9 @@ private:
 	/** A copy of the current set of corresponding planes to be displayed in the main viewer. */
 	std::map<int,std::map<int,std::vector<std::array<int,4>>>> m_current_corresp_planes;
 
-	/** The id of the sensor whose observations are to be visualized in viewer 1.
-	 * Only the observations of two sensors can be visualized in the viewers at a time.
-	 */
-	int m_sensor_id1 = 0;
-
-	/** The id of the sensor whose observations are to be visualized in viewer 2. */
-	int m_sensor_id2 = 1;
+	/** The ids of the sensor whose observations are to be visualized in viewers 1 and 2 repsepctively.
+	 * Only the observations of two sensors can be visualized in the viewers at a time. */
+	std::vector<int> m_vsensor_ids = {0,1};
 
 	Ui::CViewerContainer *m_ui;
 

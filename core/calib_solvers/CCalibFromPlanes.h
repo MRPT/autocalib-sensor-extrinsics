@@ -27,7 +27,7 @@ class CCalibFromPlanes : public CExtrinsicCalib
 	/** The segmented planes, the vector indices to access them are [sensor_id][obs_id][plane_id]
 	 * obs_id is with respect to the synchronized model.
 	 */
-	std::vector<std::vector<std::vector<CPlaneCHull>>> vvv_planes;
+	std::map<int,std::vector<std::vector<CPlaneCHull>>> mvv_planes;
 
 	/** The plane correspondences between the different sensors.
 	 * The map indices correspond to the sensor ids, with the list of correspondeces

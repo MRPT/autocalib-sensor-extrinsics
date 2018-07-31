@@ -258,7 +258,7 @@ int CObservationTree::findSyncIndexFromSet(const int &set_id, const std::string 
 	{
 		if(item->child(i)->getObservation()->sensorLabel == sensor_label)
 		{
-			return utils::findItemIndexIn(m_sync_indices[sensor_index], item->getPriorIndex());
+			return utils::findItemIndexIn(m_sync_indices[sensor_index], item->child(i)->getPriorIndex());
 		}
 	}
 }

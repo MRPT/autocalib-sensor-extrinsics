@@ -6,11 +6,9 @@
 #include <mrpt/poses/CPose3D.h>
 #include <Eigen/Core>
 
-/** Function template to find the position of an element in a vector. */
-
-// Define some colours to draw bolobs, patches, etc.
 namespace utils
 {
+    // Define some colours to draw bolobs, patches, etc.
     namespace colors
 	{
 	    static const unsigned char red [10] = {255,   0,   0, 255, 255,   0, 255, 204,   0, 255};
@@ -18,13 +16,18 @@ namespace utils
 		static const unsigned char blu [10] = {  0,   0, 255,   0, 255, 255, 0  , 204,   0, 173};
 	}
 
+	/** Function template to find the position of an element in a vector. */
 	template <typename T>
 	size_t findItemIndexIn(const std::vector<T> &vec, const T &item)
 	{
 		auto iter = std::find(vec.begin(), vec.end(), item);
-		return std::distance(vec.begin(), iter);
+		if(iter != vec.end())
+			return std::distance(vec.begin(), iter);
+		else
+			return -1;
 	}
 
+	/** Function template to get so(3) rotation from SE(3) transformation. */
 	template <typename T>
 	Eigen::Matrix<T,3,1> getRotationVector(const Eigen::Matrix<T,4,4> &sensor_pose)
 	{
@@ -37,9 +40,24 @@ namespace utils
 		return rot_vec;
 	}
 
+	/** Function template to get translation from SE(3) transformation. */
 	template <typename T>
 	Eigen::Matrix<T,3,1> getTranslationVector(const Eigen::Matrix<T,4,4> &sensor_pose)
 	{
 		return sensor_pose.block(0,3,3,1);
+	}
+
+	template <typename T>
+	void transformPoint(const Eigen::Affine3f &transform, T &point)
+	{
+		Eigen::Vector3f tpoint(3);
+		tpoint(0) = point.x;
+		tpoint(1) = point.y;
+		tpoint(2) = point.z;
+
+		tpoint = transform * tpoint;
+		point.x = tpoint(0);
+		point.y = tpoint(1);
+		point.z = tpoint(2);
 	}
 }

@@ -41,7 +41,8 @@ int CObservationTreeItem::row() const
 	if(m_parentitem)
 	{
 		auto iter = std::find(m_parentitem->m_childitems.begin(), m_parentitem->m_childitems.end(), const_cast<CObservationTreeItem*>(this));
-		return std::distance(m_parentitem->m_childitems.begin(), iter);
+		if(iter != m_parentitem->m_childitems.end())
+			return std::distance(m_parentitem->m_childitems.begin(), iter);
 	}
 
 	return 0;

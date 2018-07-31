@@ -55,7 +55,7 @@ void CCalibFromPlanesGui::publishPlanes(const int &sensor_id, const int &sync_ob
 {
 	for(CPlanesObserver *observer : m_planes_observers)
 	{
-		observer->onReceivingPlanes(sensor_id, vvv_planes[sensor_id][sync_obs_id]);
+		observer->onReceivingPlanes(sensor_id, mvv_planes[sensor_id][sync_obs_id]);
 	}
 }
 
@@ -80,8 +80,8 @@ void CCalibFromPlanesGui::publishCorrespPlanes(const int &obs_set_id)
 					int sync_obs1_id = sync_model->findSyncIndexFromSet(set_id, sync_model->getSensorLabels()[sensor_i]);
 					int sync_obs2_id = sync_model->findSyncIndexFromSet(set_id, sync_model->getSensorLabels()[sensor_j]);
 
-					std::array<CPlaneCHull,2> planes_pair{vvv_planes[sensor_i][sync_obs1_id][correspondences[i][1]],
-						                                 vvv_planes[sensor_j][sync_obs2_id][correspondences[i][2]]};
+					std::array<CPlaneCHull,2> planes_pair{mvv_planes[sensor_i][sync_obs1_id][correspondences[i][1]],
+						                                 mvv_planes[sensor_j][sync_obs2_id][correspondences[i][2]]};
 					corresp_planes[sensor_i][sensor_j].push_back(planes_pair);
 				}
 			}
@@ -90,7 +90,7 @@ void CCalibFromPlanesGui::publishCorrespPlanes(const int &obs_set_id)
 
 	for(CCorrespPlanesObserver *observer : m_corresp_planes_observers)
 	{
-		observer->onReceivingCorrespPlanes(corresp_planes);
+		observer->onReceivingCorrespPlanes(corresp_planes, sync_model->getSensorPoses());
 	}
 }
 
@@ -128,12 +128,11 @@ void CCalibFromPlanesGui::extractPlanes()
 	mrpt::system::TTimeStamp prev_ts = 0;
 
 	selected_sensor_labels = sync_model->getSensorLabels();
-	vvv_planes.resize(selected_sensor_labels.size());
 
 	for(size_t i = 0; i < selected_sensor_labels.size(); i++)
 	{
 		publishText("**Extracting planes from sensor #" + std::to_string(i) + " observations**");
-		vvv_planes[i].resize((sync_model->getSyncIndices()[i]).size());
+		mvv_planes[i].resize((sync_model->getSyncIndices()[i]).size());
 
 		//let's run it for 5 sets
 		for(size_t j = 0; j < 15; j++)
@@ -164,7 +163,7 @@ void CCalibFromPlanesGui::extractPlanes()
 					publishText(std::to_string(n_planes) + " plane(s) extracted from observation #" + std::to_string(tree_item->child(k)->getPriorIndex())
 					            + "\nTime elapsed: " +  std::to_string(plane_segment_end - plane_segment_start));
 
-					vvv_planes[i][sync_obs_id] = segmented_planes;
+					mvv_planes[i][sync_obs_id] = segmented_planes;
 					sync_obs_id++;
 					prev_ts = obs_item->timestamp;
 				}
@@ -190,27 +189,25 @@ void CCalibFromPlanesGui::matchPlanes()
 	sensor_labels = sync_model->getSensorLabels();
 
 	std::vector<std::vector<CPlaneCHull>> planes;
-	std::vector<std::vector<int>> corresp_set;
 
-	for(size_t i = 0; i < root_item->childCount(); i++)
+	//for(int i = 0; i < root_item->childCount(); i++)
+	for(int i = 0; i < 15; i++)
 	{
 		tree_item = root_item->child(i);
 		planes.resize(sensor_labels.size());
 
-		publishText("**Finding matches between planes in set #" +std::to_string(i) + "**");
+		publishText("**Finding matches between planes in set #" + std::to_string(i) + "**");
 
-		for(size_t j = 0; j < tree_item->childCount(); j++)
+		for(int j = 0; j < tree_item->childCount(); j++)
 		{
 			item = tree_item->child(j);
 			sensor_id = utils::findItemIndexIn(sensor_labels, item->getObservation()->sensorLabel);
 			sync_obs_id = sync_model->findSyncIndexFromSet(i, item->getObservation()->sensorLabel);
-
-			planes[sensor_id] = vvv_planes[sensor_id][sync_obs_id];
+			planes[sensor_id] = mvv_planes[sensor_id][sync_obs_id];
 		}
 
 		findPotentialMatches(planes, i, m_params->match);
 		planes.clear();
-
 
 		//print statistics
 		int count = 0;
@@ -236,5 +233,7 @@ void CCalibFromPlanesGui::matchPlanes()
 void CCalibFromPlanesGui::calibrate()
 {
 	publishText("****Running the calibration solver****");
-	//computeCalibration_rot(sensor_poses);
+
+	std::string stats;
+	computeRotCalibration(m_params->solver, sync_model->getSensorPoses(), stats);
 }

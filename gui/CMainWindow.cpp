@@ -403,7 +403,8 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 				item->cloud() = cloud;
 			}
 
-			if((m_calib_from_planes_gui!= nullptr) && m_calib_from_planes_gui->calibStatus() == CalibrationStatus::PLANES_EXTRACTED)
+			if((m_calib_from_planes_gui!= nullptr) && (m_calib_from_planes_gui->calibStatus() == CalibrationStatus::PLANES_EXTRACTED
+			                                           || m_calib_from_planes_gui->calibStatus() == CalibrationStatus::PLANES_MATCHED))
 				m_calib_from_planes_gui->publishPlanes(sensor_id, sync_obs_id);
 		}
 
@@ -451,7 +452,8 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 					item->cloud() = cloud;
 				}
 
-				if((m_calib_from_planes_gui != nullptr) && m_calib_from_planes_gui->calibStatus() == CalibrationStatus::PLANES_EXTRACTED)
+				if((m_calib_from_planes_gui != nullptr) && (m_calib_from_planes_gui->calibStatus() == CalibrationStatus::PLANES_EXTRACTED
+				                                            || m_calib_from_planes_gui->calibStatus() == CalibrationStatus::PLANES_MATCHED));
 				{
 					m_calib_from_planes_gui->publishPlanes(sensor_id, sync_obs_id);
 				}

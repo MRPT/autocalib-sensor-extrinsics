@@ -80,27 +80,6 @@ void CViewerContainer::updateCloudViewer(const int &viewer_id, const pcl::PointC
 	m_ui->result_viz->update();
 }
 
-void CViewerContainer::updateSetCloudViewer(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const std::string &sensor_label, const Eigen::Matrix4f &sensor_pose, const std::string &text)
-{
-	pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGBA> viewer_color_handler(cloud);
-	Eigen::Affine3f rt;
-	rt.matrix() = sensor_pose;
-
-	if(viewerContainsCloud(2, sensor_label))
-	{
-		m_viewers[2]->removePointCloud(sensor_label);
-		m_viewers[2]->removeCoordinateSystem(sensor_label);
-	}
-
-	m_viewers[2]->addPointCloud(cloud, viewer_color_handler, sensor_label);
-	m_viewers[2]->updatePointCloudPose(sensor_label, rt);
-	m_viewers[2]->resetCamera();
-	m_viewers[2]->updateText(text, 10, 10, 1, 1, 1, "text");
-	m_viewers[2]->addCoordinateSystem(0.3, rt, sensor_label);
-
-	m_ui->result_viz->update();
-}
-
 void CViewerContainer::onReceivingPlanes(const int &viewer_id, const std::vector<CPlaneCHull> &planes)
 {
 	char normal_id[1024], polygon_id[1024];
@@ -145,17 +124,39 @@ void CViewerContainer::onReceivingPlanes(const int &viewer_id, const std::vector
 	m_ui->input1_viz->update();
 	m_ui->input2_viz->update();
 	m_ui->result_viz->update();
-
 }
 
-void CViewerContainer::onReceivingCorrespPlanes(std::map<int,std::map<int,std::vector<std::array<CPlaneCHull,2>>>> &corresp_planes)
+void CViewerContainer::updateSetCloudViewer(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const std::string &sensor_label, const Eigen::Matrix4f &sensor_pose, const std::string &text)
+{
+	pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGBA> viewer_color_handler(cloud);
+	Eigen::Affine3f rt;
+	rt.matrix() = sensor_pose;
+
+	if(viewerContainsCloud(2, sensor_label))
+	{
+		m_viewers[2]->removePointCloud(sensor_label);
+		m_viewers[2]->removeCoordinateSystem(sensor_label);
+	}
+
+	m_viewers[2]->addPointCloud(cloud, viewer_color_handler, sensor_label);
+	m_viewers[2]->updatePointCloudPose(sensor_label, rt);
+	m_viewers[2]->resetCamera();
+	m_viewers[2]->updateText(text, 10, 10, 1, 1, 1, "text");
+	m_viewers[2]->addCoordinateSystem(0.3, rt, sensor_label);
+
+	m_ui->result_viz->update();
+}
+
+void CViewerContainer::onReceivingCorrespPlanes(std::map<int,std::map<int,std::vector<std::array<CPlaneCHull,2>>>> &corresp_planes, const std::vector<Eigen::Matrix4f> &sensor_poses)
 {
 	m_viewers[2]->removeAllShapes();
 	char normal_id[1024], polygon_id[1024];
+	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr transformed_polygon(new pcl::PointCloud<pcl::PointXYZRGBA>);
+	Eigen::Affine3f rt;
 
-	for(int i = 0; i < corresp_planes[m_sensor_id1][m_sensor_id2].size(); i++)
+	for(int i = 0; i < corresp_planes[m_vsensor_ids[0]][m_vsensor_ids[1]].size(); i++)
 	{
-		std::array<CPlaneCHull,2> planes_pair = corresp_planes[m_sensor_id1][m_sensor_id2][i];
+		std::array<CPlaneCHull,2> planes_pair = corresp_planes[m_vsensor_ids[0]][m_vsensor_ids[1]][i];
 		for(int j = 0; j < 2; j++)
 		{
 			sprintf(normal_id, "%u_plane_normal_%u", static_cast<unsigned>(i), static_cast<unsigned>(j));
@@ -167,8 +168,13 @@ void CViewerContainer::onReceivingCorrespPlanes(std::map<int,std::map<int,std::v
 			        planes_pair[j].v3center[1] + (0.5f * planes_pair[j].v3normal[1]),
 			        planes_pair[j].v3center[2] + (0.5f * planes_pair[j].v3normal[2]));
 
-			m_viewers[2]->addArrow(pt2, pt1, 0.5 * utils::colors::red[j%10] / 255, utils::colors::grn[j%10] / 255, utils::colors::blu[j%10] / 255, false, normal_id);
-			m_viewers[2]->addPolygon<pcl::PointXYZRGBA>(planes_pair[j].ConvexHullPtr, utils::colors::red[j%10], utils::colors::grn[j%10], utils::colors::blu[j%10], polygon_id);
+			rt.matrix() = sensor_poses[m_vsensor_ids[j]];
+			pcl::transformPointCloud(*planes_pair[j].ConvexHullPtr, *transformed_polygon, rt);
+			utils::transformPoint(rt, pt1);
+			utils::transformPoint(rt, pt2);
+
+			m_viewers[2]->addArrow(pt2, pt1, 0.5 * utils::colors::red[i%10] / 255, utils::colors::grn[i%10] / 255, utils::colors::blu[i%10] / 255, false, normal_id);
+			m_viewers[2]->addPolygon<pcl::PointXYZRGBA>(transformed_polygon, utils::colors::red[i%10], utils::colors::grn[i%10], utils::colors::blu[i%10], polygon_id);
 		}
 	}
 

@@ -27,6 +27,7 @@ CCalibFromPlanes::CCalibFromPlanes(CObservationTree *model) :
 {
 	for(int sensor_id1=0; sensor_id1 < sync_model->getNumberOfSensors(); sensor_id1++)
 	{
+		mvv_planes[sensor_id1] = std::vector<std::vector<CPlaneCHull>>();
 		mmv_plane_corresp[sensor_id1] = std::map<int, std::vector<std::array<int,3>>>();
 		for(int sensor_id2 = sensor_id1 + 1; sensor_id2 < sync_model->getNumberOfSensors(); sensor_id2++)
 			mmv_plane_corresp[sensor_id1][sensor_id2] = std::vector<std::array<int,3>>();
@@ -184,8 +185,8 @@ Scalar CCalibFromPlanes::computeRotCalibResidual(const std::vector<Eigen::Matrix
 				int sync_obs1_id = sync_model->findSyncIndexFromSet(set_id, sync_model->getSensorLabels()[sensor_i]);
 				int sync_obs2_id = sync_model->findSyncIndexFromSet(set_id, sync_model->getSensorLabels()[sensor_j]);
 
-				Eigen::Vector3f n_obs_i = vvv_planes[sensor_i][sync_obs1_id][correspondences[i][1]].v3normal;
-				Eigen::Vector3f n_obs_j = vvv_planes[sensor_j][sync_obs2_id][correspondences[i][2]].v3normal;
+				Eigen::Vector3f n_obs_i = mvv_planes[sensor_i][sync_obs1_id][correspondences[i][1]].v3normal;
+				Eigen::Vector3f n_obs_j = mvv_planes[sensor_j][sync_obs2_id][correspondences[i][2]].v3normal;
 
 				Eigen::Vector3f n_i = sensor_poses[sensor_i].block(0,0,3,3) * n_obs_i;
 				Eigen::Vector3f n_j = sensor_poses[sensor_j].block(0,0,3,3) * n_obs_j;
@@ -210,7 +211,7 @@ Scalar CCalibFromPlanes::computeRotCalibration(const TSolverParams &params, cons
 	int num_corresp;
 
 	std::vector<Eigen::Matrix4f> estimated_poses = sensor_poses;
-	std::vector<Eigen::Matrix4f> estimated_poses_temp;
+	std::vector<Eigen::Matrix4f> estimated_poses_temp(sensor_poses.size());
 
 	float increment = 1000, diff_error = 1000;
 	int it = 0;
@@ -242,8 +243,8 @@ Scalar CCalibFromPlanes::computeRotCalibration(const TSolverParams &params, cons
 					int sync_obs1_id = sync_model->findSyncIndexFromSet(set_id, sync_model->getSensorLabels()[sensor_i]);
 					int sync_obs2_id = sync_model->findSyncIndexFromSet(set_id, sync_model->getSensorLabels()[sensor_j]);
 
-					Eigen::Vector3f n_obs_i = vvv_planes[sensor_i][sync_obs1_id][correspondences[i][1]].v3normal;
-					Eigen::Vector3f n_obs_j = vvv_planes[sensor_j][sync_obs2_id][correspondences[i][2]].v3normal;
+					Eigen::Vector3f n_obs_i = mvv_planes[sensor_i][sync_obs1_id][correspondences[i][1]].v3normal;
+					Eigen::Vector3f n_obs_j = mvv_planes[sensor_j][sync_obs2_id][correspondences[i][2]].v3normal;
 
 					Eigen::Vector3f n_i = sensor_poses[sensor_i].block(0,0,3,3) * n_obs_i;
 					Eigen::Vector3f n_j = sensor_poses[sensor_j].block(0,0,3,3) * n_obs_j;

@@ -19,7 +19,7 @@ typedef float Scalar;
 class CPlane
 {
   public:
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     Eigen::Matrix<Scalar,3,1> v3center;
     Eigen::Matrix<Scalar,3,1> v3normal;
