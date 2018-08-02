@@ -134,7 +134,7 @@ void CCalibFromPlanesGui::extractPlanes()
 		publishText("**Extracting planes from sensor #" + std::to_string(i) + " observations**");
 		mvv_planes[i].resize((sync_model->getSyncIndices()[i]).size());
 
-		//let's run it for 5 sets
+		//let's run it for 15 sets
 		for(size_t j = 0; j < 15; j++)
 		{
 			tree_item = root_item->child(j);
@@ -236,4 +236,6 @@ void CCalibFromPlanesGui::calibrate()
 
 	std::string stats;
 	computeRotCalibration(m_params->solver, sync_model->getSensorPoses(), stats);
+
+	publishText(stats);
 }

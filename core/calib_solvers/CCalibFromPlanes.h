@@ -15,9 +15,8 @@
 //#include <mrpt/pbmap/Miscellaneous.h>
 #include <map>
 
-/** Exploit 3D plane observations from a set of sensors to perform extrinsic calibration.
- *  Plane correspondences are analogous to the control points used to create panoramic images with a regular camera).
- *  It allows to estimate the extrinsic calibration between RGB-D sensors like Asus XPL.
+/**
+ * \brief Exploit 3D plane observations from a set of sensors to perform extrinsic calibration.
  */
 
 class CCalibFromPlanes : public CExtrinsicCalib

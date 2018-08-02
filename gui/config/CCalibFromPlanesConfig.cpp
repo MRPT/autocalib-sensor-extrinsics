@@ -38,7 +38,7 @@ CCalibFromPlanesConfig::CCalibFromPlanesConfig(mrpt::config::CConfigFile &config
 	connect(m_ui->extract_planes_button, SIGNAL(clicked(bool)), this, SLOT(extractPlanes()));
 	connect(m_ui->match_planes_button, SIGNAL(clicked(bool)), this, SLOT(matchPlanes()));
 	connect(m_ui->calib_button, SIGNAL(clicked(bool)), this, SLOT(calibrate()));
-	connect(m_ui->save_calib_button, SIGNAL(clicked(bool)), this, SLOT(saveCalib()));
+	connect(m_ui->save_calib_button, SIGNAL(clicked(bool)), this, SLOT(saveCalibClicked()));
 	connect(m_ui->save_params_button, SIGNAL(clicked(bool)), this, SLOT(saveParamsClicked()));
 
 	m_ui->match_planes_button->setDisabled(true);
@@ -85,7 +85,7 @@ void CCalibFromPlanesConfig::calibrate()
 	static_cast<CMainWindow*>(parentWidget()->parentWidget()->parentWidget())->runCalibFromPlanes(&m_params);
 }
 
-void CCalibFromPlanesConfig::saveCalib()
+void CCalibFromPlanesConfig::saveCalibClicked()
 {
 }
 

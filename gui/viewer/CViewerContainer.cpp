@@ -183,9 +183,10 @@ void CViewerContainer::onReceivingCorrespPlanes(std::map<int,std::map<int,std::v
 	m_ui->result_viz->update();
 }
 
-void CViewerContainer::updateImageViewer(const int &viewer_id, mrpt::img::CImage &image)
+void CViewerContainer::updateImageViewer(const int &viewer_id, mrpt::img::CImage image, const bool &draw)
 {
-	m_viewer_images[viewer_id] = image;
+	if(!draw)
+		m_viewer_images[viewer_id] = image;
 
 	switch(viewer_id)
 	{
@@ -193,7 +194,7 @@ void CViewerContainer::updateImageViewer(const int &viewer_id, mrpt::img::CImage
 	{
 		m_ui->input1_tab_widget->removeTab(1);
 		mrpt::gui::CQtGlCanvasBase *gl = new mrpt::gui::CQtGlCanvasBase();
-		gl->mainViewport()->setImageView(image);
+		gl->mainViewport()->setImageView_fast(image);
 		m_ui->input1_tab_widget->insertTab(1, gl, "RGB");
 		break;
 	}
@@ -202,11 +203,28 @@ void CViewerContainer::updateImageViewer(const int &viewer_id, mrpt::img::CImage
 	{
 		m_ui->input2_tab_widget->removeTab(1);
 		mrpt::gui::CQtGlCanvasBase *gl = new mrpt::gui::CQtGlCanvasBase();
-		gl->mainViewport()->setImageView(image);
+		gl->mainViewport()->setImageView_fast(image);
 		m_ui->input2_tab_widget->insertTab(1, gl, "RGB");
 		break;
 	}
 	}
+}
+
+void CViewerContainer::onReceivingLines(const int &viewer_id, const std::vector<cv::Vec4i> &lines)
+{
+	cv::Mat img = cv::cvarrToMat((m_viewer_images[viewer_id]).getAs<IplImage>());
+
+	for(int i = 0; i < lines.size(); i++)
+	{
+		cv::Vec4i l = lines[i];
+		cv::line(img, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]),
+		        cv::Scalar(utils::colors::blu[i%10], utils::colors::grn[i%10], utils::colors::red[i%10]), 3);
+	}
+
+	IplImage *iimg = new IplImage(img);
+	mrpt::img::CImage cimg;
+	cimg.setFromIplImage(iimg);
+	updateImageViewer(viewer_id, cimg, true);
 }
 
 void CViewerContainer::onReceivingText(const std::string &msg)

@@ -1,11 +1,15 @@
 #pragma once
+
+#include <calib_solvers/TCalibFromLinesParams.h>
 #include <QWidget>
+#include <mrpt/config/CConfigFile.h>
 
 /**
  * Class for loading and storing parameters related to CCalibFromLines.
  */
 
-namespace Ui {
+namespace Ui
+{
 class CCalibFromLinesConfig;
 }
 
@@ -14,14 +18,23 @@ class CCalibFromLinesConfig : public QWidget
 	Q_OBJECT
 
 public:
-	explicit CCalibFromLinesConfig(QWidget *parent = 0);
+	explicit CCalibFromLinesConfig(mrpt::config::CConfigFile &config_file, QWidget *parent = 0);
 	~CCalibFromLinesConfig();
 
 private slots:
-	void startCalib();
-	void proceedCalib();
-	void saveCalib();
+	void extractLines();
+	void matchLines();
+	void calibrate();
+
+	/** Callback to save the estimated calibration to a file. */
+	void saveCalibClicked();
 
 private:
 	Ui::CCalibFromLinesConfig *m_ui;
+
+	/** The configuration file for the app.*/
+	mrpt::config::CConfigFile m_config_file;
+
+	/** The parameters for calibration from lines. */
+	TCalibFromLinesParams m_params;
 };

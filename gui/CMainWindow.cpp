@@ -3,7 +3,6 @@
 #include <observation_tree/CObservationTreeGui.h>
 #include <config/CCalibFromPlanesConfig.h>
 #include <config/CCalibFromLinesConfig.h>
-#include <core_gui/CCalibFromPlanesGui.h>
 #include <Utils.h>
 
 #include <mrpt/obs/CObservation3DRangeScan.h>
@@ -406,6 +405,10 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 			if((m_calib_from_planes_gui!= nullptr) && (m_calib_from_planes_gui->calibStatus() == CalibrationStatus::PLANES_EXTRACTED
 			                                           || m_calib_from_planes_gui->calibStatus() == CalibrationStatus::PLANES_MATCHED))
 				m_calib_from_planes_gui->publishPlanes(sensor_id, sync_obs_id);
+
+			else if((m_calib_from_lines_gui != nullptr) && (m_calib_from_lines_gui->calibStatus() == CalibrationFromLinesStatus::LINES_EXTRACTED
+			                                           || m_calib_from_lines_gui->calibStatus() == CalibrationFromLinesStatus::LINES_MATCHED))
+				m_calib_from_lines_gui->publishLines(sensor_id, sync_obs_id);
 		}
 
 		//else set-item was clicked
@@ -453,10 +456,13 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 				}
 
 				if((m_calib_from_planes_gui != nullptr) && (m_calib_from_planes_gui->calibStatus() == CalibrationStatus::PLANES_EXTRACTED
-				                                            || m_calib_from_planes_gui->calibStatus() == CalibrationStatus::PLANES_MATCHED));
-				{
+				                                            || m_calib_from_planes_gui->calibStatus() == CalibrationStatus::PLANES_MATCHED))
 					m_calib_from_planes_gui->publishPlanes(sensor_id, sync_obs_id);
-				}
+
+
+				else if((m_calib_from_lines_gui != nullptr) && (m_calib_from_lines_gui->calibStatus() == CalibrationFromLinesStatus::LINES_EXTRACTED
+				                                           || m_calib_from_lines_gui->calibStatus() == CalibrationFromLinesStatus::LINES_MATCHED))
+					m_calib_from_lines_gui->publishLines(sensor_id, sync_obs_id);
 			}
 
 			if((m_calib_from_planes_gui != nullptr) && m_calib_from_planes_gui->calibStatus() == CalibrationStatus::PLANES_MATCHED)
@@ -487,7 +493,7 @@ void CMainWindow::algosIndexChanged(int index)
 
 	case 2:
 	{
-		m_config_widget = std::make_shared<CCalibFromLinesConfig>();
+		m_config_widget = std::make_shared<CCalibFromLinesConfig>(m_config_file);
 		qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(3, m_config_widget.get());
 		break;
 	}
@@ -550,17 +556,33 @@ void CMainWindow::runCalibFromPlanes(TCalibFromPlanesParams *params)
 	}
 }
 
-void CMainWindow::runCalibFromLines()
+void CMainWindow::runCalibFromLines(TCalibFromLinesParams *params)
 {
-	if(m_sync_model != nullptr && (m_sync_model->getRootItem()->childCount() > 0))
+	switch(params->calib_status)
 	{
-		m_calib_from_planes_gui = nullptr;
-		m_calib_from_lines_gui = new CCalibFromLinesGui(m_sync_model);
-		//m_line_matching->extractLines();
+	case CalibrationFromLinesStatus::LCALIB_YET_TO_START:
+	{
+		if(m_sync_model != nullptr && (m_sync_model->getRootItem()->childCount() > 0))
+		{
+			m_calib_from_planes_gui = nullptr;
+			m_calib_from_lines_gui = new CCalibFromLinesGui(m_sync_model, params);
+			m_calib_from_lines_gui->addTextObserver(m_ui->viewer_container);
+			m_calib_from_lines_gui->addLinesObserver(m_ui->viewer_container);
+			m_calib_from_lines_gui->extractLines();
+		}
+
+		else
+			m_ui->viewer_container->updateText("No grouped observations available!");
+
+		break;
 	}
 
-	else
-		m_ui->viewer_container->updateText("No grouped observations available!");
+	case CalibrationFromLinesStatus::LINES_EXTRACTED:
+	{
+		m_calib_from_lines_gui->matchLines();
+		break;
+	}
+	}
 }
 
 void CMainWindow::saveParams()

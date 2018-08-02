@@ -3,6 +3,7 @@
 #include <interfaces/CTextObserver.h>
 #include <interfaces/CPlanesObserver.h>
 #include <interfaces/CCorrespPlanesObserver.h>
+#include <interfaces/CLinesObserver.h>
 #include <CPlanes.h>
 #include <Utils.h>
 
@@ -20,7 +21,7 @@ namespace Ui {
 class CViewerContainer;
 }
 
-class CViewerContainer : public QWidget, public CTextObserver, public CPlanesObserver, public CCorrespPlanesObserver
+class CViewerContainer : public QWidget, public CTextObserver, public CPlanesObserver, public CCorrespPlanesObserver, public CLinesObserver
 {
 	Q_OBJECT
 
@@ -50,8 +51,9 @@ public:
 	/** Update the image viewer with an image.
 	 * \param viewer_id the id of the image viewer to be updated.
 	 * \param image the image to be displayed.
+	 * \param draw indicates whether the image to be displayed is drawn with shapes.
 	 */
-	void updateImageViewer(const int &viewer_id, mrpt::img::CImage &image);
+	void updateImageViewer(const int &viewer_id, mrpt::img::CImage image, const bool &draw = 0);
 
 	void updateCalibConfig(const int &calib_algo_id);
 	bool viewerContainsCloud(const int &viewer_id, const std::string &id);
@@ -68,6 +70,13 @@ public:
 	 * \param corresp_planes the set of correspondinging planes between each sensor pair in a set that are to be visualized.
 	 */
 	virtual void onReceivingCorrespPlanes(std::map<int,std::map<int,std::vector<std::array<CPlaneCHull,2>>>> &corresp_planes, const std::vector<Eigen::Matrix4f> &sensor_poses);
+
+	/**
+	 * \brief Updates the image viewer with the received line segments.
+	 * \param viewer_id the id of the image viewer.
+	 * \param lines the vector of line segments to be drawn.
+	 */
+	virtual void onReceivingLines(const int &viewer_id, const std::vector<cv::Vec4i> &lines);
 
 private:
 

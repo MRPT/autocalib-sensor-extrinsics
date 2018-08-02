@@ -50,7 +50,7 @@ public:
 	/** Adds observer to list of matched planes observers. */
 	void addCorrespPlanesObserver(CCorrespPlanesObserver *observer);
 
-	/** Notifies observers with a text message. */
+	/** Notifies text observers with a message. */
 	void publishText(const std::string &msg);
 
 	/** Notifies observers with the extracted planes.
@@ -74,7 +74,7 @@ private:
 	/** The parameters for the calibration. */
 	TCalibFromPlanesParams *m_params;
 
-	/** List of observers to be notified about progress status. */
+	/** List of text observers to be notified about progress status. */
 	std::vector<CTextObserver*> m_text_observers;
 
 	/** List of observers to be notified about extracted planes. */

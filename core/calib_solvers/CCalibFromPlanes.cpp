@@ -206,7 +206,7 @@ Scalar CCalibFromPlanes::computeRotCalibration(const TSolverParams &params, cons
 	const int dof = 3 * (num_sensors - 1);
 	Eigen::VectorXf update_vector(dof);
 	Eigen::Matrix3f jacobian_rot_i, jacobian_rot_j; // Jacobians of the rotation
-	float accum_error;
+	float error, new_error, init_error;
 	float av_angle_error;
 	int num_corresp;
 
@@ -215,12 +215,15 @@ Scalar CCalibFromPlanes::computeRotCalibration(const TSolverParams &params, cons
 
 	float increment = 1000, diff_error = 1000;
 	int it = 0;
+
+	init_error = computeRotCalibResidual(sensor_poses);
+
 	while(it < params.max_iters && increment > params.min_update && diff_error > params.converge_error)
 	{
 		// Calculate the hessian and the gradient
 		hessian = Eigen::Matrix<Scalar,Eigen::Dynamic,Eigen::Dynamic>::Zero(dof, dof); // Hessian of the rotation of the decoupled system
 		gradient = Eigen::Matrix<Scalar,Eigen::Dynamic,1>::Zero(dof); // Gradient of the rotation of the decoupled system
-		accum_error = 0.0;
+		error = 0.0;
 		av_angle_error = 0.0;
 		num_corresp = 0;
 
@@ -253,10 +256,9 @@ Scalar CCalibFromPlanes::computeRotCalibration(const TSolverParams &params, cons
 					jacobian_rot_j = skew(n_j);
 
 					Eigen::Vector3f rot_error = (n_i - n_j);
-					accum_error += rot_error.dot(rot_error);
+					error += rot_error.dot(rot_error);
 					av_angle_error += acos(n_i.dot(n_j));
 					num_corresp++;
-
 
 					if(sensor_i != 0) // The pose of the first camera is fixed
 					{
@@ -310,23 +312,32 @@ Scalar CCalibFromPlanes::computeRotCalibration(const TSolverParams &params, cons
 			//cout << "new rotation\n" << Rt_estimatedTemp[sensor_id].block(0,0,3,3) << endl;
 		}
 
-		accum_error = computeRotCalibResidual(estimated_poses);
+		//accum_error = computeRotCalibResidual(estimated_poses);
 		//cout << "Error accumulated " << accum_error2 << endl;
-		float new_accum_error2 = computeRotCalibResidual(estimated_poses_temp);
+		new_error = computeRotCalibResidual(estimated_poses_temp);
 
 		//cout << "New rotation error " << new_accum_error2 << endl;
 		//cout << "Closing loop? \n" << Rt_estimated[0].inverse() * Rt_estimated[7] * Rt_78;
 
 		//Assign new rotations
-		if(new_accum_error2 < accum_error)
+		if(new_error < error)
 			for(int sensor_id = 1; sensor_id < num_sensors; sensor_id++)
 				estimated_poses[sensor_id] = estimated_poses_temp[sensor_id];
 
 		increment = update_vector.dot(update_vector);
-		diff_error = accum_error - new_accum_error2;
+		diff_error = error - new_error;
 		++it;
 		//cout << "Iteration " << it << " increment " << increment << " diff_error " << diff_error << endl;
 	}
+
+	std::stringstream stream;
+	stream << estimated_poses_temp[1].block(0,0,3,3);
+
+	stats += "Initial error: " + std::to_string(init_error);
+	stats += "\nNumber of iterations: " + std::to_string(it);
+	stats += "\nFinal error: " + std::to_string(new_error);
+	stats += "\n\nEstimated rotation: \n";
+	stats += stream.str();
 
 	//std::cout << "ErrorCalibRotation " << accum_error2/numPlaneCorresp << " " << av_angle_error/numPlaneCorresp << std::endl;
 }

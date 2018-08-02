@@ -32,7 +32,7 @@ public:
 	void runCalibFromPlanes(TCalibFromPlanesParams *params);
 
 	/** Triggers the calibration from lines method. */
-	void runCalibFromLines();
+	void runCalibFromLines(TCalibFromLinesParams *params);
 
 	/** Receives the estimated relative transformation from the gui calib classes. */
 	void ontReceivingRt(const std::vector<Eigen::Matrix4f> &relative_transformations);

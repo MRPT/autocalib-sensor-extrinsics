@@ -13,7 +13,9 @@ SET(SRC
 	solver.h
 	calib_solvers/CExtrinsicCalib.h
 	calib_solvers/CCalibFromPlanes.h
+	calib_solvers/CCalibFromLines.h
 	calib_solvers/TCalibFromPlanesParams.h
+	calib_solvers/TCalibFromLinesParams.h
 	calib_solvers/TExtrinsicCalibParams.h
 
 	CObservationTree.cpp
@@ -23,6 +25,7 @@ SET(SRC
 	solver.cpp
 	calib_solvers/CExtrinsicCalib.cpp
 	calib_solvers/CCalibFromPlanes.cpp
+	calib_solvers/CCalibFromLines.cpp
 )
 
 # CORE library encapsulates the methods and types for the calibration algorithms
