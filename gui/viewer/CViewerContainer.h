@@ -50,10 +50,10 @@ public:
 
 	/** Update the image viewer with an image.
 	 * \param viewer_id the id of the image viewer to be updated.
-	 * \param image the image to be displayed.
+	 * \param image pointer to the image to be displayed.
 	 * \param draw indicates whether the image to be displayed is drawn with shapes.
 	 */
-	void updateImageViewer(const int &viewer_id, mrpt::img::CImage image, const bool &draw = 0);
+	void updateImageViewer(const int &viewer_id, mrpt::img::CImage::Ptr &image, const bool &draw = 0);
 
 	void updateCalibConfig(const int &calib_algo_id);
 	bool viewerContainsCloud(const int &viewer_id, const std::string &id);
@@ -83,8 +83,8 @@ private:
 	/** An array of three PCLVisualizer objects, each linked to one viewer widget. */
 	std::array<std::shared_ptr<pcl::visualization::PCLVisualizer>, 3> m_viewers;
 
-	/** An array of images that are a copy of the images displayed in the image viewers. */
-	std::array<mrpt::img::CImage, 2> m_viewer_images;
+	/** An array of image pointers that point to the images displayed in the image viewers. */
+	std::array<mrpt::img::CImage::Ptr, 2> m_viewer_images;
 
 	/** A copy of the current set of corresponding planes to be displayed in the main viewer. */
 	std::map<int,std::map<int,std::vector<std::array<int,4>>>> m_current_corresp_planes;
@@ -94,5 +94,4 @@ private:
 	std::vector<int> m_vsensor_ids = {0,1};
 
 	Ui::CViewerContainer *m_ui;
-
 };

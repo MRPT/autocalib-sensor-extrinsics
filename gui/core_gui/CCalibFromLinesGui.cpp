@@ -99,6 +99,7 @@ void CCalibFromLinesGui::extractLines()
 					cv::Mat image = cv::cvarrToMat(obs_item->intensityImage.getAs<IplImage>());
 
 					line_segment_start = pcl::getTime();
+					segmented_lines.clear();
 					segmentLines(image, m_params->seg, segmented_lines);
 					line_segment_end = pcl::getTime();
 

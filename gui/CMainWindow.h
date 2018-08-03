@@ -3,6 +3,8 @@
 #include <observation_tree/CObservationTreeGui.h>
 #include <core_gui/CCalibFromPlanesGui.h>
 #include <core_gui/CCalibFromLinesGui.h>
+#include <config/CCalibFromPlanesConfig.h>
+#include <config/CCalibFromLinesConfig.h>
 
 #include <QMainWindow>
 #include <QSettings>
@@ -87,7 +89,12 @@ private:
 	/** Stores the synchronized (modified) rawlog after re-grouping. */
 	CObservationTreeGui *m_sync_model;
 
-	std::shared_ptr<QWidget> m_config_widget;
+	//std::shared_ptr<QWidget> m_config_widget;
+	/** Pointer to the calibration using planes config widget. */
+	std::shared_ptr<CCalibFromPlanesConfig> m_calib_from_planes_config_widget;
+
+	/** Pointer to the calibration using lines config widget. */
+	std::shared_ptr<CCalibFromLinesConfig> m_calib_from_lines_config_widget;
 
 	/** Object to interact with the calibration from planes gui class. */
 	CCalibFromPlanesGui *m_calib_from_planes_gui;

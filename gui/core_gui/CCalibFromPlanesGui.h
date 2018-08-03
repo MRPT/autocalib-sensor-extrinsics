@@ -67,7 +67,7 @@ public:
 	void publishCorrespPlanes(const int &obs_set_id);
 
 	/** Returns the status of the calibration progress. */
-	CalibrationStatus calibStatus();
+	CalibrationFromPlanesStatus calibStatus();
 
 private:
 

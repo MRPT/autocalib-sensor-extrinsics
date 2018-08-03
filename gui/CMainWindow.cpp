@@ -1,8 +1,6 @@
 #include <CMainWindow.h>
 #include <ui_CMainWindow.h>
 #include <observation_tree/CObservationTreeGui.h>
-#include <config/CCalibFromPlanesConfig.h>
-#include <config/CCalibFromLinesConfig.h>
 #include <Utils.h>
 
 #include <mrpt/obs/CObservation3DRangeScan.h>
@@ -88,6 +86,15 @@ void CMainWindow::loadConfigFile()
 		m_ui->rlog_file_select_button->setDisabled(false);
 		if(!m_ui->rlog_file_line_edit->text().isEmpty())
 			m_ui->load_rlog_button->setDisabled(false);
+
+		m_calib_from_planes_config_widget = std::make_shared<CCalibFromPlanesConfig>(m_config_file);
+		qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(3, m_calib_from_planes_config_widget.get());
+		m_calib_from_lines_config_widget = std::make_shared<CCalibFromLinesConfig>(m_config_file);
+		qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(4, m_calib_from_lines_config_widget.get());
+
+		m_calib_from_planes_config_widget.get()->hide();
+		m_calib_from_lines_config_widget.get()->hide();
+
 	}
 }
 
@@ -238,7 +245,18 @@ void CMainWindow::listItemClicked(const QModelIndex &index)
 		int viewer_id, sensor_id;
 
 		CObservation3DRangeScan::Ptr obs_item;
-		mrpt::img::CImage image;
+		mrpt::img::CImage::Ptr image(new mrpt::img::CImage());
+
+		obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(m_model->getItem(index)->getObservation());
+		obs_item->getDescriptionAsText(update_stream);
+		image = std::make_shared<mrpt::img::CImage>(obs_item->intensityImage);
+		sensor_id = utils::findItemIndexIn(m_model->getSensorLabels(), obs_item->sensorLabel);
+		viewer_id = sensor_id;
+
+		viewer_text = (m_model->data(index)).toString().toStdString();
+
+		m_ui->viewer_container->updateImageViewer(viewer_id, image);
+		m_ui->observations_description_textbrowser->setText(QString::fromStdString(update_stream.str()));
 
 		if(item->cloud() != nullptr)
 			m_ui->viewer_container->updateCloudViewer(viewer_id, item->cloud(), viewer_text);
@@ -251,20 +269,10 @@ void CMainWindow::listItemClicked(const QModelIndex &index)
 			projection_params.MAKE_DENSE = false;
 			projection_params.MAKE_ORGANIZED = false;
 
-			obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(m_model->getItem(index)->getObservation());
-			obs_item->getDescriptionAsText(update_stream);
 			obs_item->project3DPointsFromDepthImageInto(*cloud, projection_params);
 			cloud->is_dense = false;
 
-			image = obs_item->intensityImage;
-
-			sensor_id = utils::findItemIndexIn(m_model->getSensorLabels(), obs_item->sensorLabel);
-			viewer_id = sensor_id;
-			viewer_text = (m_model->data(index)).toString().toStdString();
-
 			m_ui->viewer_container->updateCloudViewer(viewer_id, cloud, viewer_text);
-			m_ui->viewer_container->updateImageViewer(viewer_id, image);
-			m_ui->observations_description_textbrowser->setText(QString::fromStdString(update_stream.str()));
 
 			item->cloud() = cloud;
 		}
@@ -370,14 +378,14 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 
 		CObservation3DRangeScan::Ptr obs_item;
 		size_t sync_obs_id;
-		mrpt::img::CImage image;
+		mrpt::img::CImage::Ptr image(new mrpt::img::CImage());
 
 		//if single-item was clicked
 		if((index.parent()).isValid())
 		{
 			obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(m_sync_model->getItem(index)->getObservation());
 			obs_item->getDescriptionAsText(update_stream);
-			image = obs_item->intensityImage;
+			image = std::make_shared<mrpt::img::CImage>(obs_item->intensityImage);
 
 			sensor_id = utils::findItemIndexIn(m_sync_model->getSensorLabels(), obs_item->sensorLabel);
 			sync_obs_id = utils::findItemIndexIn(m_sync_model->getSyncIndices()[sensor_id], item->getPriorIndex());
@@ -402,8 +410,8 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 				item->cloud() = cloud;
 			}
 
-			if((m_calib_from_planes_gui!= nullptr) && (m_calib_from_planes_gui->calibStatus() == CalibrationStatus::PLANES_EXTRACTED
-			                                           || m_calib_from_planes_gui->calibStatus() == CalibrationStatus::PLANES_MATCHED))
+			if((m_calib_from_planes_gui!= nullptr) && (m_calib_from_planes_gui->calibStatus() == CalibrationFromPlanesStatus::PLANES_EXTRACTED
+			                                           || m_calib_from_planes_gui->calibStatus() == CalibrationFromPlanesStatus::PLANES_MATCHED))
 				m_calib_from_planes_gui->publishPlanes(sensor_id, sync_obs_id);
 
 			else if((m_calib_from_lines_gui != nullptr) && (m_calib_from_lines_gui->calibStatus() == CalibrationFromLinesStatus::LINES_EXTRACTED
@@ -418,7 +426,7 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 			{
 				obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(item->child(i)->getObservation());
 				obs_item->getDescriptionAsText(update_stream);
-				image = obs_item->intensityImage;
+				image = std::make_shared<mrpt::img::CImage>(obs_item->intensityImage);
 
 				sensor_id = utils::findItemIndexIn(m_sync_model->getSensorLabels(), obs_item->sensorLabel);
 				sync_obs_id = utils::findItemIndexIn(m_sync_model->getSyncIndices()[sensor_id], item->child(i)->getPriorIndex());
@@ -428,7 +436,7 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 				m_ui->viewer_container->updateImageViewer(viewer_id, image);
 
 				//for debugging
-				m_ui->viewer_container->updateText(std::to_string(viewer_id) + " " + std::to_string(sync_obs_id));
+				//m_ui->viewer_container->updateText(std::to_string(viewer_id) + " " + std::to_string(sync_obs_id));
 
 				if(item->cloud() != nullptr)
 				{
@@ -455,8 +463,8 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 					item->cloud() = cloud;
 				}
 
-				if((m_calib_from_planes_gui != nullptr) && (m_calib_from_planes_gui->calibStatus() == CalibrationStatus::PLANES_EXTRACTED
-				                                            || m_calib_from_planes_gui->calibStatus() == CalibrationStatus::PLANES_MATCHED))
+				if((m_calib_from_planes_gui != nullptr) && (m_calib_from_planes_gui->calibStatus() == CalibrationFromPlanesStatus::PLANES_EXTRACTED
+				                                            || m_calib_from_planes_gui->calibStatus() == CalibrationFromPlanesStatus::PLANES_MATCHED))
 					m_calib_from_planes_gui->publishPlanes(sensor_id, sync_obs_id);
 
 
@@ -465,7 +473,7 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 					m_calib_from_lines_gui->publishLines(sensor_id, sync_obs_id);
 			}
 
-			if((m_calib_from_planes_gui != nullptr) && m_calib_from_planes_gui->calibStatus() == CalibrationStatus::PLANES_MATCHED)
+			if((m_calib_from_planes_gui != nullptr) && m_calib_from_planes_gui->calibStatus() == CalibrationFromPlanesStatus::PLANES_MATCHED)
 				m_calib_from_planes_gui->publishCorrespPlanes(item->row());
 		}
     
@@ -479,22 +487,47 @@ void CMainWindow::algosIndexChanged(int index)
 	{
 	case 0:
 	{
-		if(m_config_widget)
-			m_config_widget.reset();
+		// All the attempts to dynamically load/remove widgets that did not work.
+
+		//m_config_widget.reset();
+
+	   //QLayoutItem *config_widget_item = qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->takeAt(2);
+		//if(config_widget_item)
+		//qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->removeItem(config_widget_item);
+
+		//qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->removeWidget(m_config_widget.get());
+
+		//QLayoutItem *child;
+		//while ((child = qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->takeAt(0)) != 0)
+		    //delete child;
+
+		//m_config_widget = nullptr;
+		//delete qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->itemAt(3);
+
+		m_calib_from_planes_config_widget.get()->hide();
+		m_calib_from_lines_config_widget.get()->hide();
+		m_calib_from_lines_gui = nullptr;
+		m_calib_from_planes_gui = nullptr;
 		break;
 	}
 
 	case 1:
 	{
-		m_config_widget = std::make_shared<CCalibFromPlanesConfig>(m_config_file);
-		qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(3, m_config_widget.get());
+		m_calib_from_lines_gui = nullptr;
+		m_calib_from_lines_config_widget.get()->hide();
+		m_calib_from_planes_config_widget.get()->show();
 		break;
 	}
 
 	case 2:
 	{
-		m_config_widget = std::make_shared<CCalibFromLinesConfig>(m_config_file);
-		qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(3, m_config_widget.get());
+		m_calib_from_planes_gui = nullptr;
+		m_calib_from_planes_config_widget.get()->hide();
+		m_calib_from_lines_config_widget.get()->show();
+
+		//m_config_widget = std::make_shared<CCalibFromLinesConfig>(m_config_file);
+		//qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(3, m_config_widget.get());
+
 		break;
 	}
 	}
@@ -522,7 +555,7 @@ void CMainWindow::runCalibFromPlanes(TCalibFromPlanesParams *params)
 {
 	switch(params->calib_status)
 	{
-	case CalibrationStatus::YET_TO_START:
+	case CalibrationFromPlanesStatus::PCALIB_YET_TO_START:
 	{
 		if(m_sync_model != nullptr && (m_sync_model->getRootItem()->childCount() > 0))
 		{
@@ -542,13 +575,13 @@ void CMainWindow::runCalibFromPlanes(TCalibFromPlanesParams *params)
 		break;
 	}
 
-	case CalibrationStatus::PLANES_EXTRACTED:
+	case CalibrationFromPlanesStatus::PLANES_EXTRACTED:
 	{
 		m_calib_from_planes_gui->matchPlanes();
 		break;
 	}
 
-	case CalibrationStatus::PLANES_MATCHED:
+	case CalibrationFromPlanesStatus::PLANES_MATCHED:
 	{
 		m_calib_from_planes_gui->calibrate();
 		break;

@@ -69,7 +69,7 @@
       <verstretch>0</verstretch>
      </sizepolicy>
     </property>
-    <layout class="QVBoxLayout" name="verticalLayout">
+    <layout class="QVBoxLayout" name="setup_dockwidget_layout">
      <property name="topMargin">
       <number>0</number>
      </property>
@@ -414,7 +414,7 @@
     <number>1</number>
    </attribute>
    <widget class="QWidget" name="observations_dockwidget_contents">
-    <layout class="QVBoxLayout" name="verticalLayout_6">
+    <layout class="QVBoxLayout" name="observations_dockwidget_layout">
      <property name="leftMargin">
       <number>9</number>
      </property>
@@ -550,7 +550,7 @@
     <property name="accessibleName">
      <string>config_content</string>
     </property>
-    <layout class="QVBoxLayout" name="verticalLayout_3">
+    <layout class="QVBoxLayout" name="config_dockwidget_layout">
      <item>
       <widget class="QSplitter" name="observations_splitter">
        <property name="orientation">

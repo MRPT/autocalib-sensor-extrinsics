@@ -30,9 +30,9 @@ struct TPlaneMatchingParams
  * This is useful when the calibration is run in steps and
  * the results of each step are to be visualized.
  */
-enum CalibrationStatus
+enum CalibrationFromPlanesStatus
 {
-	YET_TO_START,
+	PCALIB_YET_TO_START,
 	PLANES_EXTRACTED,
 	PLANES_MATCHED
 };
@@ -42,5 +42,5 @@ struct TCalibFromPlanesParams
 	TPlaneSegmentationParams seg;
 	TPlaneMatchingParams match;
 	TSolverParams solver;
-	CalibrationStatus calib_status;
+	CalibrationFromPlanesStatus calib_status;
 };

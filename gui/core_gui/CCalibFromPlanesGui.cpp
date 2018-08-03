@@ -94,7 +94,7 @@ void CCalibFromPlanesGui::publishCorrespPlanes(const int &obs_set_id)
 	}
 }
 
-CalibrationStatus CCalibFromPlanesGui::calibStatus()
+CalibrationFromPlanesStatus CCalibFromPlanesGui::calibStatus()
 {
 	return m_params->calib_status;
 }
@@ -156,6 +156,7 @@ void CCalibFromPlanesGui::extractPlanes()
 					}
 
 					plane_segment_start = pcl::getTime();
+					segmented_planes.clear();
 					segmentPlanes(cloud, m_params->seg, segmented_planes);
 					plane_segment_end = pcl::getTime();
 
@@ -173,7 +174,7 @@ void CCalibFromPlanesGui::extractPlanes()
 		sync_obs_id = 0;
 	}
 
-	m_params->calib_status = CalibrationStatus::PLANES_EXTRACTED;
+	m_params->calib_status = CalibrationFromPlanesStatus::PLANES_EXTRACTED;
 }
 
 void CCalibFromPlanesGui::matchPlanes()
@@ -227,7 +228,7 @@ void CCalibFromPlanesGui::matchPlanes()
 		}
 	}
 
-	m_params->calib_status = CalibrationStatus::PLANES_MATCHED;
+	m_params->calib_status = CalibrationFromPlanesStatus::PLANES_MATCHED;
 }
 
 void CCalibFromPlanesGui::calibrate()
