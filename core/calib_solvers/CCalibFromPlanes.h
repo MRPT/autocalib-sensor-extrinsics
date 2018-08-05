@@ -10,7 +10,7 @@
 
 #include "CExtrinsicCalib.h"
 #include "TCalibFromPlanesParams.h"
-#include <CPlanes.h>
+#include <CPlane.h>
 //#include <mrpt/pbmap/PbMap.h>
 //#include <mrpt/pbmap/Miscellaneous.h>
 #include <map>

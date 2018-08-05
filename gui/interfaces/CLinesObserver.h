@@ -1,5 +1,6 @@
 #pragma once
 
+#include <CLine.h>
 #include<opencv2/core/core.hpp>
 
 /**
@@ -9,5 +10,5 @@
 class CLinesObserver
 {
 public:
-	virtual void onReceivingLines(const int &viewer_id, const std::vector<cv::Vec4i> &planes) = 0;
+	virtual void onReceivingLines(const int &viewer_id, const std::vector<CLine> &lines) = 0;
 };

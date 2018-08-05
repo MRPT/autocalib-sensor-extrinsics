@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <vector>
 #include <mrpt/math/CMatrix.h>
+#include <mrpt/img/TCamera.h>
 #include <mrpt/poses/CPose3D.h>
 #include <Eigen/Core>
 
@@ -59,5 +60,20 @@ namespace utils
 		point.x = tpoint(0);
 		point.y = tpoint(1);
 		point.z = tpoint(2);
+	}
+
+	/**
+	 * \brief Function template to back project 2D point to its corresponding 3D point in space
+	 * \param point the 2D pixel coordinates
+	 * \param range the depth image
+	 * \param params the intrinsic parameters of the camera
+	 * \param point3D the calculated 3D point in space
+	 */
+	template <typename T, typename S>
+	void backprojectTo3D(T &point,  mrpt::math::CMatrix &range, const mrpt::img::TCamera &params, S &point3D)
+	{
+		point3D[2] = range(point[1], point[0]);
+		point3D[0] = ((point[0] - params.cx())/params.fx()) * point3D[2];
+		point3D[1] = ((point[1] - params.cy())/params.fy()) * point3D[2];
 	}
 }

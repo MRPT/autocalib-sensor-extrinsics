@@ -1,6 +1,6 @@
 #pragma once
 
-#include <CPlanes.h>
+#include <CPlane.h>
 
 /**
  * \brief Observer (listener) that receives extracted planes for visualization from the GUI core wrappers.

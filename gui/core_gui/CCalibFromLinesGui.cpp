@@ -60,7 +60,7 @@ void CCalibFromLinesGui::extractLines()
 
 //	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
 
-	std::vector<cv::Vec4i> segmented_lines;
+	std::vector<CLine> segmented_lines;
 	size_t n_lines;
 	double line_segment_start, line_segment_end;
 
@@ -100,7 +100,7 @@ void CCalibFromLinesGui::extractLines()
 
 					line_segment_start = pcl::getTime();
 					segmented_lines.clear();
-					segmentLines(image, m_params->seg, segmented_lines);
+					segmentLines(image, obs_item->rangeImage, m_params->seg, obs_item->cameraParamsIntensity, segmented_lines);
 					line_segment_end = pcl::getTime();
 
 					n_lines = segmented_lines.size();

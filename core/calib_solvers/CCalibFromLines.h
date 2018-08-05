@@ -2,6 +2,9 @@
 
 #include "CExtrinsicCalib.h"
 #include "TCalibFromLinesParams.h"
+#include "CLine.h"
+
+#include <mrpt/img/TCamera.h>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <pcl/common/time.h>
@@ -17,7 +20,7 @@ public:
 	/** The segmented lines, the vector indices to access them are [sensor_id][obs_id][line_id]
 	 * obs_id is with respect to the synchronized model.
 	 */
-	std::map<int,std::vector<std::vector<cv::Vec4i>>> mvv_lines;
+	std::map<int,std::vector<std::vector<CLine>>> mvv_lines;
 
 	/** The line correspondences between the different sensors.
 	 * The map indices correspond to the sensor ids, with the list of correspondeces
@@ -33,7 +36,7 @@ public:
 	 * \param image the input image
 	 * \param lines vector of lines segmented
 	 */
-	void segmentLines(const cv::Mat &image, const TLineSegmentationParams &params, std::vector<cv::Vec4i> &lines);
+	void segmentLines(const cv::Mat &image, mrpt::math::CMatrix &range, const TLineSegmentationParams &params, const mrpt::img::TCamera &camera_params, std::vector<CLine> &lines);
 
 	/** Calculate the angular residual error of the correspondences.
 	 * \param sensor_poses relative poses of the sensors

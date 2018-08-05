@@ -7,8 +7,8 @@ SET(SRC
 	CObservationTree.h
 	CObservationTreeItem.h
 	Utils.h
-	CPlanes.h
-	lines.h
+	CPlane.h
+	CLine.h
 	correspondences.h
 	solver.h
 	calib_solvers/CExtrinsicCalib.h
@@ -20,7 +20,6 @@ SET(SRC
 
 	CObservationTree.cpp
 	CObservationTreeItem.cpp
-	lines.cpp
 	correspondences.cpp
 	solver.cpp
 	calib_solvers/CExtrinsicCalib.cpp

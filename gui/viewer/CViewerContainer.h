@@ -4,7 +4,7 @@
 #include <interfaces/CPlanesObserver.h>
 #include <interfaces/CCorrespPlanesObserver.h>
 #include <interfaces/CLinesObserver.h>
-#include <CPlanes.h>
+#include <CPlane.h>
 #include <Utils.h>
 
 #include <QWidget>
@@ -76,7 +76,7 @@ public:
 	 * \param viewer_id the id of the image viewer.
 	 * \param lines the vector of line segments to be drawn.
 	 */
-	virtual void onReceivingLines(const int &viewer_id, const std::vector<cv::Vec4i> &lines);
+	virtual void onReceivingLines(const int &viewer_id, const std::vector<CLine> &lines);
 
 private:
 

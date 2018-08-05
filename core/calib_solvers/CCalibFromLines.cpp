@@ -1,38 +1,41 @@
 #include "CCalibFromLines.h"
+#include <mrpt/math/geometry.h>
 
 CCalibFromLines::CCalibFromLines(CObservationTree *model) : CExtrinsicCalib(model)
 {}
 
 CCalibFromLines::~CCalibFromLines(){}
 
-void CCalibFromLines::segmentLines(const cv::Mat &image, const TLineSegmentationParams &params, std::vector<cv::Vec4i> &segments)
+void CCalibFromLines::segmentLines(const cv::Mat &image, mrpt::math::CMatrix &range, const TLineSegmentationParams &params, const mrpt::img::TCamera &camera_params, std::vector<CLine> &lines)
 {
 	cv::Mat canny_image;
 
 	cv::Canny(image, canny_image, params.clow_threshold, params.clow_threshold * params.chigh_to_low_ratio, params.ckernel_size);
 
-	std::vector<cv::Vec2f> lines;
+	std::vector<cv::Vec2f> hlines;
 
-	cv::HoughLines(canny_image, lines, 1, CV_PI, params.hthreshold);
+	cv::HoughLines(canny_image, hlines, 1, CV_PI, params.hthreshold);
+
 
 	double rho, theta;
 	double cos_theta, sin_theta;
 	double m, c, c_max;
+	CLine line;
 
 	int x, y, xf, yf;
 
-	for(size_t n(0); n < lines.size(); n++)
+	for(size_t n(0); n < hlines.size(); n++)
 	{
-		if(lines[n][0] < 0)
+		if(hlines[n][0] < 0)
 		{
-			rho = -lines[n][0];
-			theta = lines[n][1] - CV_PI;
+			rho = -hlines[n][0];
+			theta = hlines[n][1] - CV_PI;
 		}
 
 		else
 		{
-			rho = lines[n][0];
-			theta = lines[n][1];
+			rho = hlines[n][0];
+			theta = hlines[n][1];
 		}
 
 		if (rho == 0 && theta == 0)
@@ -92,8 +95,12 @@ void CCalibFromLines::segmentLines(const cv::Mat &image, const TLineSegmentation
 				xf = static_cast<int>(-c / m);
 				yf = 0;
 			}
-
 		}
+
+		line.rho = rho;
+		line.theta = theta;
+		line.m = m;
+		line.c = c;
 
 		// Bresenham algorithm
 
@@ -163,7 +170,43 @@ void CCalibFromLines::segmentLines(const cv::Mat &image, const TLineSegmentation
 					onSegment = false;
 					if (nbPixels >= params.hthreshold)
 					{
-						segments.push_back(cv::Vec4i(memoryX, memoryY, xPrev, yPrev));
+						std::array<cv::Vec2i, 2> end_points;
+						end_points[0] = cv::Vec2i(memoryX, memoryY);
+						end_points[1] = cv::Vec2i(xPrev, yPrev);
+
+						cv::Vec2i mean_point = cv::Vec2i((memoryX + xPrev)/2, (memoryY + yPrev)/2);
+
+						cv::Vec3d ray;
+						ray[0] = (mean_point[0] - camera_params.cx())/camera_params.fx();
+						ray[1] = (mean_point[1] - camera_params.cy())/camera_params.fy();
+						ray[2] = 1;
+
+						cv::Vec3d l, normal;
+						cv::Vec2d l_temp = end_points[0] - end_points[1];
+						l[0] = l_temp[0]; l[1] = l_temp[1]; l[2]= 0;
+						mrpt::math::crossProduct3D(l, ray, normal);
+
+						cv::Vec3d p;
+						utils::backprojectTo3D(mean_point, range, camera_params, p);
+
+						cv::Vec2i end_point1, end_point2;
+						std::array<cv::Vec3d, 2> end_points3D;
+
+						utils::backprojectTo3D(end_points[0], range, camera_params, end_points3D[0]);
+						utils::backprojectTo3D(end_points[1], range, camera_params, end_points3D[1]);
+
+						cv::Vec3d v;
+						v = end_points3D[1] - end_points3D[0];
+
+						line.end_points = end_points;
+						line.end_points3D = end_points3D;
+						line.mean_point = mean_point;
+						line.ray = ray;
+						line.l = l;
+						line.normal = normal;
+						line.p = p;
+						line.v = v;
+						lines.push_back(line);
 					}
 				}
 
@@ -172,6 +215,7 @@ void CCalibFromLines::segmentLines(const cv::Mat &image, const TLineSegmentation
 					++nbPixels;
 				}
 			}
+
 			else if (canny_image.at<char>(y, x) != 0)
 			{
 				onSegment = true;
