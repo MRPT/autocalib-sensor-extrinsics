@@ -13,6 +13,7 @@ SET(SOURCES
 	interfaces/CPlanesObserver.h
 	interfaces/CLinesObserver.h
 	interfaces/CCorrespPlanesObserver.h
+	interfaces/CCorrespLinesObserver.h
 	interfaces/CRtObserver.h
 	core_gui/CCalibFromPlanesGui.h
 	core_gui/CCalibFromPlanesGui.cpp

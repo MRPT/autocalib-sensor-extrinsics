@@ -36,7 +36,15 @@ public:
 	 * \param image the input image
 	 * \param lines vector of lines segmented
 	 */
-	void segmentLines(const cv::Mat &image, mrpt::math::CMatrix &range, const TLineSegmentationParams &params, const mrpt::img::TCamera &camera_params, std::vector<CLine> &lines);
+	void segmentLines(const cv::Mat &image, Eigen::MatrixXf &range, const TLineSegmentationParams &params, const mrpt::img::TCamera &camera_params, std::vector<CLine> &lines);
+
+	/**
+	 * Search for potential line matches between each sensor pair in a syc obs set.
+	 * \param lines lines extracted from sensor observations that belong to the same synchronized set. lines[sensor_id][line_id] gives a line.
+	 * \param set_id the id of the synchronized set the lines belong to.
+	 * \param params the parameters for line matching.
+	 */
+	void findPotentialMatches(const std::vector<std::vector<CLine>> &lines, const int &set_id, const TLineMatchingParams &params);
 
 	/** Calculate the angular residual error of the correspondences.
 	 * \param sensor_poses relative poses of the sensors

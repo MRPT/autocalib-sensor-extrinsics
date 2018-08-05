@@ -59,10 +59,8 @@ public:
 	 */
 	void publishPlanes(const int &sensor_id, const int &sync_obs_id);
 
-	/** Notifies observers with the planes that were matched between a pair of sensors in a sync set, if any.
+	/** Notifies observers with the planes that were matched between each pair of sensors in a sync set, if any.
 	 * \param obs_set_id the id of the synchronized observation set.
-	 * \param the id of the first sensor in the pair.
-	 * \param the id of the second sensor in the pair.
 	 */
 	void publishCorrespPlanes(const int &obs_set_id);
 
@@ -74,10 +72,10 @@ private:
 	/** The parameters for the calibration. */
 	TCalibFromPlanesParams *m_params;
 
-	/** List of text observers to be notified about progress status. */
+	/** List of text observers to be notified about the progress. */
 	std::vector<CTextObserver*> m_text_observers;
 
-	/** List of observers to be notified about extracted planes. */
+	/** List of observers to be notified about the extracted planes. */
 	std::vector<CPlanesObserver*> m_planes_observers;
 
 	/** List of observers to be notified about the matched planes. */

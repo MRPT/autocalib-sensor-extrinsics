@@ -6,7 +6,7 @@ CCalibFromLines::CCalibFromLines(CObservationTree *model) : CExtrinsicCalib(mode
 
 CCalibFromLines::~CCalibFromLines(){}
 
-void CCalibFromLines::segmentLines(const cv::Mat &image, mrpt::math::CMatrix &range, const TLineSegmentationParams &params, const mrpt::img::TCamera &camera_params, std::vector<CLine> &lines)
+void CCalibFromLines::segmentLines(const cv::Mat &image, Eigen::MatrixXf &range, const TLineSegmentationParams &params, const mrpt::img::TCamera &camera_params, std::vector<CLine> &lines)
 {
 	cv::Mat canny_image;
 
@@ -170,32 +170,31 @@ void CCalibFromLines::segmentLines(const cv::Mat &image, mrpt::math::CMatrix &ra
 					onSegment = false;
 					if (nbPixels >= params.hthreshold)
 					{
-						std::array<cv::Vec2i, 2> end_points;
-						end_points[0] = cv::Vec2i(memoryX, memoryY);
-						end_points[1] = cv::Vec2i(xPrev, yPrev);
+						std::array<Eigen::Vector2i, 2> end_points;
+						end_points[0] = Eigen::Vector2i(memoryX, memoryY);
+						end_points[1] = Eigen::Vector2i(xPrev, yPrev);
 
-						cv::Vec2i mean_point = cv::Vec2i((memoryX + xPrev)/2, (memoryY + yPrev)/2);
+						Eigen::Vector2i mean_point = Eigen::Vector2i((memoryX + xPrev)/2, (memoryY + yPrev)/2);
 
-						cv::Vec3d ray;
+						Eigen::Vector3f ray;
 						ray[0] = (mean_point[0] - camera_params.cx())/camera_params.fx();
 						ray[1] = (mean_point[1] - camera_params.cy())/camera_params.fy();
 						ray[2] = 1;
 
-						cv::Vec3d l, normal;
-						cv::Vec2d l_temp = end_points[0] - end_points[1];
-						l[0] = l_temp[0]; l[1] = l_temp[1]; l[2]= 0;
+						Eigen::Vector2i l_temp = (end_points[0] - end_points[1]);
+						Eigen::Vector3i l(l_temp[0], l_temp[1], 0);
+
+						Eigen::Vector3f normal;
 						mrpt::math::crossProduct3D(l, ray, normal);
 
-						cv::Vec3d p;
+						Eigen::Vector3f p;
 						utils::backprojectTo3D(mean_point, range, camera_params, p);
 
-						cv::Vec2i end_point1, end_point2;
-						std::array<cv::Vec3d, 2> end_points3D;
-
+						std::array<Eigen::Vector3f, 2> end_points3D;
 						utils::backprojectTo3D(end_points[0], range, camera_params, end_points3D[0]);
 						utils::backprojectTo3D(end_points[1], range, camera_params, end_points3D[1]);
 
-						cv::Vec3d v;
+						Eigen::Vector3f v;
 						v = end_points3D[1] - end_points3D[0];
 
 						line.end_points = end_points;
@@ -243,6 +242,27 @@ void CCalibFromLines::segmentLines(const cv::Mat &image, mrpt::math::CMatrix &ra
 			}
 		}
 	}
+}
+
+void CCalibFromLines::findPotentialMatches(const std::vector<std::vector<CLine>> &lines, const int &set_id, const TLineMatchingParams &params)
+{
+	for(int i = 0; i < lines.size()-1; ++i)
+		for(int j = i+1; j < lines.size(); ++j)
+			for(int ii = 0; ii < lines[i].size(); ++ii)
+				for(int jj = 0; jj < lines[j].size(); ++jj)
+				{
+					Eigen::Vector3f n_ii = sync_model->getSensorPoses()[i].block(0,0,3,3) * lines[i][ii].normal;
+					Eigen::Vector3f v_ii = sync_model->getSensorPoses()[i].block(0,0,3,3) * lines[i][ii].v;
+
+					Eigen::Vector3f n_jj = sync_model->getSensorPoses()[j].block(0,0,3,3) * lines[j][jj].normal;
+					Eigen::Vector3f v_jj = sync_model->getSensorPoses()[j].block(0,0,3,3) * lines[j][jj].v;
+
+					if((n_ii.dot(n_jj) > params.min_normals_dot_prod) && (n_ii.dot(v_jj) < params.max_line_normal_dot_prod))
+					{
+						std::array<int,3> potential_match{set_id, ii, jj};
+						mmv_line_corresp[i][j].push_back(potential_match);
+					}
+				}
 }
 
 Scalar CCalibFromLines::computeRotCalibResidual(const std::vector<Eigen::Matrix4f> &sensor_poses)

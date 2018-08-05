@@ -62,7 +62,6 @@ void CCalibFromPlanesConfig::extractPlanes()
 	m_params.seg.min_inliers_frac = m_ui->minimum_threshold_sbox->value();
 	m_params.seg.max_curvature = m_ui->max_curvature_sbox->value();
 	m_params.calib_status = CalibrationFromPlanesStatus::PCALIB_YET_TO_START;
-
 	static_cast<CMainWindow*>(parentWidget()->parentWidget()->parentWidget())->runCalibFromPlanes(&m_params);
 	m_ui->match_planes_button->setDisabled(false);
 }
@@ -71,9 +70,9 @@ void CCalibFromPlanesConfig::matchPlanes()
 {
 	m_params.match.min_normals_dot_prod = m_ui->min_normals_dot_sbox->value();
 	m_params.match.max_dist_diff = m_ui->max_dist_diff_sbox->value();
-
-	static_cast<CMainWindow*>(parentWidget()->parentWidget()->parentWidget())->runCalibFromPlanes(&m_params);
+	m_params.calib_status = CalibrationFromPlanesStatus::PLANES_EXTRACTED;
 	m_ui->calib_button->setDisabled(false);
+	static_cast<CMainWindow*>(parentWidget()->parentWidget()->parentWidget())->runCalibFromPlanes(&m_params);
 }
 
 void CCalibFromPlanesConfig::calibrate()
@@ -81,7 +80,7 @@ void CCalibFromPlanesConfig::calibrate()
 	m_params.solver.max_iters = m_ui->max_iters_sbox->value();
 	m_params.solver.min_update = m_ui->min_update_sbox->value();
 	m_params.solver.converge_error = m_ui->converge_error_sbox->value();
-
+	m_params.calib_status = CalibrationFromPlanesStatus::PLANES_MATCHED;
 	static_cast<CMainWindow*>(parentWidget()->parentWidget()->parentWidget())->runCalibFromPlanes(&m_params);
 }
 

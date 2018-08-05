@@ -10,7 +10,7 @@
 #pragma once
 
 #include <array>
-#include <opencv2/core/core.hpp>
+#include <Eigen/Core>
 
 typedef float Scalar;
 
@@ -26,20 +26,20 @@ public:
 	Scalar m;
 	Scalar c;
 
-	std::array<cv::Vec2i,2> end_points;
-	std::array<cv::Vec3d,2> end_points3D;
-	cv::Vec2i mean_point;
+	std::array<Eigen::Vector2i,2> end_points;
+	std::array<Eigen::Vector3f,2> end_points3D;
+	Eigen::Vector2i mean_point;
 
 	/** The 2D direction vector. [lx ly 0] */
-	cv::Vec3i l;
+	Eigen::Vector3i l;
 
 	/** Equation of the 3D ray passing through the mean_point from the camera centre. */
-	cv::Vec3d ray;
+	Eigen::Vector3f ray;
 	/** Equation of the 3D normal of the projective plane. */
-	cv::Vec3d normal;
+	Eigen::Vector3f normal;
 
 	/** 3D coordinates of the mean_point. */
-	cv::Vec3d p;
+	Eigen::Vector3f p;
 	/** 3D direction vector of the line. */
-	cv::Vec3d v;
+	Eigen::Vector3f v;
 };

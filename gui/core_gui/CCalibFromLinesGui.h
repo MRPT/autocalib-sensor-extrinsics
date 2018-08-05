@@ -3,6 +3,7 @@
 #include <observation_tree/CObservationTreeGui.h>
 #include <calib_solvers/CCalibFromLines.h>
 #include <interfaces/CLinesObserver.h>
+#include <interfaces/CCorrespLinesObserver.h>
 
 #include <opencv2/core/core.hpp>
 #include <pcl/point_cloud.h>
@@ -38,7 +39,7 @@ public:
 	void addLinesObserver(CLinesObserver *observer);
 
 	/** Adds observer to list of matched lines observers. */
-	//void addCorrespLinesObserver(CCorrespLinesObserver *observer);
+	void addCorrespLinesObserver(CCorrespLinesObserver *observer);
 
 	/** Notifies text observers with a message. */
 	void publishText(const std::string &msg);
@@ -49,6 +50,11 @@ public:
 	 */
 	void publishLines(const int &sensor_id, const int &sync_obs_id);
 
+	/** Notifies observers with the lines that were matched between each pair of sensors in a sync set, if any.
+	 * \param obs_set_id the id of the synchronized observation set.
+	 */
+	void publishCorrespLines(const int &obs_set_id);
+
 	/** Returns the status of the calibration progress. */
 	CalibrationFromLinesStatus calibStatus();
 
@@ -58,9 +64,12 @@ private:
 	/** The parameters for the calibration. */
 	TCalibFromLinesParams *m_params;
 
-	/** List of text observers to be notified about progress status. */
+	/** List of text observers to be notified about the progress. */
 	std::vector<CTextObserver*> m_text_observers;
 
-	/** List of observers to be notified about extracted lines. */
+	/** List of observers to be notified about the extracted lines. */
 	std::vector<CLinesObserver*> m_lines_observers;
+
+	/** List of observers to be notified about the matched lines. */
+	std::vector<CCorrespLinesObserver*> m_corresp_lines_observers;
 };

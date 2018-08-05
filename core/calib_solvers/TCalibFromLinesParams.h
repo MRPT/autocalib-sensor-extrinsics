@@ -18,7 +18,7 @@ struct TLineSegmentationParams
 struct TLineMatchingParams
 {
 	double min_normals_dot_prod;
-	double max_dist_diff;
+	double max_line_normal_dot_prod;
 };
 
 /**

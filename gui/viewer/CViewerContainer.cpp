@@ -209,29 +209,28 @@ void CViewerContainer::updateImageViewer(const int &viewer_id, mrpt::img::CImage
 void CViewerContainer::onReceivingLines(const int &viewer_id, const std::vector<CLine> &lines)
 {
 	char line_id[1024];
-	pcl::PointXYZ pt1, pt2;
+	cv::Vec2i pt1, pt2;
+	pcl::PointXYZ ppt1, ppt2;
 
 	cv::Mat img = cv::cvarrToMat((m_viewer_images[viewer_id])->getAs<IplImage>());
 
 	for(int i = 0; i < lines.size(); i++)
 	{
 		CLine l = lines[i];
-		cv::line(img, l.end_points[0], l.end_points[1],
-		        cv::Scalar(utils::colors::blu[i%10], utils::colors::grn[i%10], utils::colors::red[i%10]), 3);
+		pt1 = cv::Vec2i(l.end_points[0][0], l.end_points[0][1]);
+		pt2 = cv::Vec2i(l.end_points[1][0], l.end_points[1][1]);
+		cv::line(img, pt1, pt2, cv::Scalar(utils::colors::blu[i%10], utils::colors::grn[i%10], utils::colors::red[i%10]), 3);
 
 		sprintf(line_id, "line_%u", static_cast<unsigned>(i));
 
-		pt1.x = l.end_points3D[0][0];
-		pt1.y = l.end_points3D[0][1];
-		pt1.z = l.end_points3D[0][2];
-		pt2.x = l.end_points3D[1][0];
-		pt2.y = l.end_points3D[1][1];
-		pt2.z = l.end_points3D[1][2];
+		ppt1.x = l.end_points3D[0][0];
+		ppt1.y = l.end_points3D[0][1];
+		ppt1.z = l.end_points3D[0][2];
+		ppt2.x = l.end_points3D[1][0];
+		ppt2.y = l.end_points3D[1][1];
+		ppt2.z = l.end_points3D[1][2];
 
-		std::cout << pt1 << std::endl;
-		std::cout << pt2 << std::endl;
-
-		m_viewers[viewer_id]->addLine(pt2, pt1, utils::colors::red[i%10] / 255, utils::colors::grn[i%10] / 255, utils::colors::blu[i%10] / 255, line_id);
+		m_viewers[viewer_id]->addLine(ppt2, ppt1, utils::colors::red[i%10] / 255, utils::colors::grn[i%10] / 255, utils::colors::blu[i%10] / 255, line_id);
 	}
 
 	IplImage *iimg = new IplImage(img);
@@ -241,6 +240,36 @@ void CViewerContainer::onReceivingLines(const int &viewer_id, const std::vector<
 	m_viewers[viewer_id]->resetCamera();
 	m_ui->input1_viz->update();
 	m_ui->input2_viz->update();
+}
+
+void CViewerContainer::onReceivingCorrespLines(std::map<int,std::map<int,std::vector<std::array<CLine,2>>>> &corresp_lines, const std::vector<Eigen::Matrix4f> &sensor_poses)
+{
+	m_viewers[2]->removeAllShapes();
+	char line_id[1024];
+	Eigen::Affine3f rt;
+
+	for(int i = 0; i < corresp_lines[m_vsensor_ids[0]][m_vsensor_ids[1]].size(); i++)
+	{
+		std::array<CLine,2> lines_pair = corresp_lines[m_vsensor_ids[0]][m_vsensor_ids[1]][i];
+		for(int j = 0; j < 2; j++)
+		{
+			sprintf(line_id, "%u_line_%u", static_cast<unsigned>(i), static_cast<unsigned>(j));
+
+			pcl::PointXYZ pt1, pt2;
+			pt1 = pcl::PointXYZ(lines_pair[j].end_points3D[0][0], lines_pair[j].end_points3D[0][1], lines_pair[j].end_points3D[0][2]);
+			pt2 = pcl::PointXYZ(lines_pair[j].end_points3D[1][0], lines_pair[j].end_points3D[1][1], lines_pair[j].end_points3D[1][2]);
+
+			rt.matrix() = sensor_poses[m_vsensor_ids[j]];
+			utils::transformPoint(rt, pt1);
+			utils::transformPoint(rt, pt2);
+
+			m_viewers[2]->addLine(pt2, pt1, utils::colors::red[i%10] / 255, utils::colors::grn[i%10] / 255, utils::colors::blu[i%10] / 255, line_id);
+		}
+	}
+
+	m_viewers[2]->resetCamera();
+	//m_viewers[2]->addCoordinateSystem(0.3);
+	m_ui->result_viz->update();
 }
 
 void CViewerContainer::onReceivingText(const std::string &msg)

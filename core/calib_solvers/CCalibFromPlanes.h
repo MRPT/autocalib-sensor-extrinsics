@@ -53,7 +53,7 @@ class CCalibFromPlanes : public CExtrinsicCalib
 	void segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const TPlaneSegmentationParams &params, std::vector<CPlaneCHull> &planes);
 
 	/**
-	 * Search for potential plane matches.
+	 * Search for potential plane matches between each sensor pair in a sync obs set.
 	 * \param planes planes extracted from sensor observations that belong to the same synchronized set. planes[sensor_id][plane_id] gives a plane.
 	 * \param set_id the id of the synchronized set the planes belong to.
 	 * \param params the parameters for plane matching.

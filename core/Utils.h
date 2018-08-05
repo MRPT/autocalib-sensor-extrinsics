@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <vector>
-#include <mrpt/math/CMatrix.h>
 #include <mrpt/img/TCamera.h>
 #include <mrpt/poses/CPose3D.h>
 #include <Eigen/Core>
@@ -70,7 +69,7 @@ namespace utils
 	 * \param point3D the calculated 3D point in space
 	 */
 	template <typename T, typename S>
-	void backprojectTo3D(T &point,  mrpt::math::CMatrix &range, const mrpt::img::TCamera &params, S &point3D)
+	void backprojectTo3D(T &point,  Eigen::MatrixXf &range, const mrpt::img::TCamera &params, S &point3D)
 	{
 		point3D[2] = range(point[1], point[0]);
 		point3D[0] = ((point[0] - params.cx())/params.fx()) * point3D[2];

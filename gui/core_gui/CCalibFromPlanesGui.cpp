@@ -179,10 +179,10 @@ void CCalibFromPlanesGui::extractPlanes()
 
 void CCalibFromPlanesGui::matchPlanes()
 {
+	publishText("****Running plane matching algorithm****");
+
 	std::vector<Eigen::Matrix4f> sensor_poses = sync_model->getSensorPoses();
 	std::vector<std::string> sensor_labels;
-
-	publishText("****Running plane matching algorithm****");
 
 	CObservationTreeItem *root_item, *tree_item, *item;
 	int sync_obs_id, sensor_id;

@@ -410,7 +410,7 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 				item->cloud() = cloud;
 			}
 
-			if((m_calib_from_planes_gui!= nullptr) && (m_calib_from_planes_gui->calibStatus() == CalibrationFromPlanesStatus::PLANES_EXTRACTED
+			if((m_calib_from_planes_gui != nullptr) && (m_calib_from_planes_gui->calibStatus() == CalibrationFromPlanesStatus::PLANES_EXTRACTED
 			                                           || m_calib_from_planes_gui->calibStatus() == CalibrationFromPlanesStatus::PLANES_MATCHED))
 				m_calib_from_planes_gui->publishPlanes(sensor_id, sync_obs_id);
 
@@ -473,8 +473,11 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 					m_calib_from_lines_gui->publishLines(sensor_id, sync_obs_id);
 			}
 
-			if((m_calib_from_planes_gui != nullptr) && m_calib_from_planes_gui->calibStatus() == CalibrationFromPlanesStatus::PLANES_MATCHED)
+			if((m_calib_from_planes_gui != nullptr) && (m_calib_from_planes_gui->calibStatus() == CalibrationFromPlanesStatus::PLANES_MATCHED))
 				m_calib_from_planes_gui->publishCorrespPlanes(item->row());
+
+			else if((m_calib_from_lines_gui != nullptr) && (m_calib_from_lines_gui->calibStatus() == CalibrationFromLinesStatus::LINES_MATCHED))
+				m_calib_from_lines_gui->publishCorrespLines(item->row());
 		}
     
 		m_ui->observations_description_textbrowser->setText(QString::fromStdString(update_stream.str()));
@@ -601,6 +604,7 @@ void CMainWindow::runCalibFromLines(TCalibFromLinesParams *params)
 			m_calib_from_lines_gui = new CCalibFromLinesGui(m_sync_model, params);
 			m_calib_from_lines_gui->addTextObserver(m_ui->viewer_container);
 			m_calib_from_lines_gui->addLinesObserver(m_ui->viewer_container);
+			m_calib_from_lines_gui->addCorrespLinesObserver(m_ui->viewer_container);
 			m_calib_from_lines_gui->extractLines();
 		}
 

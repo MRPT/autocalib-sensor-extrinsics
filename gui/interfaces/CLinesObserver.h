@@ -1,7 +1,6 @@
 #pragma once
 
 #include <CLine.h>
-#include<opencv2/core/core.hpp>
 
 /**
  * \brief Observer (listener) that receives extracted lines for visualization from the GUI core wrappers.

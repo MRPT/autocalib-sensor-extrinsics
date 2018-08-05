@@ -4,7 +4,7 @@
 #include <map>
 
 /**
- * \brief Observer (listener) that receives the matched planes of a set for visualization from the GUI core wrappers.
+ * \brief Observer (listener) that receives the matched planes between each sensor pair in an observation set for visualization.
  */
 
 class CCorrespPlanesObserver

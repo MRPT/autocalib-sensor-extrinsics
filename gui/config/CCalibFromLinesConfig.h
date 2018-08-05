@@ -22,9 +22,15 @@ public:
 	~CCalibFromLinesConfig();
 
 private slots:
-	void extractLines();
-	void matchLines();
-	void calibrate();
+
+	/** Callback to start extracting lines. */
+	void extractLinesClicked();
+
+	/** Callback to start forming line correspondences. */
+	void matchLinesClicked();
+
+	/** Callback to start the calibration. */
+	void calibrateClicked();
 
 	/** Callback to save the estimated calibration to a file. */
 	void saveCalibClicked();
