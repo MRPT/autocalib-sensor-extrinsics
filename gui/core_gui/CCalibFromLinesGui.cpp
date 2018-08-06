@@ -94,12 +94,6 @@ void CCalibFromLinesGui::extractLines()
 	size_t sync_obs_id = 0;
 	root_item = sync_model->getRootItem();
 
-//	T3DPointsProjectionParams projection_params;
-//	projection_params.MAKE_DENSE = false;
-//	projection_params.MAKE_ORGANIZED = true;
-
-//	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
-
 	std::vector<CLine> segmented_lines;
 	size_t n_lines;
 	double line_segment_start, line_segment_end;
@@ -126,16 +120,6 @@ void CCalibFromLinesGui::extractLines()
 				obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(item->getObservation());
 				if((obs_item->sensorLabel == selected_sensor_labels[i]) && (obs_item->timestamp != prev_ts))
 				{
-//					if(item->cloud() != nullptr)
-//						cloud  = item->cloud();
-
-//					else
-//					{
-//						obs_item->project3DPointsFromDepthImageInto(*cloud, projection_params);
-//						cloud->is_dense = false;
-//						item->cloud() = cloud;
-//					}
-
 					cv::Mat image = cv::cvarrToMat(obs_item->intensityImage.getAs<IplImage>());
 					Eigen::MatrixXf range = obs_item->rangeImage;
 
@@ -196,6 +180,7 @@ void CCalibFromLinesGui::matchLines()
 
 		//print statistics
 		int count = 0;
+
 		for(std::map<int,std::map<int,std::vector<std::array<int,3>>>>::iterator iter1 = mmv_line_corresp.begin(); iter1 != mmv_line_corresp.end(); iter1++)
 		{
 			for(std::map<int,std::vector<std::array<int,3>>>::iterator iter2 = iter1->second.begin(); iter2 != iter1->second.end(); iter2++)

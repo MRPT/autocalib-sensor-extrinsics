@@ -34,9 +34,9 @@
         <item>
          <layout class="QHBoxLayout" name="input1_label_group">
           <item>
-           <widget class="QLabel" name="input1_label">
-            <property name="text">
-             <string>Input 1</string>
+           <widget class="QComboBox" name="input1_cbox">
+            <property name="accessibleName">
+             <string>input1</string>
             </property>
            </widget>
           </item>
@@ -102,9 +102,9 @@
         <item>
          <layout class="QHBoxLayout" name="input2_label_group">
           <item>
-           <widget class="QLabel" name="input2_label">
-            <property name="text">
-             <string>Input 2</string>
+           <widget class="QComboBox" name="input2_cbox">
+            <property name="accessibleName">
+             <string>input2</string>
             </property>
            </widget>
           </item>
@@ -163,7 +163,7 @@
        </layout>
       </widget>
      </widget>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <layout class="QVBoxLayout" name="result_group">
        <item>
         <layout class="QHBoxLayout" name="result_label_group">
@@ -207,7 +207,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <layout class="QVBoxLayout" name="status_group">
        <item>
         <layout class="QHBoxLayout" name="status_label_group">

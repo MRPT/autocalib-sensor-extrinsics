@@ -217,6 +217,7 @@ void CMainWindow::loadRawlog()
 		}
 
 		m_ui->viewer_container->updateText(stats_string);
+		m_ui->viewer_container->updateSensorsList(m_model->getSensorLabels());
 		m_ui->sensor_cbox->setDisabled(false);
 		m_ui->irx_sbox->setDisabled(false);
 		m_ui->iry_sbox->setDisabled(false);
@@ -251,15 +252,17 @@ void CMainWindow::listItemClicked(const QModelIndex &index)
 		obs_item->getDescriptionAsText(update_stream);
 		image = std::make_shared<mrpt::img::CImage>(obs_item->intensityImage);
 		sensor_id = utils::findItemIndexIn(m_model->getSensorLabels(), obs_item->sensorLabel);
-		viewer_id = sensor_id;
+		//viewer_id = sensor_id;
 
 		viewer_text = (m_model->data(index)).toString().toStdString();
 
-		m_ui->viewer_container->updateImageViewer(viewer_id, image);
+		//m_ui->viewer_container->updateImageViewer(viewer_id, image);
+		m_ui->viewer_container->updateImageViewers(sensor_id, image);
 		m_ui->observations_description_textbrowser->setText(QString::fromStdString(update_stream.str()));
 
 		if(item->cloud() != nullptr)
-			m_ui->viewer_container->updateCloudViewer(viewer_id, item->cloud(), viewer_text);
+			m_ui->viewer_container->updateCloudViewers(sensor_id, item->cloud(), viewer_text);
+		    //m_ui->viewer_container->updateCloudViewer(viewer_id, item->cloud(), viewer_text);
 
 		else
 		{
@@ -272,7 +275,8 @@ void CMainWindow::listItemClicked(const QModelIndex &index)
 			obs_item->project3DPointsFromDepthImageInto(*cloud, projection_params);
 			cloud->is_dense = false;
 
-			m_ui->viewer_container->updateCloudViewer(viewer_id, cloud, viewer_text);
+			//m_ui->viewer_container->updateCloudViewer(viewer_id, cloud, viewer_text);
+			m_ui->viewer_container->updateCloudViewers(sensor_id, cloud, viewer_text);
 
 			item->cloud() = cloud;
 		}

@@ -151,7 +151,8 @@ void CCalibFromPlanes::findPotentialMatches(const std::vector<std::vector<CPlane
 {
 	for(int i = 0; i < planes.size()-1; ++i)
 		for(int j = i+1; j < planes.size(); ++j)
-			for(int ii = 0; ii < planes[i].size(); ++ii)
+		{	for(int ii = 0; ii < planes[i].size(); ++ii)
+			{
 				for(int jj = 0; jj < planes[j].size(); ++jj)
 				{
 					Eigen::Vector3f n_ii = sync_model->getSensorPoses()[i].block(0,0,3,3) * planes[i][ii].v3normal;
@@ -164,6 +165,15 @@ void CCalibFromPlanes::findPotentialMatches(const std::vector<std::vector<CPlane
 						mmv_plane_corresp[i][j].push_back(potential_match);
 					}
 				}
+			}
+
+			// for stats printing when no matches exist
+			if((planes[i].size() == 0) || (planes[j].size() == 0))
+			{
+				std::array<int,3> temp_match{-1, -1, -1};
+				mmv_plane_corresp[i][j].push_back(temp_match);
+			}
+		}
 }
 
 Scalar CCalibFromPlanes::computeRotCalibResidual(const std::vector<Eigen::Matrix4f> & sensor_poses)

@@ -19,8 +19,8 @@ public:
 
 	/**
 	 * Constructor
-	 * \param model the rawlog model.
-	 * \param sync_obs_indices sync_obs_indices indices of the grouped (synchronized) observations in the original model, per sensor.
+	 * \param model The sync rawlog model.
+	 * \param params The parameters for the calibration.
 	 */
 	CCalibFromLinesGui(CObservationTree *model, TCalibFromLinesParams *params);
 
@@ -45,7 +45,7 @@ public:
 	void publishText(const std::string &msg);
 
 	/** Notifies observers with the extracted lines.
-	 * \param sensor_id id of the sensor the lines were observed from.
+	 * \param sensor_id id of the sensor whose observation the lines were extracted from.
 	 * \param sync_obs_id id of the observation in the synchronized rawlog.
 	 */
 	void publishLines(const int &sensor_id, const int &sync_obs_id);

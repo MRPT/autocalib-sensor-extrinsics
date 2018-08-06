@@ -12,6 +12,9 @@ CViewerContainer::CViewerContainer(QWidget *parent) :
 {
 	m_ui->setupUi(this);
 
+	connect(m_ui->input1_cbox, SIGNAL(activated(int)), this, SLOT(sensorIndexChanged(int)));
+	connect(m_ui->input2_cbox, SIGNAL(activated(int)), this, SLOT(sensorIndexChanged(int)));
+
 	std::string place_holder_str = "No input";
 
 	m_viewers[0].reset(new pcl::visualization::PCLVisualizer("input1_viewer", false));
@@ -50,6 +53,41 @@ CViewerContainer::~CViewerContainer()
 	delete m_ui;
 }
 
+void CViewerContainer::updateSensorsList(const std::vector<std::string> &sensor_labels)
+{
+	m_sensor_labels = sensor_labels;
+
+	for(int i = 0; i < sensor_labels.size(); i++)
+	{
+		m_ui->input1_cbox->insertItem(i, QString::fromStdString(sensor_labels[i]));
+		m_ui->input2_cbox->insertItem(i, QString::fromStdString(sensor_labels[i]));
+	}
+
+	m_ui->input2_cbox->setCurrentIndex(1);
+}
+
+void CViewerContainer::sensorIndexChanged(const int &sensor_id)
+{
+	QComboBox *cbox = (QComboBox*)sender();
+
+	if(utils::findItemIndexIn(m_vsensor_ids, sensor_id) != -1)
+	{
+		updateText("Error! Sensor already exists. Choose a different sensor.");
+		if(cbox->accessibleName() == QString("input1"))
+			cbox->setCurrentIndex(m_vsensor_ids[0]);
+		else
+			cbox->setCurrentIndex(m_vsensor_ids[1]);
+	}
+
+	else
+	{
+		if(cbox->accessibleName() == QString("input1"))
+			m_vsensor_ids[0] = sensor_id;
+		else
+			m_vsensor_ids[1] = sensor_id;
+	}
+}
+
 void CViewerContainer::updateText(const std::string &text)
 {
 	m_ui->text_output->moveCursor(QTextCursor::End);
@@ -67,6 +105,31 @@ bool CViewerContainer::viewerContainsCloud(const int &viewer_id, const std::stri
 void CViewerContainer::updateCloudViewer(const int &viewer_id, const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const std::string &text)
 {
 	pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGBA> viewer_color_handler(cloud);
+
+	m_viewers[viewer_id]->removeAllPointClouds();
+	m_viewers[viewer_id]->removeAllShapes();
+	m_viewers[viewer_id]->addPointCloud(cloud, viewer_color_handler, "cloud");
+	m_viewers[viewer_id]->resetCamera();
+	m_viewers[viewer_id]->addText(text, 10, 10, 1, 1, 1, "text");
+	m_viewers[viewer_id]->addCoordinateSystem(0.3);
+
+	m_ui->input1_viz->update();
+	m_ui->input2_viz->update();
+	m_ui->result_viz->update();
+}
+
+void CViewerContainer::updateCloudViewers(const int &sensor_id, const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const std::string &text)
+{
+	pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGBA> viewer_color_handler(cloud);
+
+	int viewer_id = utils::findItemIndexIn(m_vsensor_ids, sensor_id);
+
+	if(viewer_id == -1)
+	{
+		m_vsensor_ids[1] = sensor_id;
+		viewer_id = 1;
+		m_ui->input2_cbox->setCurrentIndex(sensor_id);
+	}
 
 	m_viewers[viewer_id]->removeAllPointClouds();
 	m_viewers[viewer_id]->removeAllShapes();
@@ -181,6 +244,35 @@ void CViewerContainer::onReceivingCorrespPlanes(std::map<int,std::map<int,std::v
 
 void CViewerContainer::updateImageViewer(const int &viewer_id, mrpt::img::CImage::Ptr &image, const bool &draw)
 {
+	if(!draw)
+		m_viewer_images[viewer_id] = image;
+
+	switch(viewer_id)
+	{
+	case 0:
+	{
+		m_ui->input1_tab_widget->removeTab(1);
+		mrpt::gui::CQtGlCanvasBase *gl = new mrpt::gui::CQtGlCanvasBase();
+		gl->mainViewport()->setImageView(*image);
+		m_ui->input1_tab_widget->insertTab(1, gl, "RGB");
+		break;
+	}
+
+	case 1:
+	{
+		m_ui->input2_tab_widget->removeTab(1);
+		mrpt::gui::CQtGlCanvasBase *gl = new mrpt::gui::CQtGlCanvasBase();
+		gl->mainViewport()->setImageView(*image);
+		m_ui->input2_tab_widget->insertTab(1, gl, "RGB");
+		break;
+	}
+	}
+}
+
+void CViewerContainer::updateImageViewers(const int &sensor_id, mrpt::img::CImage::Ptr &image, const bool &draw)
+{
+	int viewer_id = utils::findItemIndexIn(m_vsensor_ids, sensor_id);
+
 	if(!draw)
 		m_viewer_images[viewer_id] = image;
 

@@ -23,7 +23,6 @@ public:
 	/**
 	 * Constructor
 	 * \param model the synced rawlog model.
-	 * \param sync_obs_indices indices of the grouped (synchronized) observations in the original model, per sensor.
 	 * \param params parameters for the algorithm.
 	 */
 	CCalibFromPlanesGui(CObservationTreeGui *model, TCalibFromPlanesParams *params);
@@ -54,7 +53,7 @@ public:
 	void publishText(const std::string &msg);
 
 	/** Notifies observers with the extracted planes.
-	 * \param sensor_id id of the sensor the planes were observed from.
+	 * \param sensor_id id of the sensor whose observervation the planes were extracted from.
 	 * \param sync_obs_id id of the observation in the synchronized rawlog.
 	 */
 	void publishPlanes(const int &sensor_id, const int &sync_obs_id);

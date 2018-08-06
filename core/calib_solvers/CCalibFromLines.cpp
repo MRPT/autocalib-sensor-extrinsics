@@ -248,8 +248,9 @@ void CCalibFromLines::findPotentialMatches(const std::vector<std::vector<CLine>>
 {
 	for(int i = 0; i < lines.size()-1; ++i)
 		for(int j = i+1; j < lines.size(); ++j)
+		{
 			for(int ii = 0; ii < lines[i].size(); ++ii)
-				for(int jj = 0; jj < lines[j].size(); ++jj)
+			{	for(int jj = 0; jj < lines[j].size(); ++jj)
 				{
 					Eigen::Vector3f n_ii = sync_model->getSensorPoses()[i].block(0,0,3,3) * lines[i][ii].normal;
 					Eigen::Vector3f v_ii = sync_model->getSensorPoses()[i].block(0,0,3,3) * lines[i][ii].v;
@@ -263,6 +264,15 @@ void CCalibFromLines::findPotentialMatches(const std::vector<std::vector<CLine>>
 						mmv_line_corresp[i][j].push_back(potential_match);
 					}
 				}
+			}
+
+			// for stats printing when no matches exist
+			if((lines[i].size() == 0) || (lines[j].size() == 0))
+			{
+				std::array<int,3> temp_match{-1, -1, -1};
+				mmv_line_corresp[i][j].push_back(temp_match);
+			}
+		}
 }
 
 Scalar CCalibFromLines::computeRotCalibResidual(const std::vector<Eigen::Matrix4f> &sensor_poses)

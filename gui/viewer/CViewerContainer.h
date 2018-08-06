@@ -30,6 +30,11 @@ public:
 	explicit CViewerContainer(QWidget *parent = 0);
 	~CViewerContainer();
 
+	/** Updates the sensor selection comboboxes with the available sensor labels.
+	 * \param sensor_labels The list of sensor labels that are to be loaded into the comboboxes.
+	 */
+	void updateSensorsList(const std::vector<std::string> &sensor_labels);
+
 	/** Update the text browswer with received text message. */
 	void updateText(const std::string &);
 
@@ -39,6 +44,13 @@ public:
 	 * \param text to be displayed in the visualizer.
 	 */
 	void updateCloudViewer(const int &viewer_id, const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const std::string &text);
+
+	/** Updates the respective cloud visualizer(s) with a point cloud.
+	 * \param sensor_id The id of the sensor the cloud belongs to.
+	 * \param cloud The input cloud.
+	 * \param text The text to be displayed in the visualizer.
+	 */
+	void updateCloudViewers(const int &sensor_id, const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const std::string &text);
 
 	/**
 	 * Update the result viewer with all the observations in a set, overlapped.
@@ -55,6 +67,14 @@ public:
 	 * \param draw indicates whether the image to be displayed is drawn with shapes.
 	 */
 	void updateImageViewer(const int &viewer_id, mrpt::img::CImage::Ptr &image, const bool &draw = 0);
+
+	/** Update the respective image viewer(s) with an image.
+	 * \param sensor_id The id of the sensor the image belongs to.
+	 * \param image Pointer to the image to be displayed.
+	 * \param draw Indicates whether the image to be displayed is drawn with shapes.
+	 */
+	void updateImageViewers(const int &sensor_id, mrpt::img::CImage::Ptr &image, const bool &draw = 0);
+
 
 	void updateCalibConfig(const int &calib_algo_id);
 
@@ -93,20 +113,28 @@ public:
 	 */
 	virtual void onReceivingCorrespLines(std::map<int,std::map<int,std::vector<std::array<CLine,2>>>> &corresp_lines, const std::vector<Eigen::Matrix4f> &sensor_poses);
 
+private slots:
+
+	/** Callback function to update the viewers with which sensor's observations to display. */
+	void sensorIndexChanged(const int &index);
+
 private:
+
+	/** The sensor labels of the sensors available for display. */
+	std::vector<std::string> m_sensor_labels;
+
+	/** The ids of the sensors whose observations are to be visualized in viewers 1 and 2 repsepctively, and together in the main viewer.
+	 * Only the observations of two sensors can be visualized in the viewers at a time. */
+	std::vector<int> m_vsensor_ids = {0,1};
 
 	/** An array of three PCLVisualizer objects, each linked to one viewer widget. */
 	std::array<std::shared_ptr<pcl::visualization::PCLVisualizer>, 3> m_viewers;
 
 	/** An array of image pointers that point to the images displayed in the image viewers. */
-	std::array<mrpt::img::CImage::Ptr, 2> m_viewer_images;
+	std::array<mrpt::img::CImage::Ptr, 2> m_viewer_images;	
 
 	/** A copy of the current set of corresponding planes to be displayed in the main viewer. */
 	std::map<int,std::map<int,std::vector<std::array<int,4>>>> m_current_corresp_planes;
-
-	/** The ids of the sensors whose observations are to be visualized in viewers 1 and 2 repsepctively, and together in the main viewer.
-	 * Only the observations of two sensors can be visualized in the viewers at a time. */
-	std::vector<int> m_vsensor_ids = {0,1};
 
 	Ui::CViewerContainer *m_ui;
 };
