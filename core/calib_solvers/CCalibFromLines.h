@@ -50,11 +50,16 @@ public:
 	 * \param sensor_poses relative poses of the sensors
 	 * \return the residual
 	 */
-	virtual Scalar computeRotCalibResidual(const std::vector<Eigen::Matrix4f> &sensor_poses);
+    virtual Scalar computeRotationResidual(const std::vector<Eigen::Matrix4f> &sensor_poses);
 
 	/** Compute Calibration (only rotation).
 	 * \param sensor_poses initial calibration
 	 * \return the residual
 	 */
-	virtual Scalar computeRotCalibration(const TSolverParams &params, const std::vector<Eigen::Matrix4f> &sensor_poses, std::string &stats);
+    virtual Scalar computeRotation(const TSolverParams &params, const std::vector<Eigen::Matrix4f> &sensor_poses, std::string &stats);
+
+    /** Compute Calibration (only translation).
+        \param sensor_poses initial calibration
+        \return the residual */
+    virtual Scalar computeTranslation(const std::vector<Eigen::Matrix4f> &sensor_poses, std::string &stats);
 };

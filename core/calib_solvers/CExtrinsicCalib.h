@@ -65,28 +65,28 @@ public:
     /** Calculate the angular residual error of the correspondences.
         \param sensor_poses relative poses of the sensors
         \return the residual */
-	virtual Scalar computeRotCalibResidual(const std::vector<Eigen::Matrix4f> &sensor_poses) = 0;
+    virtual Scalar computeRotationResidual(const std::vector<Eigen::Matrix4f> &sensor_poses) = 0;
 
 //    /** Calculate the translational residual error of the correspondences.
 //        \param sensor_poses relative poses of the sensors
 //        \return the residual */
-//    virtual Scalar computeCalibResidual_trans(const std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > & sensor_poses) = 0;
+//    virtual Scalar computeTranslationResidual(const std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > & sensor_poses) = 0;
 
-//    /** Compute Calibration.
-//        \param sensor_poses initial calibration
-//        \return the residual */
-//    virtual Scalar computeCalibration(const std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > & sensor_poses) = 0;
+    /** Compute Calibration.
+        \param sensor_poses initial calibration
+        \return the residual */
+    virtual Scalar computeCalibration(const std::vector<Eigen::Matrix4f> & sensor_poses); // = 0;
 
     /** Compute Calibration (only rotation).
 	 * \params params the parameters related to the least-squares solver
 	 * \param sensor_poses the initial calibration
 	 * \return the residual */
-	virtual Scalar computeRotCalibration(const TSolverParams &params, const std::vector<Eigen::Matrix4f> & sensor_poses, std::string &stats) = 0;
+    virtual Scalar computeRotation(const TSolverParams &params, const std::vector<Eigen::Matrix4f> & sensor_poses, std::string &stats) = 0;
 
-//    /** Compute Calibration (only translation).
-//        \param sensor_poses initial calibration
-//        \return the residual */
-//    virtual Scalar computeCalibration_trans(const std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > & sensor_poses) = 0;
+    /** Compute Calibration (only translation).
+        \param sensor_poses initial calibration
+        \return the residual */
+    virtual Scalar computeTranslation(const std::vector<Eigen::Matrix4f> & sensor_poses, std::string &stats) = 0;
 
 //    /*! Compute the Fisher Information Matrix (FIM) of the rotation estimate. */ // TODO
 //    void calcFIM_rot();

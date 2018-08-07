@@ -275,12 +275,18 @@ void CCalibFromLines::findPotentialMatches(const std::vector<std::vector<CLine>>
 		}
 }
 
-Scalar CCalibFromLines::computeRotCalibResidual(const std::vector<Eigen::Matrix4f> &sensor_poses)
+Scalar CCalibFromLines::computeRotationResidual(const std::vector<Eigen::Matrix4f> &sensor_poses)
 {
 
 }
 
-Scalar CCalibFromLines::computeRotCalibration(const TSolverParams &params, const std::vector<Eigen::Matrix4f> & sensor_poses, std::string &stats)
+Scalar CCalibFromLines::computeRotation(const TSolverParams &params, const std::vector<Eigen::Matrix4f> & sensor_poses, std::string &stats)
 {
 
 }
+
+Scalar CCalibFromLines::computeTranslation(const std::vector<Eigen::Matrix4f> &sensor_poses, std::string &stats)
+{
+
+}
+

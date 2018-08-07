@@ -236,7 +236,7 @@ void CCalibFromPlanesGui::calibrate()
 	publishText("****Running the calibration solver****");
 
 	std::string stats;
-	computeRotCalibration(m_params->solver, sync_model->getSensorPoses(), stats);
+    computeRotation(m_params->solver, sync_model->getSensorPoses(), stats);
 
 	publishText(stats);
 }
