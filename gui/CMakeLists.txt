@@ -5,6 +5,7 @@ SET(SOURCES
 	CMainWindow.cpp
 	observation_tree/CObservationTreeGui.cpp
 	viewer/CViewerContainer.cpp
+	viewer/TViewerBuffer.h
 	config/CCalibFromPlanesConfig.h
 	config/CCalibFromPlanesConfig.cpp
 	config/CCalibFromLinesConfig.h

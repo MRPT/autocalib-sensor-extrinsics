@@ -53,7 +53,10 @@ class CObservationTreeItem
 		int getPriorIndex() const;
 
 		/** Pointer to the cloud loaded and saved from the observation, for quicker access. */
-		pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud() const;
+		pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud();
+
+		/** Save pointer to the loaded cloud for later access. */
+		void saveCloud(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud);
 
 	private:
 

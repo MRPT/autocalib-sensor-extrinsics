@@ -103,6 +103,7 @@ void CCalibFromLinesGui::extractLines()
 	mrpt::system::TTimeStamp prev_ts = 0;
 
 	selected_sensor_labels = sync_model->getSensorLabels();
+	std::vector<int> used_sets;
 
 	for(size_t i = 0; i < selected_sensor_labels.size(); i++)
 	{
@@ -110,7 +111,7 @@ void CCalibFromLinesGui::extractLines()
 		mvv_lines[i].resize((sync_model->getSyncIndices()[i]).size());
 
 		//let's run it for 15 sets
-		for(size_t j = 0; j < 15; j++)
+		for(size_t j = 0; j < 15; j += m_params->downsample_factor)
 		{
 			tree_item = root_item->child(j);
 
@@ -132,15 +133,24 @@ void CCalibFromLinesGui::extractLines()
 					publishText(std::to_string(n_lines) + " line(s) extracted from observation #" + std::to_string(tree_item->child(k)->getPriorIndex())
 					            + "\nTime elapsed: " +  std::to_string(line_segment_end - line_segment_start));
 
+					sync_obs_id = sync_model->findSyncIndexFromSet(j, obs_item->sensorLabel);
 					mvv_lines[i][sync_obs_id] = segmented_lines;
-					sync_obs_id++;
 					prev_ts = obs_item->timestamp;
 				}
 			}
-		}
+
+			if(i == 0)
+				used_sets.push_back(j);
+		}	
 
 		sync_obs_id = 0;
 	}
+
+	std::string s = "Used sets:\n";
+	for(auto iter = used_sets.begin(); iter != used_sets.end(); iter++)
+		s = s + std::to_string((*iter)) + " ";
+
+	publishText(s);
 
 	m_params->calib_status = CalibrationFromLinesStatus::LINES_EXTRACTED;
 }
@@ -158,9 +168,10 @@ void CCalibFromLinesGui::matchLines()
 	sensor_labels = sync_model->getSensorLabels();
 
 	std::vector<std::vector<CLine>> lines;
+	std::vector<int> used_sets;
 
 	//for(int i = 0; i < root_item->childCount(); i++)
-	for(int i = 0; i < 15; i++)
+	for(int i = 0; i < 15; i += m_params->downsample_factor)
 	{
 		tree_item = root_item->child(i);
 		lines.resize(sensor_labels.size());
@@ -195,7 +206,15 @@ void CCalibFromLinesGui::matchLines()
 				count = 0;
 			}
 		}
+
+		used_sets.push_back(i);
 	}
+
+	std::string s = "Used sets:\n";
+	for(auto iter = used_sets.begin(); iter != used_sets.end(); iter++)
+		s = s + std::to_string((*iter)) + " ";
+
+	publishText(s);
 
 	m_params->calib_status = CalibrationFromLinesStatus::LINES_MATCHED;
 }

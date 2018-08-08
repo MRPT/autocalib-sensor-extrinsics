@@ -11,6 +11,8 @@
 
 /**
  * Provides a GUI wrapper around the core calibration from lines classes.
+ *
+ * Inherits from CCalibFromLines.
  */
 
 class CCalibFromLinesGui : public CCalibFromLines

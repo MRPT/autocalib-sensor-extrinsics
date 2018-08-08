@@ -128,14 +128,14 @@ void CCalibFromPlanesGui::extractPlanes()
 	mrpt::system::TTimeStamp prev_ts = 0;
 
 	selected_sensor_labels = sync_model->getSensorLabels();
+	std::vector<int> used_sets;
 
 	for(size_t i = 0; i < selected_sensor_labels.size(); i++)
 	{
-		publishText("**Extracting planes from sensor #" + std::to_string(i) + " observations**");
+		publishText("**Extracting planes from " + selected_sensor_labels[i] + " observations**");
 		mvv_planes[i].resize((sync_model->getSyncIndices()[i]).size());
 
-		//let's run it for 15 sets
-		for(size_t j = 0; j < 15; j++)
+		for(size_t j = 0; j < 15; j += m_params->downsample_factor)
 		{
 			tree_item = root_item->child(j);
 
@@ -145,15 +145,15 @@ void CCalibFromPlanesGui::extractPlanes()
 				obs_item = std::dynamic_pointer_cast<CObservation3DRangeScan>(item->getObservation());
 				if((obs_item->sensorLabel == selected_sensor_labels[i]) && (obs_item->timestamp != prev_ts))
 				{
-					if(item->cloud() != nullptr)
-						cloud  = item->cloud();
+					//if(item->cloud() != nullptr)
+					   // cloud  = item->cloud();
 
-					else
-					{
+					//else
+					//{
 						obs_item->project3DPointsFromDepthImageInto(*cloud, projection_params);
 						cloud->is_dense = false;
-						item->cloud() = cloud;
-					}
+						//item->saveCloud(cloud);
+					//}
 
 					plane_segment_start = pcl::getTime();
 					segmented_planes.clear();
@@ -164,15 +164,24 @@ void CCalibFromPlanesGui::extractPlanes()
 					publishText(std::to_string(n_planes) + " plane(s) extracted from observation #" + std::to_string(tree_item->child(k)->getPriorIndex())
 					            + "\nTime elapsed: " +  std::to_string(plane_segment_end - plane_segment_start));
 
+					sync_obs_id = sync_model->findSyncIndexFromSet(j, obs_item->sensorLabel);
 					mvv_planes[i][sync_obs_id] = segmented_planes;
-					sync_obs_id++;
 					prev_ts = obs_item->timestamp;
 				}
 			}
+
+			if(i == 0)
+				used_sets.push_back(j);
 		}
 
 		sync_obs_id = 0;
 	}
+
+	std::string s = "Used sets:\n";
+	for(auto iter = used_sets.begin(); iter != used_sets.end(); iter++)
+		s = s + std::to_string((*iter)) + " ";
+
+	publishText(s);
 
 	m_params->calib_status = CalibrationFromPlanesStatus::PLANES_EXTRACTED;
 }
@@ -190,9 +199,10 @@ void CCalibFromPlanesGui::matchPlanes()
 	sensor_labels = sync_model->getSensorLabels();
 
 	std::vector<std::vector<CPlaneCHull>> planes;
+	std::vector<int> used_sets;
 
 	//for(int i = 0; i < root_item->childCount(); i++)
-	for(int i = 0; i < 15; i++)
+	for(int i = 0; i < 15; i+= m_params->downsample_factor)
 	{
 		tree_item = root_item->child(i);
 		planes.resize(sensor_labels.size());
@@ -222,11 +232,19 @@ void CCalibFromPlanesGui::matchPlanes()
 						count++;
 				}
 
-				publishText(std::to_string(count) + " matches found between sensor #" + std::to_string(iter1->first) + " and sensor #" + std::to_string(iter2->first));
+				publishText(std::to_string(count) + " matches found between " + sensor_labels[iter1->first] + " and " + sensor_labels[iter2->first]);
 				count = 0;
 			}
 		}
+
+		used_sets.push_back(i);
 	}
+
+	std::string s = "Used sets:\n";
+	for(auto iter = used_sets.begin(); iter != used_sets.end(); iter++)
+		s = s + std::to_string((*iter)) + " ";
+
+	publishText(s);
 
 	m_params->calib_status = CalibrationFromPlanesStatus::PLANES_MATCHED;
 }

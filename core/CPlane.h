@@ -14,8 +14,7 @@
 
 typedef float Scalar;
 
-/** Store the plane extracted from a depth image (or point cloud) defined by some geometric characteristics.
- */
+/** Store the plane extracted from a depth image (or point cloud) defined by some geometric characteristics. */
 class CPlane
 {
   public:
@@ -30,8 +29,7 @@ class CPlane
     size_t n_inliers;
 };
 
-/** Store the plane's geometric characteristics and its convex hull.
- */
+/** Store the plane's geometric characteristics and its convex hull. */
 class CPlaneCHull : public CPlane
 {
   public:

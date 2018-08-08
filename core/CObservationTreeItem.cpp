@@ -73,8 +73,12 @@ int CObservationTreeItem::getPriorIndex() const
 	return this->m_prior_index;
 }
 
-pcl::PointCloud<pcl::PointXYZRGBA>::Ptr CObservationTreeItem::cloud() const
+pcl::PointCloud<pcl::PointXYZRGBA>::Ptr CObservationTreeItem::cloud()
 {
 	return this->m_cloud;
 }
 
+void CObservationTreeItem::saveCloud(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud)
+{
+	this->m_cloud = cloud;
+}

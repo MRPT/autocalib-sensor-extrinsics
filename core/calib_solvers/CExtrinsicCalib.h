@@ -75,7 +75,7 @@ public:
     /** Compute Calibration.
         \param sensor_poses initial calibration
         \return the residual */
-    virtual Scalar computeCalibration(const std::vector<Eigen::Matrix4f> & sensor_poses); // = 0;
+	virtual Scalar computeCalibration(const std::vector<Eigen::Matrix4f> & sensor_poses); // = 0;
 
     /** Compute Calibration (only rotation).
 	 * \params params the parameters related to the least-squares solver

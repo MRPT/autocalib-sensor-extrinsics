@@ -18,8 +18,12 @@ class CCalibFromPlanesConfig : public QWidget
 	Q_OBJECT
 
 public:
-	 CCalibFromPlanesConfig(mrpt::config::CConfigFile &config_file, QWidget *parent = 0);
+	 CCalibFromPlanesConfig(QWidget *parent = 0);
 	~CCalibFromPlanesConfig();
+
+	 /** Set the associated config file and load the values. */
+	 void setConfig(mrpt::config::CConfigFile &config_file);
+
 
 private slots:
 	void calibrate();

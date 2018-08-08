@@ -39,6 +39,7 @@ enum CalibrationFromPlanesStatus
 
 struct TCalibFromPlanesParams
 {
+	int downsample_factor;
 	TPlaneSegmentationParams seg;
 	TPlaneMatchingParams match;
 	TSolverParams solver;

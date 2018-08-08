@@ -2,13 +2,32 @@
 #include <config/CCalibFromPlanesConfig.h>
 #include <ui_CCalibFromPlanesConfig.h>
 
-CCalibFromPlanesConfig::CCalibFromPlanesConfig(mrpt::config::CConfigFile &config_file, QWidget *parent) :
+CCalibFromPlanesConfig::CCalibFromPlanesConfig(QWidget *parent) :
 	QWidget(parent),
-    m_config_file(config_file),
     m_ui(new Ui::CCalibFromPlanesConfig)
 {
 	m_ui->setupUi(this);
 
+	connect(m_ui->extract_planes_button, SIGNAL(clicked(bool)), this, SLOT(extractPlanes()));
+	connect(m_ui->match_planes_button, SIGNAL(clicked(bool)), this, SLOT(matchPlanes()));
+	connect(m_ui->calib_button, SIGNAL(clicked(bool)), this, SLOT(calibrate()));
+	connect(m_ui->save_calib_button, SIGNAL(clicked(bool)), this, SLOT(saveCalibClicked()));
+	connect(m_ui->save_params_button, SIGNAL(clicked(bool)), this, SLOT(saveParamsClicked()));
+
+	m_ui->match_planes_button->setDisabled(true);
+	m_ui->calib_button->setDisabled(true);
+	m_ui->save_calib_button->setDisabled(true);
+}
+
+CCalibFromPlanesConfig::~CCalibFromPlanesConfig()
+{
+	delete m_ui;
+}
+
+void CCalibFromPlanesConfig::setConfig(mrpt::config::CConfigFile &config_file)
+{
+	m_config_file = config_file;
+	m_ui->downsample_factor_sbox->setValue(m_config_file.read_int("grouped_observations", "downsample_factor", 10, true));
 	std::string ne_method_string = m_config_file.read_string("plane_segmentation", "normal_estimation_method", "COVARIANCE_MATRIX", true);
 
 	if(ne_method_string == "AVERAGE_3D_GRADIENT")
@@ -34,25 +53,11 @@ CCalibFromPlanesConfig::CCalibFromPlanesConfig(mrpt::config::CConfigFile &config
 	m_ui->max_iters_sbox->setValue(m_config_file.read_int("solver", "max_iters", 10, true));
 	m_ui->min_update_sbox->setValue(m_config_file.read_double("solver", "min_update", 0.00001, true));
 	m_ui->converge_error_sbox->setValue(m_config_file.read_double("solver", "convergence_error", 0.00001, true));
-
-	connect(m_ui->extract_planes_button, SIGNAL(clicked(bool)), this, SLOT(extractPlanes()));
-	connect(m_ui->match_planes_button, SIGNAL(clicked(bool)), this, SLOT(matchPlanes()));
-	connect(m_ui->calib_button, SIGNAL(clicked(bool)), this, SLOT(calibrate()));
-	connect(m_ui->save_calib_button, SIGNAL(clicked(bool)), this, SLOT(saveCalibClicked()));
-	connect(m_ui->save_params_button, SIGNAL(clicked(bool)), this, SLOT(saveParamsClicked()));
-
-	m_ui->match_planes_button->setDisabled(true);
-	m_ui->calib_button->setDisabled(true);
-	m_ui->save_calib_button->setDisabled(true);
-}
-
-CCalibFromPlanesConfig::~CCalibFromPlanesConfig()
-{
-	delete m_ui;
 }
 
 void CCalibFromPlanesConfig::extractPlanes()
 {
+	m_params.downsample_factor = m_ui->downsample_factor_sbox->value();
 	m_params.seg.normal_estimation_method = m_ui->ne_method_cbox->currentIndex();
 	m_params.seg.depth_dependent_smoothing = m_ui->depth_dependent_smoothing_check->isChecked();
 	m_params.seg.max_depth_change_factor = m_ui->max_depth_change_factor_sbox->value();

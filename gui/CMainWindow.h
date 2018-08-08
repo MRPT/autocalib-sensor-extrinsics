@@ -89,7 +89,6 @@ private:
 	/** Stores the synchronized (modified) rawlog after re-grouping. */
 	CObservationTreeGui *m_sync_model;
 
-	//std::shared_ptr<QWidget> m_config_widget;
 	/** Pointer to the calibration using planes config widget. */
 	std::shared_ptr<CCalibFromPlanesConfig> m_calib_from_planes_config_widget;
 

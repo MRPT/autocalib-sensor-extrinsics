@@ -35,6 +35,7 @@ enum CalibrationFromLinesStatus
 
 struct TCalibFromLinesParams
 {
+	int downsample_factor;
 	TLineSegmentationParams seg;
 	TLineMatchingParams match;
 	TSolverParams solver;

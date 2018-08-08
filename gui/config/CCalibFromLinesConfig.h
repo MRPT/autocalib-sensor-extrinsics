@@ -18,8 +18,11 @@ class CCalibFromLinesConfig : public QWidget
 	Q_OBJECT
 
 public:
-	explicit CCalibFromLinesConfig(mrpt::config::CConfigFile &config_file, QWidget *parent = 0);
+	CCalibFromLinesConfig(QWidget *parent = 0);
 	~CCalibFromLinesConfig();
+
+	 /** Set the associated config file and load the values. */
+	 void setConfig(mrpt::config::CConfigFile &config_file);
 
 private slots:
 
