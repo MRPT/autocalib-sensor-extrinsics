@@ -17,6 +17,11 @@ struct TPlaneSegmentationParams
 	double dist_threshold;
 	double min_inliers_frac;
 	double max_curvature;
+
+	//params for removing duplicate planes
+	double max_cos_normal;
+	double dist_centre_plane_threshold;
+	double proximity_threshold;
 };
 
 struct TPlaneMatchingParams

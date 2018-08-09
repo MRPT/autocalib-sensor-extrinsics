@@ -152,7 +152,7 @@ void CCalibFromPlanesGui::extractPlanes()
 					//{
 						obs_item->project3DPointsFromDepthImageInto(*cloud, projection_params);
 						cloud->is_dense = false;
-						//item->saveCloud(cloud);
+						//item->setCloud(cloud);
 					//}
 
 					plane_segment_start = pcl::getTime();

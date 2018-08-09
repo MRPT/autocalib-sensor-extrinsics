@@ -56,7 +56,7 @@ class CObservationTreeItem
 		pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud();
 
 		/** Save pointer to the loaded cloud for later access. */
-		void saveCloud(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud);
+		void setCloud(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud);
 
 	private:
 

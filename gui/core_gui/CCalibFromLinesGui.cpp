@@ -107,7 +107,7 @@ void CCalibFromLinesGui::extractLines()
 
 	for(size_t i = 0; i < selected_sensor_labels.size(); i++)
 	{
-		publishText("**Extracting lines from sensor #" + std::to_string(i) + " observations**");
+		publishText("**Extracting lines from " + selected_sensor_labels[i] + " observations**");
 		mvv_lines[i].resize((sync_model->getSyncIndices()[i]).size());
 
 		//let's run it for 15 sets
@@ -202,7 +202,7 @@ void CCalibFromLinesGui::matchLines()
 						count++;
 				}
 
-				publishText(std::to_string(count) + " matches found between sensor #" + std::to_string(iter1->first) + " and sensor #" + std::to_string(iter2->first));
+				publishText(std::to_string(count) + " matches found between " + sensor_labels[iter1->first] + " and " + sensor_labels[iter2->first]);
 				count = 0;
 			}
 		}

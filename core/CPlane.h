@@ -23,10 +23,6 @@ class CPlane
     Eigen::Matrix<Scalar,3,1> v3center;
     Eigen::Matrix<Scalar,3,1> v3normal;
     Scalar d;
-    Eigen::Matrix<Scalar,4,4> covariance;  // the inverse of Fisher information matrix
-    Scalar curvature;
-    Scalar area;
-    size_t n_inliers;
 };
 
 /** Store the plane's geometric characteristics and its convex hull. */

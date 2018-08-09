@@ -63,6 +63,7 @@ void CCalibFromPlanes::segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::P
 	multi_plane_segmentation.setInputCloud(cloud);
 
 	std::vector<pcl::PlanarRegion<pcl::PointXYZRGBA>, Eigen::aligned_allocator<pcl::PlanarRegion<pcl::PointXYZRGBA>>> regions;
+	std::vector<pcl::PlanarRegion<pcl::PointXYZRGBA>, Eigen::aligned_allocator<pcl::PlanarRegion<pcl::PointXYZRGBA>>> unique_regions;
 	std::vector<pcl::ModelCoefficients> model_coefficients;
 	std::vector<pcl::PointIndices> inlier_indices;
 	pcl::PointCloud<pcl::Label>::Ptr labels(new pcl::PointCloud<pcl::Label>);
@@ -74,7 +75,6 @@ void CCalibFromPlanes::segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::P
 	// Create a vector with the planes detected in this frame, and calculate their parameters (normal, center, pointclouds, etc.)
 
 	mrpt::pbmap::PbMap pbmap;
-	planes.resize(regions.size());
 
 	for (size_t i = 0; i < regions.size(); i++)
 	{
@@ -105,46 +105,46 @@ void CCalibFromPlanes::segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::P
 		extract.filter (*plane.planePointCloudPtr);
 		plane.inliers = inlier_indices[i].indices;
 
-		planes[i].v3normal = plane.v3normal;
-		planes[i].v3center = plane.v3center;
-		planes[i].d = plane.d;
-		planes[i].v_inliers = inlier_indices[i].indices;
-
 		pcl::PointCloud<pcl::PointXYZRGBA>::Ptr contourPtr(new pcl::PointCloud<pcl::PointXYZRGBA>);
 		contourPtr->points = regions[i].getContour();
-		plane.calcConvexHull(contourPtr, planes[i].v_hull_indices);
-		plane.computeMassCenterAndArea();
+		plane.calcConvexHull(contourPtr);
 
-		planes[i].ConvexHullPtr = contourPtr;
+		// Check whether this region correspond to the same plane as a previous one (this situation may happen when there exists a small discontinuity in the observation)
 
-		for (size_t j = 0; j < planes[i].v_hull_indices.size(); j++)
-			planes[i].v_hull_indices[j] = boundary_indices[i].indices[planes[i].v_hull_indices[j]];
+		bool isSamePlane = false;
+		for (size_t j = 0; j < pbmap.vPlanes.size(); j++)
+			if(pbmap.vPlanes[j].isSamePlane(plane, params.max_cos_normal, params.dist_centre_plane_threshold, params.proximity_threshold))
+			{
+				isSamePlane = true;
+				pbmap.vPlanes[j].mergePlane(plane);
+				boundary_indices.erase(boundary_indices.begin() + j);
+				break;
+			}
 
-
-//        Check whether this region correspond to the same plane as a previous one (this situation may happen when there exists a small discontinuity in the observation)
-
-//        bool isSamePlane = false;
-//        for (size_t j = 0; j < pbmap.vPlanes.size(); j++)
-//            if( pbmap.vPlanes[j].isSamePlane(plane, 0.998, 0.1, 0.4) ) // The planes are merged if they are the same
-//            {
-//                std::cout << "Merge local region\n\n";
-//                isSamePlane = true;
-//                pbmap.vPlanes[j].mergePlane(plane);
-//                break;
-//            }
-//        if(!isSamePlane)
-//            pbmap.vPlanes.push_back(plane);
+		if(!isSamePlane)
+		{
+			pbmap.vPlanes.push_back(plane);
+			unique_regions.push_back(regions[i]);
+		}
 	}
 
-//    planes.resize( pbmap.vPlanes.size() );
-//    for (size_t i = 0; i < pbmap.vPlanes.size (); i++)
-//    {
-//        std::cout << i << " normal " << pbmap.vPlanes[i].v3normal.transpose() << "\n";
-//        planes[i].v3normal = pbmap.vPlanes[i].v3normal;
-//        planes[i].d = pbmap.vPlanes[i].d;
-//        planes[i].vv_hull_indices.push_back(indices_convex_hull);
-//    }
+	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr contourPtr(new pcl::PointCloud<pcl::PointXYZRGBA>);
+	planes.resize(pbmap.vPlanes.size());
+	for (size_t i = 0; i < pbmap.vPlanes.size (); i++)
+	{
+		planes[i].v3normal = pbmap.vPlanes[i].v3normal;
+		planes[i].v3center = pbmap.vPlanes[i].v3center;
+		planes[i].d = pbmap.vPlanes[i].d;
 
+		planes[i].ConvexHullPtr = pbmap.vPlanes[i].polygonContourPtr;
+		planes[i].v_inliers = pbmap.vPlanes[i].inliers;
+
+
+		contourPtr->points = unique_regions[i].getContour();
+		pbmap.vPlanes[i].calcConvexHull(contourPtr, planes[i].v_hull_indices);
+		for (size_t j = 0; j < planes[i].v_hull_indices.size(); j++)
+			planes[i].v_hull_indices[j] = boundary_indices[i].indices[planes[i].v_hull_indices[j]];
+	}
 }
 
 void CCalibFromPlanes::findPotentialMatches(const std::vector<std::vector<CPlaneCHull>> &planes, const int &set_id, const TPlaneMatchingParams &params)
@@ -167,12 +167,12 @@ void CCalibFromPlanes::findPotentialMatches(const std::vector<std::vector<CPlane
 				}
 			}
 
-			// for stats printing when no matches exist
-			if((planes[i].size() == 0) || (planes[j].size() == 0))
-			{
-				std::array<int,3> temp_match{-1, -1, -1};
-				mmv_plane_corresp[i][j].push_back(temp_match);
-			}
+//			// for stats printing when no matches exist
+//			if((planes[i].size() == 0) || (planes[j].size() == 0))
+//			{
+//				std::array<int,3> temp_match{-1, -1, -1};
+//				mmv_plane_corresp[i][j].push_back(temp_match);
+//			}
 		}
 }
 

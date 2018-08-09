@@ -278,7 +278,7 @@ void CMainWindow::listItemClicked(const QModelIndex &index)
 
 			m_ui->viewer_container->updateCloudViewer(sensor_id, cloud, viewer_text);
 
-			item->saveCloud(cloud);
+			item->setCloud(cloud);
 		}
 	}
 }
@@ -411,7 +411,7 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 				cloud->is_dense = false;
 				m_ui->viewer_container->updateCloudViewer(sensor_id, cloud, viewer_text);
 
-				item->saveCloud(cloud);
+				item->setCloud(cloud);
 			}
 
 			if((m_calib_from_planes_gui != nullptr) && (m_calib_from_planes_gui->calibStatus() == CalibrationFromPlanesStatus::PLANES_EXTRACTED
@@ -463,7 +463,7 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 					m_ui->viewer_container->updateSetCloudViewer(cloud, obs_item->sensorLabel,
 					                                             m_sync_model->getSensorPoses()[sensor_id],
 					                                             (m_sync_model->data(index)).toString().toStdString());
-					item->child(i)->saveCloud(cloud);
+					item->child(i)->setCloud(cloud);
 				}
 
 				if((m_calib_from_planes_gui != nullptr) && (m_calib_from_planes_gui->calibStatus() == CalibrationFromPlanesStatus::PLANES_EXTRACTED

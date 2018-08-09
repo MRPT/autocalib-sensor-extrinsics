@@ -48,6 +48,9 @@ void CCalibFromPlanesConfig::setConfig(mrpt::config::CConfigFile &config_file)
 	m_ui->distance_threshold_sbox->setValue(m_config_file.read_double("plane_segmentation", "distance_threshold", 0.05, true));
 	m_ui->minimum_threshold_sbox->setValue(m_config_file.read_double("plane_segmentation", "min_inliers_frac", 0.001, true));
 	m_ui->max_curvature_sbox->setValue(m_config_file.read_double("plane_segmentation", "max_curvature", 0.1, true));
+	m_ui->max_cos_normal_sbox->setValue(m_config_file.read_double("plane_segmentation", "max_cos_normal", 0.998, true));
+	m_ui->dist_centre_plane_sbox->setValue(m_config_file.read_double("plane_segmentation", "dist_centre_plane_threshold", 0.1, true));
+	m_ui->proximity_threshold_sbox->setValue(m_config_file.read_double("plane_segmentation", "proximity_threshold", 0.4, true));
 	m_ui->min_normals_dot_sbox->setValue(m_config_file.read_double("plane_matching", "min_normals_dot_product", 0.9, true));
 	m_ui->max_dist_diff_sbox->setValue(m_config_file.read_double("plane_matching", "max_plane_dist_diff", 0.2, true));
 	m_ui->max_iters_sbox->setValue(m_config_file.read_int("solver", "max_iters", 10, true));
@@ -66,6 +69,9 @@ void CCalibFromPlanesConfig::extractPlanes()
 	m_params.seg.dist_threshold = m_ui->distance_threshold_sbox->value();
 	m_params.seg.min_inliers_frac = m_ui->minimum_threshold_sbox->value();
 	m_params.seg.max_curvature = m_ui->max_curvature_sbox->value();
+	m_params.seg.max_cos_normal = m_ui->max_cos_normal_sbox->value();
+	m_params.seg.dist_centre_plane_threshold = m_ui->dist_centre_plane_sbox->value();
+	m_params.seg.proximity_threshold = m_ui->proximity_threshold_sbox->value();
 	m_params.calib_status = CalibrationFromPlanesStatus::PCALIB_YET_TO_START;
 	static_cast<CMainWindow*>(parentWidget()->parentWidget()->parentWidget())->runCalibFromPlanes(&m_params);
 	m_ui->match_planes_button->setDisabled(false);
