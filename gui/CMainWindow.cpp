@@ -42,6 +42,8 @@ CMainWindow::CMainWindow(QWidget *parent) :
 	connect(m_ui->itx_sbox, SIGNAL(valueChanged(double)), this, SLOT(initCalibChanged(double)));
 	connect(m_ui->ity_sbox, SIGNAL(valueChanged(double)), this, SLOT(initCalibChanged(double)));
 	connect(m_ui->itz_sbox, SIGNAL(valueChanged(double)), this, SLOT(initCalibChanged(double)));
+	connect(m_ui->angle_uncertain_sbox, SIGNAL(valueChanged(double)), this, SLOT(initCalibChanged(double)));
+	connect(m_ui->distance_uncertain_sbox, SIGNAL(valueChanged(double)), this, SLOT(initCalibChanged(double)));
 
 	setWindowTitle("Automatic Calibration of Sensor Extrinsics");
 	m_calib_from_planes_gui = nullptr;
@@ -52,10 +54,10 @@ CMainWindow::CMainWindow(QWidget *parent) :
 	m_recent_config_path = m_settings.value("recent_config").toString();
 
 	m_calib_from_planes_config_widget = std::make_shared<CCalibFromPlanesConfig>();
-	qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(3, m_calib_from_planes_config_widget.get());
+	qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(8, m_calib_from_planes_config_widget.get());
 
 	m_calib_from_lines_config_widget = std::make_shared<CCalibFromLinesConfig>();
-	qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(4, m_calib_from_lines_config_widget.get());
+	qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(9, m_calib_from_lines_config_widget.get());
 
 	m_calib_from_planes_config_widget.get()->hide();
 	m_calib_from_lines_config_widget.get()->hide();
@@ -123,14 +125,6 @@ void CMainWindow::selectRawlogFile()
 void CMainWindow::loadRawlog()
 {
 	// To ensure all options are disabled when a new rawlog is loaded again.
-	m_ui->sensor_cbox->setDisabled(true);
-	m_ui->irx_sbox->setDisabled(true);
-	m_ui->iry_sbox->setDisabled(true);
-	m_ui->irz_sbox->setDisabled(true);
-	m_ui->itx_sbox->setDisabled(true);
-	m_ui->ity_sbox->setDisabled(true);
-	m_ui->itz_sbox->setDisabled(true);
-	m_ui->med_sbox->setDisabled(true);
 	m_ui->observations_treeview->setDisabled(true);
 	m_ui->observations_description_textbrowser->setDisabled(true);
 	m_ui->observations_delay_sbox->setDisabled(true);
@@ -181,14 +175,6 @@ void CMainWindow::loadRawlog()
 		m_ui->sensors_selection_list->setDisabled(false);
 		m_ui->observations_delay_sbox->setDisabled(false);
 		m_ui->sync_observations_button->setDisabled(false);
-		m_ui->sensor_cbox->setDisabled(false);
-		m_ui->irx_sbox->setDisabled(false);
-		m_ui->iry_sbox->setDisabled(false);
-		m_ui->irz_sbox->setDisabled(false);
-		m_ui->itx_sbox->setDisabled(false);
-		m_ui->ity_sbox->setDisabled(false);
-		m_ui->itz_sbox->setDisabled(false);
-		m_ui->med_sbox->setDisabled(false);
 
 		m_ui->observations_delay_sbox->setValue(m_config_file.read_int("grouping_observations", "max_delay", 30, true));
 
@@ -201,7 +187,6 @@ void CMainWindow::loadRawlog()
 			item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
 			item->setCheckState(Qt::Checked);
 			m_ui->sensors_selection_list->insertItem(i, item);
-			m_ui->sensor_cbox->insertItem(i, QString::fromStdString(sensor_labels[i]));
 		}
 
 		std::string stats_string;
@@ -222,14 +207,6 @@ void CMainWindow::loadRawlog()
 		m_ui->viewer_container->updateText(stats_string);
 		m_ui->viewer_container->updateSensorsList(m_model->getSensorLabels());
 		m_ui->viewer_container->updateSensorPoses(m_model->getSensorPoses());
-		m_ui->sensor_cbox->setDisabled(false);
-		m_ui->irx_sbox->setDisabled(false);
-		m_ui->iry_sbox->setDisabled(false);
-		m_ui->irz_sbox->setDisabled(false);
-		m_ui->itx_sbox->setDisabled(false);
-		m_ui->ity_sbox->setDisabled(false);
-		m_ui->itz_sbox->setDisabled(false);
-		m_ui->med_sbox->setDisabled(false);
 	}
 
 	else
@@ -283,20 +260,6 @@ void CMainWindow::listItemClicked(const QModelIndex &index)
 	}
 }
 
-void CMainWindow::sensorIndexChanged(int index)
-{
-//	Eigen::Matrix4f rt = m_model->getSensorPoses()[index];
-//	Eigen::Matrix<float,3,1> rvec = utils::getRotationVector(rt);
-//	Eigen::Matrix<float,3,1> tvec = utils::getTranslationVector(rt);
-
-//	m_ui->irx_sbox->setValue(rvec(0,0));
-//	m_ui->iry_sbox->setValue(rvec(1,0));
-//	m_ui->irz_sbox->setValue(rvec(2,0));
-//	m_ui->itx_sbox->setValue(tvec(0,0));
-//	m_ui->itx_sbox->setValue(tvec(1,0));
-//	m_ui->itx_sbox->setValue(tvec(2,0));
-}
-
 void CMainWindow::syncObservationsClicked()
 {
 	std::vector<std::string> selected_sensor_labels;
@@ -304,11 +267,15 @@ void CMainWindow::syncObservationsClicked()
 
 	m_ui->grouped_observations_treeview->setDisabled(true);
 	m_ui->observations_treeview->setDisabled(false);
-
-	//if(m_config_widget)
-	    //m_config_widget.reset();
-	    //qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->removeWidget(m_config_widget.get());
-	//if(qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->indexOf(m_config_widget.get()) != -1)
+	m_ui->sensor_cbox->setDisabled(true);
+	m_ui->irx_sbox->setDisabled(true);
+	m_ui->iry_sbox->setDisabled(true);
+	m_ui->irz_sbox->setDisabled(true);
+	m_ui->itx_sbox->setDisabled(true);
+	m_ui->ity_sbox->setDisabled(true);
+	m_ui->itz_sbox->setDisabled(true);
+	m_ui->angle_uncertain_sbox->setDisabled(true);
+	m_ui->distance_uncertain_sbox->setDisabled(true);
 
 	for(size_t i = 0; i < m_ui->sensors_selection_list->count(); i++)
 	{
@@ -345,6 +312,25 @@ void CMainWindow::syncObservationsClicked()
 			m_ui->grouped_observations_treeview->setModel(m_sync_model);
 			m_ui->algo_cbox->setDisabled(false);
 
+			m_ui->sensor_cbox->setDisabled(false);
+			m_ui->irx_sbox->setDisabled(false);
+			m_ui->iry_sbox->setDisabled(false);
+			m_ui->irz_sbox->setDisabled(false);
+			m_ui->itx_sbox->setDisabled(false);
+			m_ui->ity_sbox->setDisabled(false);
+			m_ui->itz_sbox->setDisabled(false);
+			m_ui->angle_uncertain_sbox->setDisabled(false);
+			m_ui->distance_uncertain_sbox->setDisabled(false);
+
+			for(size_t i = 0; i < selected_sensor_labels.size(); i++)
+			{
+				QListWidgetItem *item = new QListWidgetItem;
+				item->setText(QString::fromStdString(selected_sensor_labels[i]));
+				item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+				item->setCheckState(Qt::Checked);
+				m_ui->sensor_cbox->insertItem(i, QString::fromStdString(selected_sensor_labels[i]));
+			}
+
 			std::string stats_string;
 			stats_string = "GROUPING STATS";
 			stats_string += "\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - ";
@@ -362,12 +348,83 @@ void CMainWindow::syncObservationsClicked()
 
 			m_ui->viewer_container->updateText(stats_string);
 			m_ui->viewer_container->updateSensorsList(selected_sensor_labels);
-			m_ui->viewer_container->updateSensorPoses(m_model->getSensorPoses());
+			m_ui->viewer_container->updateSensorPoses(m_sync_model->getSensorPoses());
 			m_ui->viewer_container->observationsSynced = true;
 		}
 
 		else
 			m_ui->viewer_container->updateText("Zero observations grouped.");
+	}
+}
+
+void CMainWindow::sensorIndexChanged(int index)
+{
+	Eigen::Matrix4f rt = m_sync_model->getSensorPoses()[index];
+	Eigen::Vector2f uncertain = m_sync_model->getSensorUncertainties()[index];
+
+	Eigen::Matrix<float,3,1> rvec = utils::getRotations(rt);
+	Eigen::Matrix<float,3,1> tvec = utils::getTranslations(rt);
+
+	m_ui->irx_sbox->blockSignals(true);
+	m_ui->iry_sbox->blockSignals(true);
+	m_ui->irz_sbox->blockSignals(true);
+	m_ui->itx_sbox->blockSignals(true);
+	m_ui->ity_sbox->blockSignals(true);
+	m_ui->itz_sbox->blockSignals(true);
+	m_ui->angle_uncertain_sbox->blockSignals(true);
+	m_ui->distance_uncertain_sbox->blockSignals(true);
+
+	m_ui->irx_sbox->setValue(rvec(0,0));
+	m_ui->iry_sbox->setValue(rvec(1,0));
+	m_ui->irz_sbox->setValue(rvec(2,0));
+	m_ui->itx_sbox->setValue(tvec(0,0));
+	m_ui->ity_sbox->setValue(tvec(1,0));
+	m_ui->itz_sbox->setValue(tvec(2,0));
+	m_ui->angle_uncertain_sbox->setValue(uncertain(0));
+	m_ui->distance_uncertain_sbox->setValue(uncertain(1));
+
+	m_ui->irx_sbox->blockSignals(false);
+	m_ui->iry_sbox->blockSignals(false);
+	m_ui->irz_sbox->blockSignals(false);
+	m_ui->itx_sbox->blockSignals(false);
+	m_ui->ity_sbox->blockSignals(false);
+	m_ui->itz_sbox->blockSignals(false);
+	m_ui->angle_uncertain_sbox->blockSignals(false);
+	m_ui->distance_uncertain_sbox->blockSignals(false);
+}
+
+void CMainWindow::initCalibChanged(double value)
+{
+	QDoubleSpinBox *sbox = (QDoubleSpinBox*)sender();
+
+	int sensor_index = m_ui->sensor_cbox->currentIndex();
+
+	if(sbox->accessibleName() == QString("angle_uncertain_sbox") || sbox->accessibleName() == QString("distance_uncertain_sbox"))
+	{
+		Eigen::Vector2f uncertainty;
+		uncertainty(0) = m_ui->angle_uncertain_sbox->value();
+		uncertainty(1) = m_ui->distance_uncertain_sbox->value();
+		m_sync_model->setSensorUncertainty(uncertainty, sensor_index);
+	}
+
+	else
+	{
+		std::vector<Eigen::Matrix4f> sensor_poses = m_sync_model->getSensorPoses();
+
+		Eigen::Matrix<float,3,1> rotation_angles;
+		Eigen::Matrix<float,3,1> translations;
+
+		rotation_angles(0) = m_ui->irx_sbox->value() * (M_PI/180);
+		rotation_angles(1) = m_ui->iry_sbox->value() * (M_PI/180);
+		rotation_angles(2) = m_ui->irz_sbox->value() * (M_PI/180);
+		sensor_poses[sensor_index].block(0,0,3,3) = utils::getRotationMatrix(rotation_angles);
+
+		translations(0) = m_ui->itx_sbox->value();
+		translations(1) = m_ui->ity_sbox->value();
+		translations(2) = m_ui->itz_sbox->value();
+		sensor_poses[sensor_index].block(0,3,3,1) = translations;
+
+		m_sync_model->setSensorPose(sensor_poses[sensor_index], sensor_index);
 	}
 }
 
@@ -414,12 +471,12 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 				item->setCloud(cloud);
 			}
 
-			if((m_calib_from_planes_gui != nullptr) && (m_calib_from_planes_gui->calibStatus() == CalibrationFromPlanesStatus::PLANES_EXTRACTED
-			                                           || m_calib_from_planes_gui->calibStatus() == CalibrationFromPlanesStatus::PLANES_MATCHED))
+			if((m_calib_from_planes_gui != nullptr) && (m_calib_from_planes_gui->calibStatus() == CalibFromPlanesStatus::PLANES_EXTRACTED
+			                                           || m_calib_from_planes_gui->calibStatus() == CalibFromPlanesStatus::PLANES_MATCHED))
 				m_calib_from_planes_gui->publishPlanes(sensor_id, sync_obs_id);
 
-			else if((m_calib_from_lines_gui != nullptr) && (m_calib_from_lines_gui->calibStatus() == CalibrationFromLinesStatus::LINES_EXTRACTED
-			                                           || m_calib_from_lines_gui->calibStatus() == CalibrationFromLinesStatus::LINES_MATCHED))
+			else if((m_calib_from_lines_gui != nullptr) && (m_calib_from_lines_gui->calibStatus() == CalibFromLinesStatus::LINES_EXTRACTED
+			                                           || m_calib_from_lines_gui->calibStatus() == CalibFromLinesStatus::LINES_MATCHED))
 				m_calib_from_lines_gui->publishLines(sensor_id, sync_obs_id);
 		}
 
@@ -466,20 +523,20 @@ void CMainWindow::treeItemClicked(const QModelIndex &index)
 					item->child(i)->setCloud(cloud);
 				}
 
-				if((m_calib_from_planes_gui != nullptr) && (m_calib_from_planes_gui->calibStatus() == CalibrationFromPlanesStatus::PLANES_EXTRACTED
-				                                            || m_calib_from_planes_gui->calibStatus() == CalibrationFromPlanesStatus::PLANES_MATCHED))
+				if((m_calib_from_planes_gui != nullptr) && (m_calib_from_planes_gui->calibStatus() == CalibFromPlanesStatus::PLANES_EXTRACTED
+				                                            || m_calib_from_planes_gui->calibStatus() == CalibFromPlanesStatus::PLANES_MATCHED))
 					m_calib_from_planes_gui->publishPlanes(sensor_id, sync_obs_id);
 
 
-				else if((m_calib_from_lines_gui != nullptr) && (m_calib_from_lines_gui->calibStatus() == CalibrationFromLinesStatus::LINES_EXTRACTED
-				                                           || m_calib_from_lines_gui->calibStatus() == CalibrationFromLinesStatus::LINES_MATCHED))
+				else if((m_calib_from_lines_gui != nullptr) && (m_calib_from_lines_gui->calibStatus() == CalibFromLinesStatus::LINES_EXTRACTED
+				                                           || m_calib_from_lines_gui->calibStatus() == CalibFromLinesStatus::LINES_MATCHED))
 					m_calib_from_lines_gui->publishLines(sensor_id, sync_obs_id);
 			}
 
-			if((m_calib_from_planes_gui != nullptr) && (m_calib_from_planes_gui->calibStatus() == CalibrationFromPlanesStatus::PLANES_MATCHED))
+			if((m_calib_from_planes_gui != nullptr) && (m_calib_from_planes_gui->calibStatus() == CalibFromPlanesStatus::PLANES_MATCHED))
 				m_calib_from_planes_gui->publishCorrespPlanes(item->row());
 
-			else if((m_calib_from_lines_gui != nullptr) && (m_calib_from_lines_gui->calibStatus() == CalibrationFromLinesStatus::LINES_MATCHED))
+			else if((m_calib_from_lines_gui != nullptr) && (m_calib_from_lines_gui->calibStatus() == CalibFromLinesStatus::LINES_MATCHED))
 				m_calib_from_lines_gui->publishCorrespLines(item->row());
 		}
     
@@ -545,29 +602,11 @@ void CMainWindow::algosIndexChanged(int index)
 	}
 }
 
-void CMainWindow::initCalibChanged(double value)
-{
-	QSpinBox *sbox = (QSpinBox*)sender();
-
-	if(sbox->accessibleName() == QString("irx"))
-		m_init_calib[0] = value;
-	else if(sbox->accessibleName() == QString("iry"))
-		m_init_calib[1] = value;
-	else if(sbox->accessibleName() == QString("irz"))
-		m_init_calib[2] = value;
-	else if(sbox->accessibleName() == QString("itx"))
-		m_init_calib[3] = value;
-	else if(sbox->accessibleName() == QString("ity"))
-		m_init_calib[4] = value;
-	else if(sbox->accessibleName() == QString("itz"))
-		m_init_calib[5] = value;
-}
-
 void CMainWindow::runCalibFromPlanes(TCalibFromPlanesParams *params)
 {
 	switch(params->calib_status)
 	{
-	case CalibrationFromPlanesStatus::PCALIB_YET_TO_START:
+	case CalibFromPlanesStatus::PCALIB_YET_TO_START:
 	{
 		if(m_sync_model != nullptr && (m_sync_model->getRootItem()->childCount() > 0))
 		{
@@ -587,13 +626,13 @@ void CMainWindow::runCalibFromPlanes(TCalibFromPlanesParams *params)
 		break;
 	}
 
-	case CalibrationFromPlanesStatus::PLANES_EXTRACTED:
+	case CalibFromPlanesStatus::PLANES_EXTRACTED:
 	{
 		m_calib_from_planes_gui->matchPlanes();
 		break;
 	}
 
-	case CalibrationFromPlanesStatus::PLANES_MATCHED:
+	case CalibFromPlanesStatus::PLANES_MATCHED:
 	{
 		m_calib_from_planes_gui->calibrate();
 		break;
@@ -605,7 +644,7 @@ void CMainWindow::runCalibFromLines(TCalibFromLinesParams *params)
 {
 	switch(params->calib_status)
 	{
-	case CalibrationFromLinesStatus::LCALIB_YET_TO_START:
+	case CalibFromLinesStatus::LCALIB_YET_TO_START:
 	{
 		if(m_sync_model != nullptr && (m_sync_model->getRootItem()->childCount() > 0))
 		{
@@ -623,7 +662,7 @@ void CMainWindow::runCalibFromLines(TCalibFromLinesParams *params)
 		break;
 	}
 
-	case CalibrationFromLinesStatus::LINES_EXTRACTED:
+	case CalibFromLinesStatus::LINES_EXTRACTED:
 	{
 		m_calib_from_lines_gui->matchLines();
 		break;

@@ -64,12 +64,9 @@ public:
 	void publishCorrespPlanes(const int &obs_set_id);
 
 	/** Returns the status of the calibration progress. */
-	CalibrationFromPlanesStatus calibStatus();
+	CalibFromPlanesStatus calibStatus();
 
 private:
-
-	/** The parameters for the calibration. */
-	TCalibFromPlanesParams *m_params;
 
 	/** List of text observers to be notified about the progress. */
 	std::vector<CTextObserver*> m_text_observers;

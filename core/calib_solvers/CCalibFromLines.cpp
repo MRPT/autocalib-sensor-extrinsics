@@ -1,20 +1,23 @@
 #include "CCalibFromLines.h"
 #include <mrpt/math/geometry.h>
 
-CCalibFromLines::CCalibFromLines(CObservationTree *model) : CExtrinsicCalib(model)
-{}
+CCalibFromLines::CCalibFromLines(CObservationTree *model, TCalibFromLinesParams *params) :
+    CExtrinsicCalib(model)
+{
+	this->params = params;
+}
 
 CCalibFromLines::~CCalibFromLines(){}
 
-void CCalibFromLines::segmentLines(const cv::Mat &image, Eigen::MatrixXf &range, const TLineSegmentationParams &params, const mrpt::img::TCamera &camera_params, std::vector<CLine> &lines)
+void CCalibFromLines::segmentLines(const cv::Mat &image, Eigen::MatrixXf &range, const mrpt::img::TCamera &camera_params, std::vector<CLine> &lines)
 {
 	cv::Mat canny_image;
 
-	cv::Canny(image, canny_image, params.clow_threshold, params.clow_threshold * params.chigh_to_low_ratio, params.ckernel_size);
+	cv::Canny(image, canny_image, params->seg.clow_threshold, params->seg.clow_threshold * params->seg.chigh_to_low_ratio, params->seg.ckernel_size);
 
 	std::vector<cv::Vec2f> hlines;
 
-	cv::HoughLines(canny_image, hlines, 1, CV_PI, params.hthreshold);
+	cv::HoughLines(canny_image, hlines, 1, CV_PI, params->seg.hthreshold);
 
 
 	double rho, theta;
@@ -168,7 +171,7 @@ void CCalibFromLines::segmentLines(const cv::Mat &image, Eigen::MatrixXf &range,
 				if (canny_image.at<char>(y, x) == 0 || i == longest)
 				{
 					onSegment = false;
-					if (nbPixels >= params.hthreshold)
+					if (nbPixels >= params->seg.hthreshold)
 					{
 						std::array<Eigen::Vector2i, 2> end_points;
 						end_points[0] = Eigen::Vector2i(memoryX, memoryY);
@@ -244,13 +247,16 @@ void CCalibFromLines::segmentLines(const cv::Mat &image, Eigen::MatrixXf &range,
 	}
 }
 
-void CCalibFromLines::findPotentialMatches(const std::vector<std::vector<CLine>> &lines, const int &set_id, const TLineMatchingParams &params)
+void CCalibFromLines::findPotentialMatches(const std::vector<std::vector<CLine>> &lines, const int &set_id)
 {
+	std::vector<Eigen::Vector2f> sensor_pose_uncertainties = sync_model->getSensorUncertainties();
+
 	for(int i = 0; i < lines.size()-1; ++i)
 		for(int j = i+1; j < lines.size(); ++j)
 		{
 			for(int ii = 0; ii < lines[i].size(); ++ii)
-			{	for(int jj = 0; jj < lines[j].size(); ++jj)
+			{
+				for(int jj = 0; jj < lines[j].size(); ++jj)
 				{
 					Eigen::Vector3f n_ii = sync_model->getSensorPoses()[i].block(0,0,3,3) * lines[i][ii].normal;
 					Eigen::Vector3f v_ii = sync_model->getSensorPoses()[i].block(0,0,3,3) * lines[i][ii].v;
@@ -258,7 +264,7 @@ void CCalibFromLines::findPotentialMatches(const std::vector<std::vector<CLine>>
 					Eigen::Vector3f n_jj = sync_model->getSensorPoses()[j].block(0,0,3,3) * lines[j][jj].normal;
 					Eigen::Vector3f v_jj = sync_model->getSensorPoses()[j].block(0,0,3,3) * lines[j][jj].v;
 
-					if((n_ii.dot(n_jj) > params.min_normals_dot_prod) && (n_ii.dot(v_jj) < params.max_line_normal_dot_prod))
+					if((n_ii.dot(n_jj) > cos(sensor_pose_uncertainties[j](0) * (M_PI/180))) && (n_ii.dot(v_jj) < cos((90 - sensor_pose_uncertainties[j](0)) * (M_PI/180))))
 					{
 						std::array<int,3> potential_match{set_id, ii, jj};
 						mmv_line_corresp[i][j].push_back(potential_match);
@@ -266,27 +272,24 @@ void CCalibFromLines::findPotentialMatches(const std::vector<std::vector<CLine>>
 				}
 			}
 
-			// for stats printing when no matches exist
-			if((lines[i].size() == 0) || (lines[j].size() == 0))
-			{
-				std::array<int,3> temp_match{-1, -1, -1};
-				mmv_line_corresp[i][j].push_back(temp_match);
-			}
+//			for stats printing when no matches exist
+//			if((lines[i].size() == 0) || (lines[j].size() == 0))
+//			{
+//				std::array<int,3> temp_match{-1, -1, -1};
+//				mmv_line_corresp[i][j].push_back(temp_match);
+//			}
 		}
 }
 
-Scalar CCalibFromLines::computeRotationResidual(const std::vector<Eigen::Matrix4f> &sensor_poses)
+Scalar CCalibFromLines::computeRotationResidual()
 {
-
 }
 
-Scalar CCalibFromLines::computeRotation(const TSolverParams &params, const std::vector<Eigen::Matrix4f> & sensor_poses, std::string &stats)
+Scalar CCalibFromLines::computeRotation()
 {
-
 }
 
-Scalar CCalibFromLines::computeTranslation(const std::vector<Eigen::Matrix4f> &sensor_poses, std::string &stats)
+Scalar CCalibFromLines::computeTranslation()
 {
-
 }
 

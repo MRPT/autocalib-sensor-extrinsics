@@ -80,9 +80,6 @@ private:
 	/** Path of the most recently loaded config file. */
 	QString m_recent_config_path;
 
-	/** The initial calibration vector. */
-	std::array<double,6> m_init_calib;
-
 	/** Stores the originally loaded rawlog. */
 	CObservationTreeGui *m_model;
 

@@ -70,10 +70,13 @@ void CObservationTree::loadTree()
 	}
 
 	Eigen::Matrix4f rt;
+	Eigen::Vector2f uncertain;
 	for(size_t i = 0; i < m_sensor_labels.size(); i++)
 	{
 		m_config_file.read_matrix("initial_calibration", m_sensor_labels[i], rt, Eigen::Matrix4f(), true);
+		m_config_file.read_vector("initial_uncertainty", m_sensor_labels[i], Eigen::Vector2f(), uncertain, true);
 		m_sensor_poses.push_back(rt);
+		m_sensor_pose_uncertainties.push_back(uncertain);
 	}
 }
 
@@ -191,10 +194,13 @@ void CObservationTree::syncObservations(const std::vector<std::string> &selected
 	m_sync_offset = max_delay;
 
 	Eigen::Matrix4f rt;
+	Eigen::Vector2f uncertain;
 	for(size_t i = 0; i < m_sensor_labels.size(); i++)
 	{
 		m_config_file.read_matrix("initial_calibration", m_sensor_labels[i], rt, Eigen::Matrix4f(), true);
+		m_config_file.read_vector("initial_uncertainty", m_sensor_labels[i], Eigen::Vector2f(), uncertain, true);
 		m_sensor_poses.push_back(rt);
+		m_sensor_pose_uncertainties.push_back(uncertain);
 	}
 }
 
@@ -233,12 +239,35 @@ std::vector<Eigen::Matrix4f> CObservationTree::getSensorPoses() const
 	return this->m_sensor_poses;
 }
 
+std::vector<Eigen::Vector2f> CObservationTree::getSensorUncertainties() const
+{
+	return this->m_sensor_pose_uncertainties;
+}
+
+void CObservationTree::setSensorPose(const Eigen::Matrix4f &sensor_pose, const int &sensor_index)
+{
+	this->m_sensor_poses[sensor_index] = sensor_pose;
+}
+
 bool CObservationTree::setSensorPoses(const std::vector<Eigen::Matrix4f> &sensor_poses)
 {
 	if(sensor_poses.size() != this->m_sensor_labels.size())
 		return 0;
 	else
 		this->m_sensor_poses = sensor_poses;
+}
+
+void CObservationTree::setSensorUncertainty(const Eigen::Vector2f &sensor_uncertainty, const int &sensor_index)
+{
+	this->m_sensor_pose_uncertainties[sensor_index] = sensor_uncertainty;
+}
+
+bool CObservationTree::setSensorUncertainties(const std::vector<Eigen::Vector2f> &uncertainties)
+{
+	if(uncertainties.size() != this->m_sensor_pose_uncertainties.size())
+		return 0;
+	else
+		this->m_sensor_pose_uncertainties = uncertainties;
 }
 
 std::vector<std::vector<int>> CObservationTree::getSyncIndices() const

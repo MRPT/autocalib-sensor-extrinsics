@@ -15,7 +15,10 @@
 
 class CCalibFromLines : public CExtrinsicCalib
 {
-public:
+protected:
+
+	/** The parameters for the calibration. */
+	TCalibFromLinesParams *params;
 
 	/** The segmented lines, the vector indices to access them are [sensor_id][obs_id][line_id]
 	 * obs_id is with respect to the synchronized model.
@@ -28,7 +31,7 @@ public:
 	 */
 	std::map<int,std::map<int,std::vector<std::array<int,3>>>> mmv_line_corresp;
 
-	CCalibFromLines(CObservationTree *model);
+	CCalibFromLines(CObservationTree *model, TCalibFromLinesParams *params);
 	~CCalibFromLines();
 
 	/**
@@ -36,7 +39,7 @@ public:
 	 * \param image the input image
 	 * \param lines vector of lines segmented
 	 */
-	void segmentLines(const cv::Mat &image, Eigen::MatrixXf &range, const TLineSegmentationParams &params, const mrpt::img::TCamera &camera_params, std::vector<CLine> &lines);
+	void segmentLines(const cv::Mat &image, Eigen::MatrixXf &range, const mrpt::img::TCamera &camera_params, std::vector<CLine> &lines);
 
 	/**
 	 * Search for potential line matches between each sensor pair in a syc obs set.
@@ -44,22 +47,19 @@ public:
 	 * \param set_id the id of the synchronized set the lines belong to.
 	 * \param params the parameters for line matching.
 	 */
-	void findPotentialMatches(const std::vector<std::vector<CLine>> &lines, const int &set_id, const TLineMatchingParams &params);
+	void findPotentialMatches(const std::vector<std::vector<CLine>> &lines, const int &set_id);
 
 	/** Calculate the angular residual error of the correspondences.
-	 * \param sensor_poses relative poses of the sensors
 	 * \return the residual
 	 */
-    virtual Scalar computeRotationResidual(const std::vector<Eigen::Matrix4f> &sensor_poses);
+	virtual Scalar computeRotationResidual();
 
 	/** Compute Calibration (only rotation).
-	 * \param sensor_poses initial calibration
 	 * \return the residual
 	 */
-    virtual Scalar computeRotation(const TSolverParams &params, const std::vector<Eigen::Matrix4f> &sensor_poses, std::string &stats);
+	virtual Scalar computeRotation();
 
     /** Compute Calibration (only translation).
-        \param sensor_poses initial calibration
         \return the residual */
-    virtual Scalar computeTranslation(const std::vector<Eigen::Matrix4f> &sensor_poses, std::string &stats);
+	virtual Scalar computeTranslation();
 };

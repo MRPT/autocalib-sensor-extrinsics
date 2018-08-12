@@ -22,7 +22,7 @@
 
 using namespace std;
 
-CCalibFromPlanes::CCalibFromPlanes(CObservationTree *model) :
+CCalibFromPlanes::CCalibFromPlanes(CObservationTree *model, TCalibFromPlanesParams *params) :
     CExtrinsicCalib(model)
 {
 	for(int sensor_id1=0; sensor_id1 < sync_model->getNumberOfSensors(); sensor_id1++)
@@ -32,24 +32,26 @@ CCalibFromPlanes::CCalibFromPlanes(CObservationTree *model) :
 		for(int sensor_id2 = sensor_id1 + 1; sensor_id2 < sync_model->getNumberOfSensors(); sensor_id2++)
 			mmv_plane_corresp[sensor_id1][sensor_id2] = std::vector<std::array<int,3>>();
 	}
+
+	this->params = params;
 }
 
-void CCalibFromPlanes::segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const TPlaneSegmentationParams & params, std::vector<CPlaneCHull> & planes)
+void CCalibFromPlanes::segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, std::vector<CPlaneCHull> & planes)
 {
-	unsigned min_inliers = params.min_inliers_frac * cloud->size();
+	unsigned min_inliers = params->seg.min_inliers_frac * cloud->size();
 
 	pcl::IntegralImageNormalEstimation<pcl::PointXYZRGBA, pcl::Normal> normal_estimation;
 
-	if(params.normal_estimation_method == 0)
+	if(params->seg.normal_estimation_method == 0)
 		normal_estimation.setNormalEstimationMethod(normal_estimation.COVARIANCE_MATRIX);
-	else if(params.normal_estimation_method == 1)
+	else if(params->seg.normal_estimation_method == 1)
 		normal_estimation.setNormalEstimationMethod(normal_estimation.AVERAGE_3D_GRADIENT);
 	else
 		normal_estimation.setNormalEstimationMethod(normal_estimation.AVERAGE_DEPTH_CHANGE);
 
-	normal_estimation.setDepthDependentSmoothing(params.depth_dependent_smoothing);
-	normal_estimation.setMaxDepthChangeFactor(params.max_depth_change_factor);
-	normal_estimation.setNormalSmoothingSize(params.normal_smoothing_size);
+	normal_estimation.setDepthDependentSmoothing(params->seg.depth_dependent_smoothing);
+	normal_estimation.setMaxDepthChangeFactor(params->seg.max_depth_change_factor);
+	normal_estimation.setNormalSmoothingSize(params->seg.normal_smoothing_size);
 
 	pcl::PointCloud<pcl::Normal>::Ptr normal_cloud(new pcl::PointCloud<pcl::Normal>);
 	normal_estimation.setInputCloud(cloud);
@@ -57,8 +59,8 @@ void CCalibFromPlanes::segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::P
 
 	pcl::OrganizedMultiPlaneSegmentation<pcl::PointXYZRGBA, pcl::Normal, pcl::Label> multi_plane_segmentation;
 	multi_plane_segmentation.setMinInliers(min_inliers);
-	multi_plane_segmentation.setAngularThreshold(params.angle_threshold);
-	multi_plane_segmentation.setDistanceThreshold(params.dist_threshold);
+	multi_plane_segmentation.setAngularThreshold(params->seg.angle_threshold);
+	multi_plane_segmentation.setDistanceThreshold(params->seg.dist_threshold);
 	multi_plane_segmentation.setInputNormals(normal_cloud);
 	multi_plane_segmentation.setInputCloud(cloud);
 
@@ -80,7 +82,7 @@ void CCalibFromPlanes::segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::P
 	{
 		CPlaneCHull planehull;
 
-		if(regions[i].getCurvature() > params.max_curvature)
+		if(regions[i].getCurvature() > params->seg.max_curvature)
 			continue;
 
 		mrpt::pbmap::Plane plane;
@@ -113,7 +115,7 @@ void CCalibFromPlanes::segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::P
 
 		bool isSamePlane = false;
 		for (size_t j = 0; j < pbmap.vPlanes.size(); j++)
-			if(pbmap.vPlanes[j].isSamePlane(plane, params.max_cos_normal, params.dist_centre_plane_threshold, params.proximity_threshold))
+			if(pbmap.vPlanes[j].isSamePlane(plane, params->seg.max_cos_normal, params->seg.dist_centre_plane_threshold, params->seg.proximity_threshold))
 			{
 				isSamePlane = true;
 				pbmap.vPlanes[j].mergePlane(plane);
@@ -147,11 +149,14 @@ void CCalibFromPlanes::segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::P
 	}
 }
 
-void CCalibFromPlanes::findPotentialMatches(const std::vector<std::vector<CPlaneCHull>> &planes, const int &set_id, const TPlaneMatchingParams &params)
+void CCalibFromPlanes::findPotentialMatches(const std::vector<std::vector<CPlaneCHull>> &planes, const int &set_id)
 {
+	std::vector<Eigen::Vector2f> sensor_pose_uncertainties = sync_model->getSensorUncertainties();
+
 	for(int i = 0; i < planes.size()-1; ++i)
 		for(int j = i+1; j < planes.size(); ++j)
-		{	for(int ii = 0; ii < planes[i].size(); ++ii)
+		{
+			for(int ii = 0; ii < planes[i].size(); ++ii)
 			{
 				for(int jj = 0; jj < planes[j].size(); ++jj)
 				{
@@ -159,7 +164,7 @@ void CCalibFromPlanes::findPotentialMatches(const std::vector<std::vector<CPlane
                     Scalar d1 = planes[i][ii].d - Eigen::Vector3f(sync_model->getSensorPoses()[i].block(0,3,3,1)).dot(n_ii);
 					Eigen::Vector3f n_jj = sync_model->getSensorPoses()[j].block(0,0,3,3) * planes[j][jj].v3normal;
                     Scalar d2 = planes[j][jj].d - Eigen::Vector3f(sync_model->getSensorPoses()[j].block(0,3,3,1)).dot(n_jj);
-					if((n_ii.dot(n_jj) > params.min_normals_dot_prod) && (d1 - d2 < params.max_dist_diff))
+					if((n_ii.dot(n_jj) > cos(sensor_pose_uncertainties[j][0] * (M_PI/180))) && (d1 - d2 < sensor_pose_uncertainties[j][1]))
 					{
 						std::array<int,3> potential_match{set_id, ii, jj};
 						mmv_plane_corresp[i][j].push_back(potential_match);
@@ -176,8 +181,9 @@ void CCalibFromPlanes::findPotentialMatches(const std::vector<std::vector<CPlane
 		}
 }
 
-Scalar CCalibFromPlanes::computeRotationResidual(const std::vector<Eigen::Matrix4f> & sensor_poses)
+Scalar CCalibFromPlanes::computeRotationResidual()
 {
+	std::vector<Eigen::Matrix4f> sensor_poses = sync_model->getSensorPoses();
 	Scalar sum_squared_error = 0.; // Accumulated squared error for all plane correspondences
 
 	for(std::map<int,std::map<int,std::vector<std::array<int,3>>>>::iterator it_sensor_i = mmv_plane_corresp.begin();
@@ -210,8 +216,9 @@ Scalar CCalibFromPlanes::computeRotationResidual(const std::vector<Eigen::Matrix
 	return sum_squared_error;
 }
 
-Scalar CCalibFromPlanes::computeRotation(const TSolverParams &params, const std::vector<Eigen::Matrix4f> & sensor_poses, std::string &stats)
+Scalar CCalibFromPlanes::computeRotation()
 {
+	std::vector<Eigen::Matrix4f> sensor_poses = sync_model->getSensorPoses();
 	const int num_sensors = sensor_poses.size();
 	const int dof = 3 * (num_sensors - 1);
 	Eigen::VectorXf update_vector(dof);
@@ -225,9 +232,9 @@ Scalar CCalibFromPlanes::computeRotation(const TSolverParams &params, const std:
 	float increment = 1000, diff_error = 1000;
 	int it = 0;
 
-    init_error = computeRotationResidual(sensor_poses);
+	init_error = computeRotationResidual();
 
-	while(it < params.max_iters && increment > params.min_update && diff_error > params.converge_error)
+	while(it < params->solver.max_iters && increment > params->solver.min_update && diff_error > params->solver.converge_error)
 	{
 		// Calculate the hessian and the gradient
 		hessian = Eigen::Matrix<Scalar,Eigen::Dynamic,Eigen::Dynamic>::Zero(dof, dof); // Hessian of the rotation of the decoupled system
@@ -292,7 +299,7 @@ Scalar CCalibFromPlanes::computeRotation(const TSolverParams &params, const std:
 		Eigen::FullPivLU<Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic>> lu(hessian);
 		if(!lu.isInvertible())
 		{
-			stats = "System is badly conditioned. Please try again with a new set of observations.";
+			result.msg = "System is badly conditioned. Please try again with a new set of observations.";
 			break;
 		}
 
@@ -321,7 +328,7 @@ Scalar CCalibFromPlanes::computeRotation(const TSolverParams &params, const std:
 
         //accum_error = computeRotationResidual(estimated_poses);
 		//cout << "Error accumulated " << accum_error2 << endl;
-        new_error = computeRotationResidual(estimated_poses_temp);
+		new_error = computeRotationResidual();
 
 		//cout << "New rotation error " << new_accum_error2 << endl;
 		//cout << "Closing loop? \n" << Rt_estimated[0].inverse() * Rt_estimated[7] * Rt_78;
@@ -337,21 +344,24 @@ Scalar CCalibFromPlanes::computeRotation(const TSolverParams &params, const std:
 		//cout << "Iteration " << it << " increment " << increment << " diff_error " << diff_error << endl;
 	}
 
-	std::stringstream stream;
-    for(int sensor_id = 0; sensor_id < num_sensors; sensor_id++)
-        stream << estimated_poses[sensor_id].block(0,0,3,3);
+	if(it == params->solver.max_iters)
+		result.msg = "Maximum iterations reached.";
+	else if(increment < params->solver.min_update)
+		result.msg = "Increment too small.";
+	else if(diff_error < params->solver.converge_error)
+		result.msg = "Convergence";
 
-	stats += "Initial error: " + std::to_string(init_error);
-	stats += "\nNumber of iterations: " + std::to_string(it);
-	stats += "\nFinal error: " + std::to_string(new_error);
-	stats += "\n\nEstimated rotation: \n";
-	stats += stream.str();
+	result.init_error = init_error;
+	result.num_iters = it;
+	result.final_error = new_error;
+	result.estimate = estimated_poses;
 
 	//std::cout << "ErrorCalibRotation " << accum_error2/numPlaneCorresp << " " << av_angle_error/numPlaneCorresp << std::endl;
 }
 
-Scalar CCalibFromPlanes::computeTranslation(const std::vector<Eigen::Matrix4f> & sensor_poses, std::string &stats)
+Scalar CCalibFromPlanes::computeTranslation()
 {
+	std::vector<Eigen::Matrix4f> sensor_poses = sync_model->getSensorPoses();
     const int num_sensors = sensor_poses.size();
     const int dof = 3 * (num_sensors - 1);
     Eigen::VectorXf update_vector(dof);
@@ -415,7 +425,7 @@ Scalar CCalibFromPlanes::computeTranslation(const std::vector<Eigen::Matrix4f> &
     Eigen::FullPivLU<Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic>> lu(hessian);
     if(!lu.isInvertible())
     {
-        stats = "System is badly conditioned. Please try again with a new set of observations.";
+		result.msg = "System is badly conditioned. Please try again with a new set of observations.";
         return accum_error2;
     }
 

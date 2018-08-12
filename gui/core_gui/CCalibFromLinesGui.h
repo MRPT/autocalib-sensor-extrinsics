@@ -58,13 +58,10 @@ public:
 	void publishCorrespLines(const int &obs_set_id);
 
 	/** Returns the status of the calibration progress. */
-	CalibrationFromLinesStatus calibStatus();
+	CalibFromLinesStatus calibStatus();
 
 
 private:
-
-	/** The parameters for the calibration. */
-	TCalibFromLinesParams *m_params;
 
 	/** List of text observers to be notified about the progress. */
 	std::vector<CTextObserver*> m_text_observers;

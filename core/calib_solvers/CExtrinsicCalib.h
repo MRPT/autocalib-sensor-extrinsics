@@ -65,7 +65,7 @@ public:
     /** Calculate the angular residual error of the correspondences.
         \param sensor_poses relative poses of the sensors
         \return the residual */
-    virtual Scalar computeRotationResidual(const std::vector<Eigen::Matrix4f> &sensor_poses) = 0;
+	virtual Scalar computeRotationResidual() = 0;
 
 //    /** Calculate the translational residual error of the correspondences.
 //        \param sensor_poses relative poses of the sensors
@@ -75,18 +75,16 @@ public:
     /** Compute Calibration.
         \param sensor_poses initial calibration
         \return the residual */
-	virtual Scalar computeCalibration(const std::vector<Eigen::Matrix4f> & sensor_poses); // = 0;
+	virtual Scalar computeCalibration(); // = 0;
 
     /** Compute Calibration (only rotation).
 	 * \params params the parameters related to the least-squares solver
-	 * \param sensor_poses the initial calibration
 	 * \return the residual */
-    virtual Scalar computeRotation(const TSolverParams &params, const std::vector<Eigen::Matrix4f> & sensor_poses, std::string &stats) = 0;
+	virtual Scalar computeRotation() = 0;
 
     /** Compute Calibration (only translation).
-        \param sensor_poses initial calibration
         \return the residual */
-    virtual Scalar computeTranslation(const std::vector<Eigen::Matrix4f> & sensor_poses, std::string &stats) = 0;
+	virtual Scalar computeTranslation() = 0;
 
 //    /*! Compute the Fisher Information Matrix (FIM) of the rotation estimate. */ // TODO
 //    void calcFIM_rot();
@@ -102,11 +100,8 @@ public:
     /** The pose of the reference sensor wrt. the global reference system (i.e. the vehicle / robot platform). */
     static mrpt::math::CMatrixFixedNumeric<Scalar,4,4> ref_sensor_pose;
 
-    /** The initial calibration (relative poses of the sensor systems wrt. the reference one) */
-    static std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > m_init_calib;
-
     /** The estimated calibration (relative poses of the sensor systems wrt. the reference one) */
-    std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > m_calibration;
+	std::vector<Eigen::Matrix4f> m_calibration;
     //std::vector<Eigen::Affine3f, Eigen::aligned_allocator<Eigen::Affine3f> > m_calibration(num_methods, Eigen::Affine3f::Identity());
 
     /** The estimated calibration's uncertainty */

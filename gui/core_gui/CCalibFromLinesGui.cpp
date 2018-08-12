@@ -5,14 +5,11 @@
 using namespace mrpt::obs;
 
 CCalibFromLinesGui::CCalibFromLinesGui(CObservationTree *model, TCalibFromLinesParams *params) :
-    CCalibFromLines(model)
-{
-	m_params = params;
-}
+    CCalibFromLines(model, params)
+{}
 
 CCalibFromLinesGui::~CCalibFromLinesGui()
-{
-}
+{}
 
 void CCalibFromLinesGui::addTextObserver(CTextObserver *observer)
 {
@@ -80,9 +77,9 @@ void CCalibFromLinesGui::publishCorrespLines(const int &obs_set_id)
 	}
 }
 
-CalibrationFromLinesStatus CCalibFromLinesGui::calibStatus()
+CalibFromLinesStatus CCalibFromLinesGui::calibStatus()
 {
-	return m_params->calib_status;
+	return params->calib_status;
 }
 
 void CCalibFromLinesGui::extractLines()
@@ -111,7 +108,7 @@ void CCalibFromLinesGui::extractLines()
 		mvv_lines[i].resize((sync_model->getSyncIndices()[i]).size());
 
 		//let's run it for 15 sets
-		for(size_t j = 0; j < 15; j += m_params->downsample_factor)
+		for(size_t j = 0; j < 15; j += params->downsample_factor)
 		{
 			tree_item = root_item->child(j);
 
@@ -126,7 +123,7 @@ void CCalibFromLinesGui::extractLines()
 
 					line_segment_start = pcl::getTime();
 					segmented_lines.clear();
-					segmentLines(image, range, m_params->seg, obs_item->cameraParamsIntensity, segmented_lines);
+					segmentLines(image, range, obs_item->cameraParamsIntensity, segmented_lines);
 					line_segment_end = pcl::getTime();
 
 					n_lines = segmented_lines.size();
@@ -152,7 +149,7 @@ void CCalibFromLinesGui::extractLines()
 
 	publishText(s);
 
-	m_params->calib_status = CalibrationFromLinesStatus::LINES_EXTRACTED;
+	params->calib_status = CalibFromLinesStatus::LINES_EXTRACTED;
 }
 
 void CCalibFromLinesGui::matchLines()
@@ -171,7 +168,7 @@ void CCalibFromLinesGui::matchLines()
 	std::vector<int> used_sets;
 
 	//for(int i = 0; i < root_item->childCount(); i++)
-	for(int i = 0; i < 15; i += m_params->downsample_factor)
+	for(int i = 0; i < 15; i += params->downsample_factor)
 	{
 		tree_item = root_item->child(i);
 		lines.resize(sensor_labels.size());
@@ -186,7 +183,7 @@ void CCalibFromLinesGui::matchLines()
 			lines[sensor_id] = mvv_lines[sensor_id][sync_obs_id];
 		}
 
-		findPotentialMatches(lines, i, m_params->match);
+		findPotentialMatches(lines, i);
 		lines.clear();
 
 		//print statistics
@@ -216,5 +213,5 @@ void CCalibFromLinesGui::matchLines()
 
 	publishText(s);
 
-	m_params->calib_status = CalibrationFromLinesStatus::LINES_MATCHED;
+	params->calib_status = CalibFromLinesStatus::LINES_MATCHED;
 }

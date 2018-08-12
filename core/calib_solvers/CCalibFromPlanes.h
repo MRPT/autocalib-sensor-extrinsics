@@ -10,6 +10,7 @@
 
 #include "CExtrinsicCalib.h"
 #include "TCalibFromPlanesParams.h"
+#include "TSolverResult.h"
 #include <CPlane.h>
 //#include <mrpt/pbmap/PbMap.h>
 //#include <mrpt/pbmap/Miscellaneous.h>
@@ -21,7 +22,13 @@
 
 class CCalibFromPlanes : public CExtrinsicCalib
 {
-  public:
+  protected:
+
+	/** The parameters for the calibration. */
+	TCalibFromPlanesParams *params;
+
+	/** Holds the result of the last solver run. */
+	TSolverResult result;
 
 	/** The segmented planes, the vector indices to access them are [sensor_id][obs_id][plane_id]
 	 * obs_id is with respect to the synchronized model.
@@ -39,7 +46,7 @@ class CCalibFromPlanes : public CExtrinsicCalib
     std::vector< Eigen::Matrix<Scalar,3,3>, Eigen::aligned_allocator<Eigen::Matrix<Scalar,3,3> > > m_covariance_trans;
 
 	/*! Constructor */
-	CCalibFromPlanes(CObservationTree *model);
+	CCalibFromPlanes(CObservationTree *model, TCalibFromPlanesParams *params);
 
     /*! Destructor */
 	virtual ~CCalibFromPlanes(){}
@@ -50,7 +57,7 @@ class CCalibFromPlanes : public CExtrinsicCalib
 	 * @param params the parameters for segmentation.
 	 * @param planes the segmented planes.
 	 */
-	void segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, const TPlaneSegmentationParams &params, std::vector<CPlaneCHull> &planes);
+	void segmentPlanes(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &cloud, std::vector<CPlaneCHull> &planes);
 
 	/**
 	 * Search for potential plane matches between each sensor pair in a sync obs set.
@@ -58,7 +65,7 @@ class CCalibFromPlanes : public CExtrinsicCalib
 	 * \param set_id the id of the synchronized set the planes belong to.
 	 * \param params the parameters for plane matching.
 	 */
-	void findPotentialMatches(const std::vector<std::vector<CPlaneCHull>> &planes, const int &set_id, const TPlaneMatchingParams &params);
+	void findPotentialMatches(const std::vector<std::vector<CPlaneCHull>> &planes, const int &set_id);
 
     /** Calculate the residual error of the correspondences.
         \param sensor_poses relative poses of the sensors
@@ -67,9 +74,8 @@ class CCalibFromPlanes : public CExtrinsicCalib
 //    virtual Scalar computeCalibResidual(const std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > & sensor_poses);
 
     /** Calculate the angular residual error of the correspondences.
-        \param sensor_poses relative poses of the sensors
         \return the residual */
-    virtual Scalar computeRotationResidual(const std::vector<Eigen::Matrix4f> &sensor_poses);
+	virtual Scalar computeRotationResidual();
 
 //    /** Calculate the translational residual error of the correspondences.
 //        \param sensor_poses relative poses of the sensors
@@ -82,13 +88,10 @@ class CCalibFromPlanes : public CExtrinsicCalib
 //    virtual Scalar computeCalibration(const std::vector<mrpt::math::CMatrixFixedNumeric<Scalar,4,4> > & sensor_poses);
 
     /** Compute Calibration (only rotation).
-        \param sensor_poses initial calibration
         \return the residual */
-    virtual Scalar computeRotation(const TSolverParams &params, const std::vector<Eigen::Matrix4f> &sensor_poses, std::string &stats);
+	virtual Scalar computeRotation();
 
     /** Compute Calibration (only translation).
-        \param sensor_poses initial calibration
         \return the residual */
-    virtual Scalar computeTranslation(const std::vector<Eigen::Matrix4f> &sensor_poses, std::string &stats);
-
+	virtual Scalar computeTranslation();
 };

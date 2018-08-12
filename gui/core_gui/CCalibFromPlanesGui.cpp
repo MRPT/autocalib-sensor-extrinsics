@@ -19,14 +19,11 @@
 using namespace mrpt::obs;
 
 CCalibFromPlanesGui::CCalibFromPlanesGui(CObservationTreeGui *model, TCalibFromPlanesParams *params) :
-    CCalibFromPlanes(model)
-{
-	m_params = params;
-}
+    CCalibFromPlanes(model,  params)
+{}
 
 CCalibFromPlanesGui::~CCalibFromPlanesGui()
-{
-}
+{}
 
 void CCalibFromPlanesGui::addTextObserver(CTextObserver *observer)
 {
@@ -94,9 +91,9 @@ void CCalibFromPlanesGui::publishCorrespPlanes(const int &obs_set_id)
 	}
 }
 
-CalibrationFromPlanesStatus CCalibFromPlanesGui::calibStatus()
+CalibFromPlanesStatus CCalibFromPlanesGui::calibStatus()
 {
-	return m_params->calib_status;
+	return params->calib_status;
 }
 
 void CCalibFromPlanesGui::run()
@@ -135,7 +132,7 @@ void CCalibFromPlanesGui::extractPlanes()
 		publishText("**Extracting planes from " + selected_sensor_labels[i] + " observations**");
 		mvv_planes[i].resize((sync_model->getSyncIndices()[i]).size());
 
-		for(size_t j = 0; j < 15; j += m_params->downsample_factor)
+		for(size_t j = 0; j < 15; j += params->downsample_factor)
 		{
 			tree_item = root_item->child(j);
 
@@ -157,7 +154,7 @@ void CCalibFromPlanesGui::extractPlanes()
 
 					plane_segment_start = pcl::getTime();
 					segmented_planes.clear();
-					segmentPlanes(cloud, m_params->seg, segmented_planes);
+					segmentPlanes(cloud, segmented_planes);
 					plane_segment_end = pcl::getTime();
 
 					n_planes = segmented_planes.size();
@@ -183,7 +180,7 @@ void CCalibFromPlanesGui::extractPlanes()
 
 	publishText(s);
 
-	m_params->calib_status = CalibrationFromPlanesStatus::PLANES_EXTRACTED;
+	params->calib_status = CalibFromPlanesStatus::PLANES_EXTRACTED;
 }
 
 void CCalibFromPlanesGui::matchPlanes()
@@ -202,7 +199,7 @@ void CCalibFromPlanesGui::matchPlanes()
 	std::vector<int> used_sets;
 
 	//for(int i = 0; i < root_item->childCount(); i++)
-	for(int i = 0; i < 15; i+= m_params->downsample_factor)
+	for(int i = 0; i < 15; i+= params->downsample_factor)
 	{
 		tree_item = root_item->child(i);
 		planes.resize(sensor_labels.size());
@@ -217,7 +214,7 @@ void CCalibFromPlanesGui::matchPlanes()
 			planes[sensor_id] = mvv_planes[sensor_id][sync_obs_id];
 		}
 
-		findPotentialMatches(planes, i, m_params->match);
+		findPotentialMatches(planes, i);
 		planes.clear();
 
 		//print statistics
@@ -246,15 +243,28 @@ void CCalibFromPlanesGui::matchPlanes()
 
 	publishText(s);
 
-	m_params->calib_status = CalibrationFromPlanesStatus::PLANES_MATCHED;
+	params->calib_status = CalibFromPlanesStatus::PLANES_MATCHED;
 }
 
 void CCalibFromPlanesGui::calibrate()
 {
 	publishText("****Running the calibration solver****");
+	computeRotation();
+
+	publishText("**Results of the rotation solver**");
 
 	std::string stats;
-    computeRotation(m_params->solver, sync_model->getSensorPoses(), stats);
+	std::stringstream stream;
+
+	for(int sensor_id = 0; sensor_id < sync_model->getNumberOfSensors(); sensor_id++)
+		stream << result.estimate[sensor_id].block(0,0,3,3) << "\n";
+
+	stats = "Status: " + result.msg;
+	stats += "\nInitial error: " + std::to_string(result.init_error);
+	stats += "\nNumber of iterations: " + std::to_string(result.num_iters);
+	stats += "\nFinal error: " + std::to_string(result.final_error);
+	stats += "\n\nEstimated rotation: \n";
+	stats += stream.str();
 
 	publishText(stats);
 }

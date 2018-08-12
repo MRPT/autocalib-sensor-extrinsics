@@ -24,18 +24,12 @@ struct TPlaneSegmentationParams
 	double proximity_threshold;
 };
 
-struct TPlaneMatchingParams
-{
-	double min_normals_dot_prod;
-	double max_dist_diff;
-};
-
 /**
  * Maintains the status of the calibration progress.
  * This is useful when the calibration is run in steps and
  * the results of each step are to be visualized.
  */
-enum CalibrationFromPlanesStatus
+enum CalibFromPlanesStatus
 {
 	PCALIB_YET_TO_START,
 	PLANES_EXTRACTED,
@@ -46,7 +40,6 @@ struct TCalibFromPlanesParams
 {
 	int downsample_factor;
 	TPlaneSegmentationParams seg;
-	TPlaneMatchingParams match;
 	TSolverParams solver;
-	CalibrationFromPlanesStatus calib_status;
+	CalibFromPlanesStatus calib_status;
 };

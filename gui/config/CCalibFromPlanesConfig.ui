@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>382</width>
-    <height>672</height>
+    <height>705</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -26,8 +26,54 @@
    <string>Form</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
    <item>
     <layout class="QFormLayout" name="params_group_form">
+     <item row="0" column="0">
+      <widget class="QLabel" name="downsample_factor_label">
+       <property name="text">
+        <string>Downsampling factor:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QSpinBox" name="downsample_factor_sbox">
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="value">
+        <number>10</number>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="segment_label">
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Plane Segmentation&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="textFormat">
+        <enum>Qt::RichText</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <spacer name="label_spacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
      <item row="2" column="0">
       <widget class="QLabel" name="normal_estimation_method_label">
        <property name="text">
@@ -200,204 +246,10 @@
        </property>
       </widget>
      </item>
-     <item row="15" column="0">
-      <widget class="QLabel" name="normals_dot_label">
+     <item row="11" column="0">
+      <widget class="QLabel" name="max_cos_normal_sbox_2">
        <property name="text">
-        <string>min n1.n2:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="15" column="1">
-      <widget class="QDoubleSpinBox" name="min_normals_dot_sbox">
-       <property name="maximum">
-        <double>1.000000000000000</double>
-       </property>
-       <property name="singleStep">
-        <double>0.050000000000000</double>
-       </property>
-       <property name="value">
-        <double>0.900000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item row="16" column="0">
-      <widget class="QLabel" name="dist_diff_label">
-       <property name="text">
-        <string>max d1 - d2:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="16" column="1">
-      <widget class="QDoubleSpinBox" name="max_dist_diff_sbox">
-       <property name="maximum">
-        <double>1.000000000000000</double>
-       </property>
-       <property name="singleStep">
-        <double>0.050000000000000</double>
-       </property>
-       <property name="value">
-        <double>0.200000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item row="14" column="0">
-      <widget class="QLabel" name="matching_label">
-       <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Plane Matching&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-       <property name="textFormat">
-        <enum>Qt::RichText</enum>
-       </property>
-      </widget>
-     </item>
-     <item row="14" column="1">
-      <spacer name="matching_label_spacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="segment_label">
-       <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Plane Segmentation&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-       <property name="textFormat">
-        <enum>Qt::RichText</enum>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <spacer name="label_spacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="17" column="0">
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <item>
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Solver&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="textFormat">
-          <enum>Qt::RichText</enum>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item row="17" column="1">
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="18" column="0">
-      <widget class="QLabel" name="max_iters_label">
-       <property name="text">
-        <string>Maximum Iterations:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="18" column="1">
-      <widget class="QSpinBox" name="max_iters_sbox">
-       <property name="maximum">
-        <number>1000</number>
-       </property>
-       <property name="value">
-        <number>10</number>
-       </property>
-      </widget>
-     </item>
-     <item row="19" column="0">
-      <widget class="QLabel" name="minimum_update_label">
-       <property name="text">
-        <string>Minimum update:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="19" column="1">
-      <widget class="QDoubleSpinBox" name="min_update_sbox">
-       <property name="decimals">
-        <number>5</number>
-       </property>
-       <property name="singleStep">
-        <double>0.000100000000000</double>
-       </property>
-       <property name="value">
-        <double>0.000010000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item row="20" column="0">
-      <widget class="QLabel" name="converge_error_label">
-       <property name="text">
-        <string>Convergence Error:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="20" column="1">
-      <widget class="QDoubleSpinBox" name="converge_error_sbox">
-       <property name="decimals">
-        <number>5</number>
-       </property>
-       <property name="singleStep">
-        <double>0.000100000000000</double>
-       </property>
-       <property name="value">
-        <double>0.000010000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="downsample_factor_label">
-       <property name="text">
-        <string>Downsampling factor:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QSpinBox" name="downsample_factor_sbox">
-       <property name="minimum">
-        <number>1</number>
-       </property>
-       <property name="value">
-        <number>10</number>
-       </property>
-      </widget>
-     </item>
-     <item row="12" column="0">
-      <widget class="QLabel" name="dist_centre_plane_label">
-       <property name="text">
-        <string>Planes Centre Threshold:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="13" column="0">
-      <widget class="QLabel" name="proximity_threshold_label">
-       <property name="text">
-        <string>Proximity Threshold:</string>
+        <string>Max Planes Cos Normal:</string>
        </property>
       </widget>
      </item>
@@ -417,6 +269,13 @@
        </property>
       </widget>
      </item>
+     <item row="12" column="0">
+      <widget class="QLabel" name="dist_centre_plane_label">
+       <property name="text">
+        <string>Planes Centre Threshold:</string>
+       </property>
+      </widget>
+     </item>
      <item row="12" column="1">
       <widget class="QDoubleSpinBox" name="dist_centre_plane_sbox">
        <property name="singleStep">
@@ -424,6 +283,13 @@
        </property>
        <property name="value">
         <double>0.100000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="13" column="0">
+      <widget class="QLabel" name="proximity_threshold_label">
+       <property name="text">
+        <string>Proximity Threshold:</string>
        </property>
       </widget>
      </item>
@@ -440,10 +306,87 @@
        </property>
       </widget>
      </item>
-     <item row="11" column="0">
-      <widget class="QLabel" name="max_cos_normal_sbox_2">
+     <item row="14" column="0">
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QLabel" name="solver_label">
+         <property name="text">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Solver&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::RichText</enum>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="14" column="1">
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="15" column="0">
+      <widget class="QLabel" name="max_iters_label">
        <property name="text">
-        <string>Max Planes Cos Normal:</string>
+        <string>Maximum Iterations:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="15" column="1">
+      <widget class="QSpinBox" name="max_iters_sbox">
+       <property name="maximum">
+        <number>1000</number>
+       </property>
+       <property name="value">
+        <number>10</number>
+       </property>
+      </widget>
+     </item>
+     <item row="16" column="0">
+      <widget class="QLabel" name="minimum_update_label">
+       <property name="text">
+        <string>Minimum update:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="16" column="1">
+      <widget class="QDoubleSpinBox" name="min_update_sbox">
+       <property name="decimals">
+        <number>5</number>
+       </property>
+       <property name="singleStep">
+        <double>0.000100000000000</double>
+       </property>
+       <property name="value">
+        <double>0.000010000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="17" column="0">
+      <widget class="QLabel" name="converge_error_label">
+       <property name="text">
+        <string>Convergence Error:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="17" column="1">
+      <widget class="QDoubleSpinBox" name="converge_error_sbox">
+       <property name="decimals">
+        <number>5</number>
+       </property>
+       <property name="singleStep">
+        <double>0.000100000000000</double>
+       </property>
+       <property name="value">
+        <double>0.000010000000000</double>
        </property>
       </widget>
      </item>

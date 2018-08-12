@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <algorithm>
 #include <vector>
 #include <mrpt/img/TCamera.h>
@@ -27,22 +28,36 @@ namespace utils
 			return -1;
 	}
 
-	/** Function template to get so(3) rotation from SE(3) transformation. */
+	/** Function template to get rotation angles from SE(3) transformation. */
 	template <typename T>
-	Eigen::Matrix<T,3,1> getRotationVector(const Eigen::Matrix<T,4,4> &sensor_pose)
+	Eigen::Matrix<T,3,1> getRotations(const Eigen::Matrix<T,4,4> &sensor_pose)
 	{
 		Eigen::Matrix<T,3,1> rot_vec;
 		mrpt::math::CMatrixDouble44 mrpt_mat(sensor_pose);
 		mrpt::poses::CPose3D mrpt_pose(mrpt_mat);
-		mrpt::math::CArrayDouble<3> rot_vec_mrpt = mrpt_pose.ln_rotation();
-		rot_vec = Eigen::Matrix<T,3,1>(rot_vec_mrpt[0], rot_vec_mrpt[1], rot_vec_mrpt[2]);
-
+		rot_vec[0] = (mrpt_pose.roll() * 180) / M_PI;
+		rot_vec[1] = (mrpt_pose.pitch() * 180) / M_PI;
+		rot_vec[2] = (mrpt_pose.yaw() * 180) / M_PI;
 		return rot_vec;
+	}
+
+	/** Function template to convert rotation angles to SO(3). */
+	template<typename T>
+	Eigen::Matrix<T,3,3> getRotationMatrix(const Eigen::Matrix<T,3,1> &angles)
+	{
+		Eigen::Matrix<T,3,3> r, rx, ry, rz;
+
+		rx << 1, 0, 0, 0, cos(angles(0)), -1 * sin(angles(0)), 0, sin(angles(0)), cos(angles(0));
+		ry << cos(angles(1)), 0, sin(angles(1)), 0, 1, 0, -1 * sin(angles(1)), 0, cos(angles(1));
+		rz << cos(angles(2)), -1 * sin(angles(2)), 0, sin(angles(2)), cos(angles(2)), 0, 0, 0, 1;
+
+		r = rz * ry * rx;
+		return r;
 	}
 
 	/** Function template to get translation from SE(3) transformation. */
 	template <typename T>
-	Eigen::Matrix<T,3,1> getTranslationVector(const Eigen::Matrix<T,4,4> &sensor_pose)
+	Eigen::Matrix<T,3,1> getTranslations(const Eigen::Matrix<T,4,4> &sensor_pose)
 	{
 		return sensor_pose.block(0,3,3,1);
 	}

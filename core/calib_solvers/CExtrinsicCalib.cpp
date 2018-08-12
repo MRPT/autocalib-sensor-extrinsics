@@ -13,7 +13,7 @@
 //Scalar CExtrinsicCalib<num_sensors,Scalar>::eigenvalue_ratio_threshold = 2e-4;
 double CExtrinsicCalib::eigenvalue_ratio_threshold = 2e-4;
 
-Scalar CExtrinsicCalib::computeCalibration(const std::vector<Eigen::Matrix4f> & sensor_poses)
+Scalar CExtrinsicCalib::computeCalibration()
 {
 //    std::string stats;
 //    computeRotation(sensor_poses, stats);

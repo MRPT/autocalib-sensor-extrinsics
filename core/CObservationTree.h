@@ -60,11 +60,32 @@ class CObservationTree
 		/** Returns the poses of the sensors found in the rawlog. */
 		std::vector<Eigen::Matrix4f> getSensorPoses() const;
 
+		/** Returns the uncertainties of the sensors found in the rawlog. */
+		std::vector<Eigen::Vector2f> getSensorUncertainties() const;
+
 		/** Sets the poses of the sensors found in the rawlog.
-		 * \param the new sensor poses (size should match the number of sensors in the model).
+		 * \param sensor_poses the new sensor poses (size should match the number of sensors in the model).
 		 * \return true or false depending on whether the poses were set.
 		 */
 		bool setSensorPoses(const std::vector<Eigen::Matrix4f> &sensor_poses);
+
+		/** Sets the pose of an individual sensor in the rawlog.
+		 * \param sensor_pose the pose of the sensor.
+		 * \param sensor_index the index of the sensor in the rawlog.
+		 */
+		void setSensorPose(const Eigen::Matrix4f &sensor_pose, const int &sensor_index);
+
+		/** Sets the uncertainties of the sensors found in the rawlog.
+		 * \param uncertainties The new uncertainites of the sensors(size should match the number of sensors in the model).
+		 * \return bool depending on whether the uncertainties were set.
+		 */
+		bool setSensorUncertainties(const std::vector<Eigen::Vector2f> &uncertainties);
+
+		/** Set the distance and angular uncertainty of an individual sensor in the rawlog.
+		 * \param sensor_uncertainty The distance and angular uncertainty.
+		 * \param sensor_index The index of the sensor in the rawlog.
+		 */
+		void setSensorUncertainty(const Eigen::Vector2f &sensor_uncertainty, const int &sensor_index);
 
 		/** Groups observations together based on their time stamp proximity.
 		 * Stores the results back in the same tree.
@@ -109,4 +130,7 @@ class CObservationTree
 
 		/** The [R,t] poses of the sensors found in the rawlog. */
 		std::vector<Eigen::Matrix4f> m_sensor_poses;
+
+		/** The initial angular and distance uncertainties in the sensor poses. */
+		std::vector<Eigen::Vector2f> m_sensor_pose_uncertainties;
 };

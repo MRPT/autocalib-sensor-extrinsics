@@ -15,18 +15,12 @@ struct TLineSegmentationParams
 	int hthreshold;
 };
 
-struct TLineMatchingParams
-{
-	double min_normals_dot_prod;
-	double max_line_normal_dot_prod;
-};
-
 /**
  * Maintains the status of the calibration progress.
  * This is useful when the calibration is run in steps and
  * the results of each step are to be visualized.
  */
-enum CalibrationFromLinesStatus
+enum CalibFromLinesStatus
 {
 	LCALIB_YET_TO_START,
 	LINES_EXTRACTED,
@@ -37,7 +31,6 @@ struct TCalibFromLinesParams
 {
 	int downsample_factor;
 	TLineSegmentationParams seg;
-	TLineMatchingParams match;
 	TSolverParams solver;
-	CalibrationFromLinesStatus calib_status;
+	CalibFromLinesStatus calib_status;
 };
