@@ -49,7 +49,7 @@ CMainWindow::CMainWindow(QWidget *parent) :
 	m_calib_from_planes_gui = nullptr;
 	m_calib_from_lines_gui = nullptr;
 	m_ui->viewer_container->updateText("Welcome to autocalib-sensor-extrinsics!");
-	m_ui->viewer_container->updateText("Set your initial (rough) calibration values and load your rawlog file to get started.");
+	m_ui->viewer_container->updateText("Load your config file to get started.");
 	m_recent_rlog_path = m_settings.value("recent_rlog").toString();
 	m_recent_config_path = m_settings.value("recent_config").toString();
 
@@ -334,7 +334,7 @@ void CMainWindow::syncObservationsClicked()
 			std::string stats_string;
 			stats_string = "GROUPING STATS";
 			stats_string += "\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - ";
-			stats_string += "\nNumber of observations used: " + std::to_string(m_sync_model->getRootItem()->childCount());
+			stats_string += "\nNumber of observation sets formed: " + std::to_string(m_sync_model->getRootItem()->childCount());
 			stats_string += "\n\nSummary of sensors used:";
 			stats_string += "\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - ";
 

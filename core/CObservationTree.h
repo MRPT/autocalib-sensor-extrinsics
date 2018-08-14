@@ -111,7 +111,7 @@ class CObservationTree
 		CObservationTreeItem *m_rootitem;
 
 		/** The total number of observations loaded from the rawlog. */
-		int m_obs_count;
+		int m_obs_count = 0;
 
 		/** The unique sensor labels found in the rawlog. */
 		std::vector<std::string> m_sensor_labels;
