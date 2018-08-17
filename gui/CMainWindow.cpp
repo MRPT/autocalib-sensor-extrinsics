@@ -205,8 +205,7 @@ void CMainWindow::loadRawlog()
 		}
 
 		m_ui->viewer_container->updateText(stats_string);
-		m_ui->viewer_container->updateSensorsList(m_model->getSensorLabels());
-		m_ui->viewer_container->updateSensorPoses(m_model->getSensorPoses());
+		m_ui->viewer_container->resetViewers(m_model->getSensorLabels(), m_model->getSensorPoses());
 	}
 
 	else
@@ -347,8 +346,7 @@ void CMainWindow::syncObservationsClicked()
 			}
 
 			m_ui->viewer_container->updateText(stats_string);
-			m_ui->viewer_container->updateSensorsList(selected_sensor_labels);
-			m_ui->viewer_container->updateSensorPoses(m_sync_model->getSensorPoses());
+			m_ui->viewer_container->resetViewers(selected_sensor_labels, m_sync_model->getSensorPoses());
 			m_ui->viewer_container->observationsSynced = true;
 		}
 
@@ -573,6 +571,7 @@ void CMainWindow::algosIndexChanged(int index)
 		m_calib_from_planes_gui = nullptr;
 		m_ui->viewer_container->calib_from_lines = false;
 		m_ui->viewer_container->calib_from_planes = false;
+		m_ui->viewer_container->resetViewers(m_sync_model->getSensorLabels(), m_sync_model->getSensorPoses());
 		break;
 	}
 
@@ -583,6 +582,7 @@ void CMainWindow::algosIndexChanged(int index)
 		m_calib_from_planes_config_widget.get()->show();
 		m_ui->viewer_container->calib_from_lines = false;
 		m_ui->viewer_container->calib_from_planes = true;
+		m_ui->viewer_container->resetViewers(m_sync_model->getSensorLabels(), m_sync_model->getSensorPoses());
 		break;
 	}
 
@@ -593,6 +593,7 @@ void CMainWindow::algosIndexChanged(int index)
 		m_calib_from_lines_config_widget.get()->show();
 		m_ui->viewer_container->calib_from_planes = false;
 		m_ui->viewer_container->calib_from_lines = true;
+		m_ui->viewer_container->resetViewers(m_sync_model->getSensorLabels(), m_sync_model->getSensorPoses());
 
 		//m_config_widget = std::make_shared<CCalibFromLinesConfig>(m_config_file);
 		//qobject_cast<QVBoxLayout*>(m_ui->config_dockwidget_contents->layout())->insertWidget(3, m_config_widget.get());

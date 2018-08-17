@@ -54,7 +54,7 @@ CViewerContainer::~CViewerContainer()
 	delete m_ui;
 }
 
-void CViewerContainer::updateSensorsList(const std::vector<std::string> &sensor_labels)
+void CViewerContainer::resetViewers(const std::vector<std::string> &sensor_labels, const std::vector<Eigen::Matrix4f> &sensor_poses)
 {
 	m_sensor_labels = sensor_labels;
 	m_ui->input1_cbox->clear();
@@ -82,6 +82,30 @@ void CViewerContainer::updateSensorsList(const std::vector<std::string> &sensor_
 	m_viewers[1]->setupInteractor(m_ui->input2_viz->GetInteractor(), m_ui->input2_viz->GetRenderWindow());
 	m_ui->input2_viz->update();
 
+	m_viewers[2].reset(new pcl::visualization::PCLVisualizer("output_viewer", false));
+	m_viewers[2]->setBackgroundColor(0.3,0.3,0.3);
+	m_viewers[2]->setShowFPS(false);
+	m_viewers[2]->addText(place_holder_str, 10, 10, 1, 1, 1, "text");
+	m_viewers[2]->resetCamera();
+
+	m_ui->result_viz->SetRenderWindow(m_viewers[2]->getRenderWindow());
+	m_viewers[2]->setupInteractor(m_ui->result_viz->GetInteractor(), m_ui->result_viz->GetRenderWindow());
+	m_ui->result_viz->update();
+
+	mrpt::img::CImage::Ptr img = mrpt::img::CImage::Ptr(new mrpt::img::CImage(1, 1, CH_GRAY));
+
+	m_ui->input1_tab_widget->removeTab(1);
+	mrpt::gui::CQtGlCanvasBase *gl1 = new mrpt::gui::CQtGlCanvasBase();
+	gl1->mainViewport()->setImageView(*img);
+	m_ui->input1_tab_widget->insertTab(1, gl1, "RGB");
+	m_viewer_images[0] = img;
+
+	m_ui->input2_tab_widget->removeTab(1);
+	mrpt::gui::CQtGlCanvasBase *gl2 = new mrpt::gui::CQtGlCanvasBase();
+	gl2->mainViewport()->setImageView(*img);
+	m_ui->input2_tab_widget->insertTab(1, gl2, "RGB");
+	m_viewer_images[1] = img;
+
 	for(int i = 0; i < sensor_labels.size(); i++)
 	{
 		m_ui->input1_cbox->insertItem(i, QString::fromStdString(sensor_labels[i]));
@@ -95,10 +119,7 @@ void CViewerContainer::updateSensorsList(const std::vector<std::string> &sensor_
 
 	m_viewer_buffer.clear();
 	m_viewer_buffer.resize(sensor_labels.size());
-}
 
-void CViewerContainer::updateSensorPoses(const std::vector<Eigen::Matrix4f> &sensor_poses)
-{
 	m_sensor_poses = sensor_poses;
 }
 

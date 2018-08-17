@@ -31,13 +31,11 @@ public:
 	explicit CViewerContainer(QWidget *parent = 0);
 	~CViewerContainer();
 
-	/** Updates the sensor selection comboboxes with the available sensor labels.
-	 * \param sensor_labels The list of sensor labels that are to be loaded into the comboboxes.
+	/** Clears the cloud and image viewers, updates the sensor selection comboboxes and sensor poses.
+	 * \param sensor_labels The labels of the (new) sensors list.
+	 * \param sensor_poses The R|t matrices of the (new) sensors list.
 	 */
-	void updateSensorsList(const std::vector<std::string> &sensor_labels);
-
-	/** Updates the poses of the sensors. */
-	void updateSensorPoses(const std::vector<Eigen::Matrix4f> &sensor_poses);
+	void resetViewers(const std::vector<std::string> &sensor_labels, const std::vector<Eigen::Matrix4f> &sensor_poses);
 
 	/** Updates the text browser with received text message. */
 	void updateText(const std::string &);
