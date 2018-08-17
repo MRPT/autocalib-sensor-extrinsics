@@ -35,11 +35,12 @@ protected:
 	~CCalibFromLines();
 
 	/**
-	 * \brief Runs Canny-Hough, and Bresenham algorithm on a single image.
+	 * \brief Runs Canny-Hough, Bresenham algorithm, and subsequent back-projection to extract 2D and 3D lines from RGB-D images.
+	 * The 3D lines extracted are in the depth sensor's frame.
 	 * \param image the input image
 	 * \param lines vector of lines segmented
 	 */
-	void segmentLines(const cv::Mat &image, Eigen::MatrixXf &range, const mrpt::img::TCamera &camera_params, std::vector<CLine> &lines);
+	void segmentLines(const cv::Mat &image, Eigen::MatrixXf &range, const mrpt::img::TCamera &camera_params, const Eigen::Affine3f &intensity_to_depth_transform, std::vector<CLine> &lines);
 
 	/**
 	 * Search for potential line matches between each sensor pair in a syc obs set.

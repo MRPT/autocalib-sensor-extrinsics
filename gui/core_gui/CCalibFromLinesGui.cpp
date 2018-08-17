@@ -88,6 +88,8 @@ void CCalibFromLinesGui::extractLines()
 
 	CObservationTreeItem *root_item, *tree_item, *item;
 	CObservation3DRangeScan::Ptr obs_item;
+	mrpt::math::CMatrixDouble44 intensity_to_depth_rt;
+	Eigen::Affine3f intensity_to_depth_transform;
 	size_t sync_obs_id = 0;
 	root_item = sync_model->getRootItem();
 
@@ -120,10 +122,12 @@ void CCalibFromLinesGui::extractLines()
 				{
 					cv::Mat image = cv::cvarrToMat(obs_item->intensityImage.getAs<IplImage>());
 					Eigen::MatrixXf range = obs_item->rangeImage;
+					(obs_item->relativePoseIntensityWRTDepth).getHomogeneousMatrix(intensity_to_depth_rt);
+					intensity_to_depth_transform = intensity_to_depth_rt.matrix().cast<float>();
 
 					line_segment_start = pcl::getTime();
 					segmented_lines.clear();
-					segmentLines(image, range, obs_item->cameraParamsIntensity, segmented_lines);
+					segmentLines(image, range, obs_item->cameraParamsIntensity, intensity_to_depth_transform, segmented_lines);
 					line_segment_end = pcl::getTime();
 
 					n_lines = segmented_lines.size();
@@ -138,7 +142,7 @@ void CCalibFromLinesGui::extractLines()
 
 			if(i == 0)
 				used_sets.push_back(j);
-		}	
+		}
 
 		sync_obs_id = 0;
 	}

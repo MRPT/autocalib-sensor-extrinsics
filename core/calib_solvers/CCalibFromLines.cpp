@@ -9,7 +9,7 @@ CCalibFromLines::CCalibFromLines(CObservationTree *model, TCalibFromLinesParams 
 
 CCalibFromLines::~CCalibFromLines(){}
 
-void CCalibFromLines::segmentLines(const cv::Mat &image, Eigen::MatrixXf &range, const mrpt::img::TCamera &camera_params, std::vector<CLine> &lines)
+void CCalibFromLines::segmentLines(const cv::Mat &image, Eigen::MatrixXf &range, const mrpt::img::TCamera &camera_params, const Eigen::Affine3f &intensity_to_depth_transform, std::vector<CLine> &lines)
 {
 	cv::Mat canny_image;
 
@@ -201,13 +201,14 @@ void CCalibFromLines::segmentLines(const cv::Mat &image, Eigen::MatrixXf &range,
 						v = end_points3D[1] - end_points3D[0];
 
 						line.end_points = end_points;
-						line.end_points3D = end_points3D;
+						line.end_points3D[0] = intensity_to_depth_transform * end_points3D[0];
+						line.end_points3D[1] = intensity_to_depth_transform * end_points3D[1];
 						line.mean_point = mean_point;
-						line.ray = ray;
+						line.ray = intensity_to_depth_transform * ray;
 						line.l = l;
-						line.normal = normal;
-						line.p = p;
-						line.v = v;
+						line.normal = intensity_to_depth_transform * normal;
+						line.p = intensity_to_depth_transform * p;
+						line.v = intensity_to_depth_transform * v;
 						lines.push_back(line);
 					}
 				}
