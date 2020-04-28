@@ -6,9 +6,8 @@ An end-to-end application with a graphical user interface for easily calibrating
 Specifically, the app can calibrate the extrinsics of RGB-D cameras, 3D LiDARs, and any combination between them or with RGB cameras. Automatic and target-less calibration algorithms based on plane-matching and line-matching have been integrated into the app, allowing the calibration to be performed in any generic scene setting without the need for any specific targets. The app allows visualizing the data and tuning the parameters through a GUI at each stage of the process, thereby easing calibration efforts.
 
 **Author** : [karnikram](https://github.com/karnikram)<br>
-**Maintainer** : [karnikram](https://github.com/karnikram)
 
-Note : **Work in progress**
+Note : Needs fixing, **NOT RECOMMENDED FOR USE**
 
 <br>
 <p align="center">
