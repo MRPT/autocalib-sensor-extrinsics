@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>CViewerContainer</class>
+ <widget class="QWidget" name="CViewerContainer">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1012</width>
+    <height>459</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_2">
+   <item>
+    <widget class="QSplitter" name="splitter">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="handleWidth">
+      <number>8</number>
+     </property>
+     <widget class="QSplitter" name="top_splitter">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="handleWidth">
+       <number>8</number>
+      </property>
+      <widget class="QWidget" name="layoutWidget">
+       <layout class="QVBoxLayout" name="input1_group">
+        <item>
+         <layout class="QHBoxLayout" name="input1_label_group">
+          <item>
+           <widget class="QComboBox" name="input1_cbox">
+            <property name="accessibleName">
+             <string>input1</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="input1_label_spacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QTabWidget" name="input1_tab_widget">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>1</horstretch>
+            <verstretch>1</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>200</width>
+            <height>100</height>
+           </size>
+          </property>
+          <property name="tabPosition">
+           <enum>QTabWidget::South</enum>
+          </property>
+          <property name="tabShape">
+           <enum>QTabWidget::Rounded</enum>
+          </property>
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <widget class="QWidget" name="input1_cloud_tab">
+           <attribute name="title">
+            <string>Cloud</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout">
+            <item>
+             <widget class="QVTKWidget" name="input1_viz" native="true"/>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="input1_rgb_tab">
+           <attribute name="title">
+            <string>RGB</string>
+           </attribute>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="layoutWidget">
+       <layout class="QVBoxLayout" name="input2_group">
+        <item>
+         <layout class="QHBoxLayout" name="input2_label_group">
+          <item>
+           <widget class="QComboBox" name="input2_cbox">
+            <property name="accessibleName">
+             <string>input2</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="input2_label_spacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QTabWidget" name="input2_tab_widget">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>1</horstretch>
+            <verstretch>1</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>200</width>
+            <height>100</height>
+           </size>
+          </property>
+          <property name="tabPosition">
+           <enum>QTabWidget::South</enum>
+          </property>
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <widget class="QWidget" name="input2_cloud_tab">
+           <attribute name="title">
+            <string>Cloud</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_3">
+            <item>
+             <widget class="QVTKWidget" name="input2_viz" native="true"/>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="input2_rgb_tab">
+           <attribute name="title">
+            <string>RGB</string>
+           </attribute>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="layoutWidget">
+      <layout class="QVBoxLayout" name="result_group">
+       <item>
+        <layout class="QHBoxLayout" name="result_label_group">
+         <item>
+          <widget class="QLabel" name="result_label">
+           <property name="text">
+            <string>Result Cloud</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="result_label_spacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QVTKWidget" name="result_viz" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>1</horstretch>
+           <verstretch>1</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>200</width>
+           <height>100</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="layoutWidget">
+      <layout class="QVBoxLayout" name="status_group">
+       <item>
+        <layout class="QHBoxLayout" name="status_label_group">
+         <item>
+          <widget class="QLabel" name="status_label">
+           <property name="text">
+            <string>Status</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="status_label_spacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QTextBrowser" name="text_output">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>1</horstretch>
+           <verstretch>1</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QVTKWidget</class>
+   <extends>QWidget</extends>
+   <header>QVTKWidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
