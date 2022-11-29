@@ -7,7 +7,7 @@ Specifically, the app can calibrate the extrinsics of RGB-D cameras, 3D LiDARs, 
 
 **Author** : [karnikram](https://github.com/karnikram)<br>
 
-Note : Needs fixing, **NOT RECOMMENDED FOR USE**
+**Note** : Solvers are not fully complete for real-world use, contributions are welcome!
 
 <br>
 <p align="center">
